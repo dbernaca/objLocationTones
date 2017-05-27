@@ -1,13 +1,17 @@
-# Joseph Lee
-# Object coordinate tones
+# Object Location Tones
+# A global plugin for NVDA# Copyright 2017 Joseph Lee, released under GPL
+
+# Brings NVDA Core issue 2559 to life.
 
 import globalPluginHandler
 import eventHandler
 import tones
 import config
 import api
+import globalVars
 from logHandler import log
 
+# Borrowed from NvDA Core's event handler code (credit: Nv Access)
 def executeEvent(eventName,obj,**kwargs):
 	"""Executes an NVDA event.
 	@param eventName: the name of the event type (e.g. 'gainFocus', 'nameChange')
@@ -23,7 +27,7 @@ def executeEvent(eventName,obj,**kwargs):
 		elif not sleepMode and eventName=="documentLoadComplete" and not eventHandler.doPreDocumentLoadComplete(obj):
 			return
 		elif not sleepMode:
-			# NVDA Core issue 2559: play object location tone if requested.
+			# JL/NVDA Core issue 2559: play object location tone if requested.
 			if eventName == "becomeNavigatorObject":
 				try:
 					l,t,w,h=obj.location
@@ -44,10 +48,15 @@ def executeEvent(eventName,obj,**kwargs):
 	except:
 		log.exception("error executing event: %s on %s with extra args of %s"%(eventName,obj,kwargs))
 
+
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
 	def __init__(self):
 		super(globalPluginHandler.GlobalPlugin, self).__init__()
+		# No, I'll never let you announce obj coords in secure screens.
+		if globalVars.appArgs.secure: return
+		# Until NVDA Core 2559 is implemented...
+		# There is a pull request for this issue. This pull request modifies the base becomeNavigatorObject event itself instead of replacing event handler function.
 		self._origExecuteEvent = eventHandler.executeEvent
 		eventHandler.executeEvent = executeEvent
 

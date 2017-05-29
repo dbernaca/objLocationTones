@@ -5,4 +5,9 @@
 
 After installing this add-on and restarting NVDA (or when you enable this add-on), as you navigate to different controls, you'll hear tones to indicate where the object is located on the screen. To turn object location tones off, uninstall or disable this add-on from add-ons manager.
 
+Important notes:
+
+* If using Audio Themes 3D or similar add-ons, it is advised to disable Object Location Tones add-on.
+* If a control is offscreen, tones will not be played.
+
 [1]: https://addons.nvda-project.org/files/get.php?file=objloc

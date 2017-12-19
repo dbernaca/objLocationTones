@@ -34,3 +34,4 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				tones.beep(curPitch,40,left=leftVolume,right=rightVolume)
 		except:
 			pass
+		nextHandler()

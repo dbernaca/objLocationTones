@@ -4,34 +4,34 @@
 # Change this file instead of sconstruct or manifest files, whenever possible.
 
 # Full getext (please don't change)
-_ = lambda x : x
+_ = lambda x: x
 
 # Add-on information variables
 addon_info = {
 	# for previously unpublished addons, please follow the community guidelines at:
 	# https://bitbucket.org/nvdaaddonteam/todo/raw/master/guideLines.txt
 	# add-on Name, internal for nvda
-	"addon_name" : "objLocTones",
+	"addon_name": "objLocTones",
 	# Add-on summary, usually the user visible name of the addon.
 	# Translators: Summary for this add-on to be shown on installation and add-on information.
-	"addon_summary" : _("Object Location Tones"),
+	"addon_summary": _("Object Location Tones"),
 	# Add-on description
 	# Translators: Long description to be shown for this add-on on add-on information from add-ons manager
-	"addon_description" : _("""Announce location of objects via tones"""),
+	"addon_description": _("""Announce location of objects via tones"""),
 	# version
-	"addon_version" : "20.01",
+	"addon_version": "20.01",
 	# Author(s)
-	"addon_author" : u"Joseph Lee <joseph.lee22590@gmail.com>",
+	"addon_author": u"Joseph Lee <joseph.lee22590@gmail.com>",
 	# URL for the add-on documentation support
-	"addon_url" : "https://addons.nvda-project.org/",
+	"addon_url": "https://addons.nvda-project.org/",
 	# Documentation file name
-	"addon_docFileName" : "readme.html",
+	"addon_docFileName": "readme.html",
 	# Minimum NVDA version supported
-	"addon_minimumNVDAVersion" : "2019.3.0",
+	"addon_minimumNVDAVersion": "2019.3.0",
 	# Last NVDA version supported/tested
-	"addon_lastTestedNVDAVersion" : "2019.3.0",
+	"addon_lastTestedNVDAVersion": "2019.3.0",
 	# Add-on update channel (default is stable)
-	"addon_updateChannel" : None,
+	"addon_updateChannel": None,
 }
 
 

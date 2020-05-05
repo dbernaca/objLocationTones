@@ -20,7 +20,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 	def event_becomeNavigatorObject(self, obj, nextHandler):
 		# Until NVDA Core 2559 is implemented...
 		try:
-			l,t,w,h = obj.location
+			l, t, w, h = obj.location
 			x = l+(w/2)
 			y = t+(h/2)
 			screenWidth, screenHeight = api.getDesktopObject().location[2:]
@@ -31,7 +31,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				brightness = config.conf['mouse']['audioCoordinates_maxVolume']
 				leftVolume = int((85*((screenWidth-float(x))/screenWidth))*brightness)
 				rightVolume = int((85*(float(x)/screenWidth))*brightness)
-				tones.beep(curPitch,40,left=leftVolume,right=rightVolume)
+				tones.beep(curPitch, 40, left=leftVolume, right=rightVolume)
 		except:
 			pass
 		nextHandler()

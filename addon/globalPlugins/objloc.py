@@ -10,6 +10,7 @@ import config
 import api
 import globalVars
 
+
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
 	def __init__(self):

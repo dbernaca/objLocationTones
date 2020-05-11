@@ -9,6 +9,7 @@ import tones
 import config
 import api
 import globalVars
+import screenExplorer
 
 
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
@@ -16,7 +17,8 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 	def __init__(self):
 		super(globalPluginHandler.GlobalPlugin, self).__init__()
 		# No, I'll never let you announce obj coords in secure screens.
-		if globalVars.appArgs.secure: return
+		# And of course, no need for this add-on once NVDA comes with equivalent functionality.
+		if globalVars.appArgs.secure or hasattr(screenExplorer, "playObjectCoordinates"): return
 
 	def event_becomeNavigatorObject(self, obj, nextHandler):
 		# Until NVDA Core 2559 is implemented...

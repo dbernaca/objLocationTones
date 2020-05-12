@@ -2,7 +2,7 @@
 
 * Author: Joseph Lee
 * Download [stable version][1]
-* NVDA compatibility: 2019.3 and beyond
+* NVDA compatibility: 2019.3 to 2020.1
 
 After installing this add-on and restarting NVDA (or when you enable this add-on), as you navigate to different controls, you'll hear tones to indicate where the object is located on screen. To turn object location tones off, uninstall or disable this add-on from add-ons manager.
 

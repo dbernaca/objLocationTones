@@ -18,7 +18,8 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		super(globalPluginHandler.GlobalPlugin, self).__init__()
 		# No, I'll never let you announce obj coords in secure screens.
 		# And of course, no need for this add-on once NVDA comes with equivalent functionality.
-		if globalVars.appArgs.secure or hasattr(screenExplorer, "playObjectCoordinates"): return
+		if globalVars.appArgs.secure or hasattr(screenExplorer, "playObjectCoordinates"):
+			return
 
 	def event_becomeNavigatorObject(self, obj, nextHandler):
 		# Until NVDA Core 2559 is implemented...

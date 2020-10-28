@@ -36,6 +36,6 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				leftVolume = int((85 * ((screenWidth - float(x)) / screenWidth)) * brightness)
 				rightVolume = int((85 * (float(x) / screenWidth)) * brightness)
 				tones.beep(curPitch, 40, left=leftVolume, right=rightVolume)
-		except:
+		except TypeError:
 			pass
 		nextHandler()

@@ -1,6 +1,6 @@
 # Object Location Tones
 # A global plugin for NVDA
-# Copyright 2017-2020 Joseph Lee, released under GPL
+# Copyright 2017-2022 Joseph Lee, released under GPL
 
 # Brings NVDA Core issue 2559 to life.
 

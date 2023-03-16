@@ -11,4 +11,4 @@ Important notes:
 * If using Audio Themes or similar add-ons, it is advised to disable Object Location Tones add-on.
 * If a control is offscreen, tones will not be played.
 
-[1]: https://addons.nvda-project.org/files/get.php?file=objloc
+[1]: https://addons.nvda-project.org/files/get.php?file=objLocTones

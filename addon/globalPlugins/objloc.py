@@ -21,7 +21,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		if globalVars.appArgs.secure or hasattr(screenExplorer, "playObjectCoordinates"):
 			return
 
-	def event_becomeNavigatorObject(self, obj, nextHandler):
+	def event_becomeNavigatorObject(self, obj, nextHandler, *args, **kwargs):
 		# Until NVDA Core 2559 is implemented...
 		try:
 			l, t, w, h = obj.location

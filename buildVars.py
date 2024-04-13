@@ -29,7 +29,7 @@ addon_info = {
 	# Author(s)
 	"addon_author": "Joseph Lee <joseph.lee22590@gmail.com>",
 	# URL for the add-on documentation support
-	"addon_url": "https://addons.nvda-project.org/",
+	"addon_url": "https://github.com/dbernaca/objlocationtones",
 	# URL for the add-on repository where the source code can be found
 	"addon_sourceURL": "https://github.com/dbernaca/objlocationtones",
 	# Documentation file name

@@ -1,6 +1,7 @@
 # Object Location Tones
 # A global plugin for NVDA
-# Copyright 2017-2022 Joseph Lee, released under GPL
+# Copyright 2017-2024 Joseph Lee, released under GPL
+# Copyright      2024  Dalen Bernaca, released under GPL
 
 # Brings NVDA Core issue 2559 to life.
 
@@ -9,17 +10,10 @@ import tones
 import config
 import api
 import globalVars
-import screenExplorer
-
 
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
-
 	def __init__(self):
 		super(globalPluginHandler.GlobalPlugin, self).__init__()
-		# No, I'll never let you announce obj coords in secure screens.
-		# And of course, no need for this add-on once NVDA comes with equivalent functionality.
-		if globalVars.appArgs.secure or hasattr(screenExplorer, "playObjectCoordinates"):
-			return
 
 	def event_becomeNavigatorObject(self, obj, nextHandler, *args, **kwargs):
 		# Until NVDA Core 2559 is implemented...

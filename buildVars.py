@@ -25,13 +25,13 @@ addon_info = {
 	# Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 	"addon_description": _("""Announce location of objects via tones"""),
 	# version
-	"addon_version": "24.04",
+	"addon_version": "24.04.2",
 	# Author(s)
 	"addon_author": "Joseph Lee <joseph.lee22590@gmail.com>",
 	# URL for the add-on documentation support
 	"addon_url": "https://addons.nvda-project.org/",
 	# URL for the add-on repository where the source code can be found
-	"addon_sourceURL": "https://github.com/josephsl/objlocationtones",
+	"addon_sourceURL": "https://github.com/dbernaca/objlocationtones",
 	# Documentation file name
 	"addon_docFileName": "readme.html",
 	# Minimum NVDA version supported (e.g. "2018.3.0", minor version is optional)

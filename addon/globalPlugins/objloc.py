@@ -8,6 +8,7 @@
 import globalPluginHandler
 import scriptHandler
 
+import textInfos
 import tones
 import config
 import api
@@ -20,7 +21,9 @@ maxVolume = config.conf['mouse']['audioCoordinates_maxVolume']
 class GlobalPlugin (globalPluginHandler.GlobalPlugin):
     def __init__ (self):
         super(globalPluginHandler.GlobalPlugin, self).__init__()
+        self.focusing = True # A flag to prevent double beeps on focus of texzt area children
         self.event_becomeNavigatorObject = self._on_becomeNavigatorObject
+        self.event_caret = self._on_caret
 
     @scriptHandler.script(
         # Translators: The gesture description in the input gesture dialog
@@ -30,30 +33,66 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
     def script_toggle (self, gesture):
         if self.event_becomeNavigatorObject==self._on_passThrough:
             self.event_becomeNavigatorObject = self._on_becomeNavigatorObject
+            self.event_caret = self._on_caret
+            self.focusing = True
             # Translators: Message when positional tones are switched on
             ui.message(_("Positional tones on"))
             return
         self.event_becomeNavigatorObject = self._on_passThrough
+        self.event_caret = self._on_passThrough
         # Translators: Message when positional tones are switched off
         ui.message(_("Positional tones off"))
 
+    def playCoordinates (self, x, y):
+        """
+        Plays a positional tone for given x and y coordinates,
+        relative to current desktop window size.
+        """
+        screenWidth, screenHeight = api.getDesktopObject().location[2:]
+        if 0 <= x <= screenWidth and 0 <= y <= screenHeight:
+            curPitch = minPitch + ((maxPitch - minPitch) * ((screenHeight - y) / float(screenHeight)))
+            leftVolume = int((85 * ((screenWidth - float(x)) / screenWidth)) * maxVolume)
+            rightVolume = int((85 * (float(x) / screenWidth)) * maxVolume)
+            tones.beep(curPitch, 40, left=leftVolume, right=rightVolume)
+
     def _on_passThrough (self, obj, nextHandler, *args, **kwargs):
+        """
+        An event handler that just passes the event to the next handler and does nothing else.
+        Used to swap a real handler when switching off a feature.
+        """
         nextHandler()
 
     def _on_becomeNavigatorObject (self, obj, nextHandler, *args, **kwargs):
-        # Until NVDA Core 2559 is implemented...
+        """
+        Event handler that plays a positional tone upon navigation.
+        """
+        self.focusing = True # Prevent beep of the caret when first focusing text area
         try:
             l, t, w, h = obj.location
             x = l + (w // 2)
             y = t + (h // 2)
-            screenWidth, screenHeight = api.getDesktopObject().location[2:]
-            if 0 <= x <= screenWidth and 0 <= y <= screenHeight:
-                curPitch = minPitch + ((maxPitch - minPitch) * ((screenHeight - y) / float(screenHeight)))
-                leftVolume = int((85 * ((screenWidth - float(x)) / screenWidth)) * maxVolume)
-                rightVolume = int((85 * (float(x) / screenWidth)) * maxVolume)
-                tones.beep(curPitch, 40, left=leftVolume, right=rightVolume)
+            self.playCoordinates(x, y)
         except TypeError:
             pass
         nextHandler()
 
     event_becomeNavigatorObject = _on_becomeNavigatorObject
+
+    def _on_caret (self, obj, nextHandler):
+        """
+        Event handler that plays a positional tone upon caret movements.
+        """
+        if self.focusing:
+            # Skip a beep right after text area gained focus
+            self.focusing = False
+            nextHandler()
+            return
+        try:
+            tei = obj.makeTextInfo(textInfos.POSITION_CARET)
+            x, y = tei.pointAtStart
+            self.playCoordinates(x*5, y)
+        except:
+            pass
+        nextHandler()
+
+    event_caret = _on_caret

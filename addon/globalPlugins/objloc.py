@@ -10,28 +10,73 @@ import scriptHandler
 
 import config
 import ui
+import gui
+import wx
 
 from tones import beep
-from api import getDesktopObject, getNavigatorObject
+from api import getDesktopObject, getNavigatorObject, getFocusObject
 from textInfos import POSITION_CARET
 from winUser import getCursorPos
 from controlTypes import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_PASSWORDEDIT
 
+try:
+    from time import monotonic as time
+except:
+    from time import time
+
+class LocationError (Exception):
+    """
+    An exception raised when unable to retrieve a desired location info from an object.
+    """
+
+# Some initial values from NVDA configuration
 minPitch  = config.conf['mouse']['audioCoordinates_minPitch']
 maxPitch  = config.conf['mouse']['audioCoordinates_maxPitch']
 maxVolume = config.conf['mouse']['audioCoordinates_maxVolume']
 
 def isEditable (obj):
+    """
+    Returns True if the *obj* is the editable field, False otherwise.
+    """
     r = obj.role
     return r==ROLE_EDITABLETEXT or r==ROLE_PASSWORDEDIT or r==ROLE_TERMINAL
+
+def getObjectPos (obj=None, location=True, caret=False):
+    try:
+        obj = obj or getFocusObject()
+        if caret:
+            try:
+                r = obj.role
+                if r==ROLE_EDITABLETEXT or r==ROLE_PASSWORDEDIT or r==ROLE_TERMINAL:
+                    tei = obj.makeTextInfo(POSITION_CARET)
+                    return tei.pointAtStart
+            except:
+                if not location:
+                    raise
+        l = obj.location
+        return (l[0]+(l[2]//2), l[1]+(l[3]//2))
+    except:
+        pass
+    raise LocationError("Location unavailable")
 
 class GlobalPlugin (globalPluginHandler.GlobalPlugin):
     def __init__ (self):
         super(globalPluginHandler.GlobalPlugin, self).__init__()
+
         self.duration   = 40
         self.volume     = maxVolume
         self.stereoSwap = False
-        self.focusing = True # A flag to prevent double beeps on focus of text area children
+        self.tolerance  = 20
+        self.timeout    = 2
+        self.caret      = True
+
+        self.focusing     = True # A flag to prevent double beeps on focus of text area children
+        self.lastMousePos = (-1, -1) # Used to detect that the mouse stopped moving so that we can stop the timer
+        self.lastTime     = 0.0 # Used to detect how much time passed while mouse is stopped
+
+        self.timer = wx.Timer(gui.mainFrame, wx.ID_ANY)
+        gui.mainFrame.Bind(wx.EVT_TIMER, self._on_mouseMonitor, self.timer)
+
         self.event_becomeNavigatorObject = self._on_becomeNavigatorObject
         self.event_caret = self._on_caret
 
@@ -52,16 +97,35 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             beep(curPitch, (d or self.duration), left=leftVolume, right=rightVolume)
 
     @scriptHandler.script(
+        # Translators: The toggle mouse location monitoring gesture description in the input gesture dialog
+        description=_("Toggle a mouse cursor position in relation to navigator object location reporting via positional tones."),
+        # Translators: Input gestures dialog category for objLocTones.
+        category=_("Object Location Tones") )
+    def script_toggleMouseMonitor (self, gesture):
+        if not self.timer.IsRunning():
+            self.timer.Start(50)
+            #self.lastTime = time()
+            return
+        self.timer.Stop()
+        self.lastMousePos = (-1, -1)
+        self.lastTime = 0.0
+        ui.message(_("Mouse location monitoring cancelled"))
+
+    @scriptHandler.script(
         # Translators: Input dialog gesture description for on request of mouse cursor location
         description=_("Play a positional tone for a mouse cursor"),
         # Translators: Input gestures dialog category for objLocTones.
         category=_("Object Location Tones") )
     def script_mouse (self, gesture):
+        """
+        Plays positional tone for a mouse cursor location on demand.
+        """
         try:
             x, y = getCursorPos()
             self.playCoordinates(x, y, self.duration+50)
         except:
             pass
+        self.timer.Stop()
 
     @scriptHandler.script(
         # Translators: The gesture description for on request object location in the input gesture dialog
@@ -69,19 +133,12 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         # Translators: Input gestures dialog category for objLocTones.
         category=_("Object Location Tones") )
     def script_locate (self, gesture):
-        obj = getNavigatorObject()
-        if isEditable(obj):
-            try:
-                tei = obj.makeTextInfo(POSITION_CARET)
-                x, y = tei.pointAtStart
-                self.playCoordinates(x+3, y+8, self.duration+30)
-            except:
-                pass
-            return
+        """
+        Plays positional tone for the current navigator object location on demand
+        """
+        self.timer.Stop()
         try:
-            l, t, w, h = obj.location
-            x = l + (w // 2)
-            y = t + (h // 2)
+            x, y = getObjectPos(caret=self.caret)
             self.playCoordinates(x, y, self.duration+30)
         except:
             pass
@@ -105,6 +162,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             return
         self.event_becomeNavigatorObject = self._on_passThrough
         self.event_caret = self._on_passThrough
+        self.timer.Stop()
         # Translators: Message when positional tones are switched off
         ui.message(_("Positional tones off"))
 
@@ -121,9 +179,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         """
         self.focusing = True # Prevent beep of the caret event right after text area gains focus
         try:
-            l, t, w, h = obj.location
-            x = l + (w // 2)
-            y = t + (h // 2)
+            x, y = getObjectPos(obj, caret=self.caret)
             self.playCoordinates(x, y)
         except:
             pass
@@ -152,3 +208,43 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         nextHandler()
 
     event_caret = _on_caret
+
+    def _on_mouseMonitor (self, e):
+        """
+        Timer callback to play positional tones of a mouse cursor location and the current navigator object.
+        Helps to monitor their relation, i.e. difference of the distance on the screen.
+        """
+        try:
+            mp     = getCursorPos()
+            oX, oY = getObjectPos(caret=self.caret)
+        except:
+            self.timer.Stop()
+            self.lastMousePos = (-1, -1)
+            self.lastTime     = 0.0
+            ui.message(_("Location unavailable"))
+            return
+        t   = time()
+        lmp = self.lastMousePos
+        if lmp==mp and t-self.lastTime>=self.timeout:
+            self.lastMousePos = (-1, -1)
+            self.lastTime     = 0.0
+            self.timer.Stop()
+            ui.message(_("Mouse location monitoring stopped"))
+            return
+        mX, mY = mp
+        dist = abs(oX-mX) + abs(oY-mY)
+        if dist<=self.tolerance:
+            self.timer.Stop()
+            self.lastMousePos = (-1, -1)
+            self.playCoordinates(oX, oY, self.duration+150)
+            if self.lastTime==0.0:
+                ui.message(_("Mouse already there"))
+                return
+            ui.message(_("Location reached"))
+            self.lastTime     = 0.0
+            return
+        if lmp!=mp:
+            self.lastMousePos = mp
+            self.lastTime = t
+        wx.CallAfter(self.playCoordinates, mX, mY, self.duration+40)
+        wx.CallLater(self.duration+60, self.playCoordinates, oX, oY, self.duration+70)

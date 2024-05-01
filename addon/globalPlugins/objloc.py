@@ -17,7 +17,7 @@ from tones import beep
 from api import getDesktopObject, getNavigatorObject, getFocusObject
 from textInfos import POSITION_CARET
 from winUser import getCursorPos
-from controlTypes import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_PASSWORDEDIT
+from controlTypes import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_PASSWORDEDIT, ROLE_DOCUMENT
 
 try:
     from time import monotonic as time
@@ -36,10 +36,10 @@ maxVolume = config.conf['mouse']['audioCoordinates_maxVolume']
 
 def isEditable (obj):
     """
-    Returns True if the *obj* is the editable field, False otherwise.
+    Returns True if the *obj* is an editable field, False otherwise.
     """
     r = obj.role
-    return r==ROLE_EDITABLETEXT or r==ROLE_PASSWORDEDIT or r==ROLE_TERMINAL
+    return r==ROLE_EDITABLETEXT or r==ROLE_PASSWORDEDIT or r==ROLE_TERMINAL or r==ROLE_DOCUMENT
 
 def getObjectPos (obj=None, location=True, caret=False):
     try:
@@ -47,7 +47,7 @@ def getObjectPos (obj=None, location=True, caret=False):
         if caret:
             try:
                 r = obj.role
-                if r==ROLE_EDITABLETEXT or r==ROLE_PASSWORDEDIT or r==ROLE_TERMINAL:
+                if r==ROLE_EDITABLETEXT or r==ROLE_PASSWORDEDIT or r==ROLE_TERMINAL or r==ROLE_DOCUMENT:
                     tei = obj.makeTextInfo(POSITION_CARET)
                     return tei.pointAtStart
             except:
@@ -58,6 +58,23 @@ def getObjectPos (obj=None, location=True, caret=False):
     except:
         pass
     raise LocationError("Location unavailable")
+
+class BBox (object):
+    __slots__ = ("L", "T", "W", "H", "X1", "X2", "X3", "X4", "Y1", "Y2", "Y3", "Y4")
+    def __init__ (self, obj):
+        loc = obj.location
+        self.L, self.T, self.W, self.H = loc
+        self.X1 = loc[0]
+        self.Y1 = loc[1]
+        self.X2 = loc[0]+loc[2]
+        self.Y2 = loc[1]
+        self.X3 = loc[0]+loc[2]
+        self.Y3 = loc[1]+loc[3]
+        self.X4 = loc[0]
+        self.Y4 = loc[1]+loc[3]
+
+    def __contains__ (self, xy):
+        return (self.X1 <= xy[0] <= self.X2) and (self.Y1 <= xy[1] <= self.Y4)
 
 class GlobalPlugin (globalPluginHandler.GlobalPlugin):
     def __init__ (self):
@@ -71,6 +88,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.caret      = True
 
         self.focusing     = True # A flag to prevent double beeps on focus of text area children
+        self.entered      = False
         self.lastMousePos = (-1, -1) # Used to detect that the mouse stopped moving so that we can stop the timer
         self.lastTime     = 0.0 # Used to detect how much time passed while mouse is stopped
 
@@ -79,6 +97,10 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
 
         self.event_becomeNavigatorObject = self._on_becomeNavigatorObject
         self.event_caret = self._on_caret
+
+    def terminate (self):
+        self.timer.Stop()
+        gui.mainFrame.Unbind(wx.EVT_TIMER, self._on_mouseMonitor, self.timer)
 
     def playCoordinates (self, x, y, d=None):
         """
@@ -103,12 +125,24 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         category=_("Object Location Tones") )
     def script_toggleMouseMonitor (self, gesture):
         if not self.timer.IsRunning():
-            self.timer.Start(50)
-            #self.lastTime = time()
+            try:
+                oX, oY = getObjectPos(caret=self.caret)
+                mX, mY = getCursorPos()
+            except:
+                ui.message(_("Location unavailable"))
+                return
+            dist = abs(oX-mX) + abs(oY-mY)
+            if dist<=self.tolerance:
+                self.playCoordinates(oX, oY, self.duration+150)
+                ui.message(_("Mouse already there"))
+                return
+            self.event_mouseMove = self._on_mouseMove
+            self.timer.Start(200)
             return
         self.timer.Stop()
         self.lastMousePos = (-1, -1)
         self.lastTime = 0.0
+        self.event_mouseMove = self._on_passThrough
         ui.message(_("Mouse location monitoring cancelled"))
 
     @scriptHandler.script(
@@ -126,6 +160,9 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         except:
             pass
         self.timer.Stop()
+        self.event_mouseMove = self._on_passThrough
+        self.lastMousePos = (-1, -1)
+        self.lastTime = 0.0
 
     @scriptHandler.script(
         # Translators: The gesture description for on request object location in the input gesture dialog
@@ -212,7 +249,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
     def _on_mouseMonitor (self, e):
         """
         Timer callback to play positional tones of a mouse cursor location and the current navigator object.
-        Helps to monitor their relation, i.e. difference of the distance on the screen.
+        Helps to monitor their relation, i.e. difference of their distance on the screen.
         """
         try:
             mp     = getCursorPos()
@@ -221,6 +258,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.timer.Stop()
             self.lastMousePos = (-1, -1)
             self.lastTime     = 0.0
+            self.event_mouseMove = self._on_passThrough
             ui.message(_("Location unavailable"))
             return
         t   = time()
@@ -229,22 +267,45 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.lastMousePos = (-1, -1)
             self.lastTime     = 0.0
             self.timer.Stop()
+            self.event_mouseMove = self._on_passThrough
             ui.message(_("Mouse location monitoring stopped"))
-            return
-        mX, mY = mp
-        dist = abs(oX-mX) + abs(oY-mY)
-        if dist<=self.tolerance:
-            self.timer.Stop()
-            self.lastMousePos = (-1, -1)
-            self.playCoordinates(oX, oY, self.duration+150)
-            if self.lastTime==0.0:
-                ui.message(_("Mouse already there"))
-                return
-            ui.message(_("Location reached"))
-            self.lastTime     = 0.0
             return
         if lmp!=mp:
             self.lastMousePos = mp
             self.lastTime = t
-        wx.CallAfter(self.playCoordinates, mX, mY, self.duration+40)
-        wx.CallLater(self.duration+60, self.playCoordinates, oX, oY, self.duration+70)
+        wx.CallAfter(self.playCoordinates, mp[0], mp[1], self.duration+40)
+        wx.CallLater(self.duration+100, self.playCoordinates, oX, oY, self.duration+70)
+
+    def _on_mouseMove (self, obj, nextHandler, x, y):
+        try:
+            fobj = getFocusObject()
+            oX, oY = getObjectPos(fobj, caret=self.caret)
+        except:
+            self.timer.Stop()
+            self.lastMousePos = (-1, -1)
+            self.lastTime     = 0.0
+            self.event_mouseMove = self._on_passThrough
+            ui.message(_("Location unavailable"))
+            nextHandler()
+            return
+        if (x, y) in BBox(fobj):
+            if not self.entered:
+                self.entered = True
+                ui.message(_("Entering focused object"))
+        else:
+            if self.entered:
+                ui.message(_("Exiting focused object"))
+            self.entered = False
+        dist = abs(oX-x) + abs(oY-y)
+        if dist<=self.tolerance:
+            self.playCoordinates(oX, oY, self.duration+150)
+            self.timer.Stop()
+            self.event_mouseMove = self._on_passThrough
+            self.lastMousePos = (-1, -1)
+            self.lastTime     = 0.0
+            ui.message(_("Location reached"))
+            nextHandler()
+            return
+        nextHandler()
+
+    event_mouseMove = _on_passThrough

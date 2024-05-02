@@ -9,14 +9,15 @@ import globalPluginHandler
 import scriptHandler
 
 import config
+import speech
 import ui
 import gui
 import wx
 
-from tones import beep
-from api import getDesktopObject, getNavigatorObject, getFocusObject
-from textInfos import POSITION_CARET
-from winUser import getCursorPos
+from tones        import beep
+from api          import getDesktopObject, getNavigatorObject, getFocusObject
+from textInfos    import POSITION_CARET
+from winUser      import getCursorPos
 from controlTypes import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_PASSWORDEDIT, ROLE_DOCUMENT
 
 try:
@@ -143,6 +144,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.lastMousePos = (-1, -1)
         self.lastTime = 0.0
         self.event_mouseMove = self._on_passThrough
+        speech.cancelSpeech()
         ui.message(_("Mouse location monitoring cancelled"))
 
     @scriptHandler.script(
@@ -273,7 +275,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         if lmp!=mp:
             self.lastMousePos = mp
             self.lastTime = t
-        wx.CallAfter(self.playCoordinates, mp[0], mp[1], self.duration+40)
+        self.playCoordinates(mp[0], mp[1], self.duration+40)
         wx.CallLater(self.duration+100, self.playCoordinates, oX, oY, self.duration+70)
 
     def _on_mouseMove (self, obj, nextHandler, x, y):
@@ -291,9 +293,11 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         if (x, y) in BBox(fobj):
             if not self.entered:
                 self.entered = True
+                speech.cancelSpeech()
                 ui.message(_("Entering focused object"))
         else:
             if self.entered:
+                speech.cancelSpeech()
                 ui.message(_("Exiting focused object"))
             self.entered = False
         dist = abs(oX-x) + abs(oY-y)
@@ -303,6 +307,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.event_mouseMove = self._on_passThrough
             self.lastMousePos = (-1, -1)
             self.lastTime     = 0.0
+            speech.cancelSpeech()
             ui.message(_("Location reached"))
             nextHandler()
             return

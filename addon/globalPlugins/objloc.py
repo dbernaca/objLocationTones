@@ -134,7 +134,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.lastTime     = 0.0 # Used to detect how much time passed while mouse is stopped
 
         # Mouse monitoring position playing timer
-        self.timer = wx.Timer(gui.mainFrame, wx.ID_ANY)
+        self.timer = wx.Timer(gui.mainFrame)
         gui.mainFrame.Bind(wx.EVT_TIMER, self._on_mouseMonitor, self.timer)
 
         # Initial NVDA event bindings
@@ -144,7 +144,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
 
     def terminate (self):
         self.timer.Stop()
-        gui.mainFrame.Unbind(wx.EVT_TIMER, self._on_mouseMonitor, self.timer)
+        gui.mainFrame.Unbind(wx.EVT_TIMER, handler=self._on_mouseMonitor, source=self.timer)
 
     def playCoordinates (self, x, y, d=None):
         """

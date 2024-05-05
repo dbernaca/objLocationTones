@@ -128,6 +128,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.caret      = True # Whether to report caret location for editable fields
 
         self.focusing     = True # A flag to prevent double beeps on focus of text area children
+        self.typing       = False # A flag to prevent beeps during typing
         self.entered      = False # A flag for reporting entering and exiting of the focused object area
 
         self.lastMousePos = (-1, -1) # Used to detect that the mouse stopped moving so that we can stop the timer
@@ -163,6 +164,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             beep(curPitch, (d or self.duration), left=leftVolume, right=rightVolume)
 
     @scriptHandler.script(
+        gesture="kb:Control+Shift+NumpadDelete",
         # Translators: Object outline report gesture description in the input gesture dialog
         description=_("Report focused object's outline via positional tones."),
         # Translators: Input gestures dialog category for objLocTones.
@@ -190,8 +192,9 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             ui.message(_("Location unavailable"))
 
     @scriptHandler.script(
+        gesture="kb:Shift+NumpadDelete",
         # Translators: The toggle mouse location monitoring gesture description in the input gesture dialog
-        description=_("Toggle a mouse cursor position in relation to navigator object location reporting via positional tones."),
+        description=_("Toggle a mouse cursor position in relation to focused object location reporting via positional tones."),
         # Translators: Input gestures dialog category for objLocTones.
         category=_("Object Location Tones") )
     def script_toggleMouseMonitor (self, gesture):
@@ -223,6 +226,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         ui.message(_("Mouse location monitoring cancelled"))
 
     @scriptHandler.script(
+        gesture="kb:Windows+NumpadDelete",
         # Translators: Input dialog gesture description for on request of mouse cursor location
         description=_("Play a positional tone for a mouse cursor"),
         # Translators: Input gestures dialog category for objLocTones.
@@ -242,6 +246,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.lastTime = 0.0
 
     @scriptHandler.script(
+        gesture="kb:NumpadDelete",
         # Translators: The gesture description for on request object location in the input gesture dialog
         description=_("Play a positional tone for currently focused object"),
         # Translators: Input gestures dialog category for objLocTones.
@@ -258,6 +263,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             pass
 
     @scriptHandler.script(
+        gesture="kb:Control+NumpadDelete",
         # Translators: The toggle gesture description in the input gesture dialog
         description=_("Toggle automatic auditory description of object locations via positional tones."),
         # Translators: Input gestures dialog category for objLocTones.
@@ -271,6 +277,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.event_becomeNavigatorObject = self._on_becomeNavigatorObject
             self.event_caret = self._on_caret
             self.focusing = True
+            self.typing = False
             # Translators: Message when positional tones are switched on
             ui.message(_("Positional tones on"))
             return
@@ -308,12 +315,11 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         """
         Event handler that plays a positional tone upon caret movements.
         """
-        if self.focusing:
+        if self.focusing or self.typing:
             # Skip a beep right after text area gained focus
+            # or if caret movement during typing is to be ignored
             self.focusing = False
-            nextHandler()
-            return
-        if obj.role==ROLE_TERMINAL:
+            self.typing = False
             nextHandler()
             return
         try:
@@ -397,3 +403,10 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         nextHandler()
 
     event_mouseMove = _on_passThrough
+
+    def event_typedCharacter (self, obj, nextHandler, ch):
+        """
+        An event that notifies other relevant methods that typing has taken  place.
+        """
+        self.typing = True
+        nextHandler()

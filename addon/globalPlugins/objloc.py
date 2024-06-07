@@ -7,6 +7,7 @@
 
 import globalPluginHandler
 import scriptHandler
+import inputCore
 
 import config
 import speech
@@ -15,17 +16,18 @@ import gui
 import wx
 
 from tones        import beep
+from speech import getObjectSpeech
 from api          import getDesktopObject, getNavigatorObject, getFocusObject
 from textInfos    import POSITION_CARET
 from winUser      import getCursorPos
-from controlTypes import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_PASSWORDEDIT, ROLE_DOCUMENT
+from controlTypes import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_PASSWORDEDIT, ROLE_DOCUMENT, OutputReason
 
 try:
     from time import monotonic as time
 except:
     from time import time
 
-class LocationError (Exception):
+class LocationError (LookupError):
     """
     An exception raised when unable to retrieve a desired location info from an object.
     """
@@ -71,6 +73,9 @@ def getObjectPos (obj=None, location=True, caret=False):
     except:
         pass
     raise LocationError("Location unavailable")
+
+def getObjectDescription (obj):
+    return " ".join(x for x in getObjectSpeech(obj, OutputReason.FOCUSENTERED) if isinstance(x, str))
 
 class BBox (object):
     """
@@ -122,14 +127,15 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.duration   = 40 # Duration of a positional tone in Msec
         self.volume     = maxVolume # Volume of positional tones in percents
         self.stereoSwap = False # Swap stereo sides
-        self.tolerance  = 20 # Mouse to location arrivall detection tolerance
-                             # distance between two points in pixels
-        self.timeout    = 2 # Timeout to stop the mouse monitoring (in seconds)
+        self.tolerance  = 20   # Mouse to location arrivall detection tolerance
+                               # distance between two points in pixels
+        self.timeout    = 2    # Timeout to stop the mouse monitoring automatically (in seconds)
         self.caret      = True # Whether to report caret location for editable fields
 
-        self.focusing     = True # A flag to prevent double beeps on focus of text area children
+        self.focusing     = True  # A flag to prevent double beeps on focus of text area children
         self.typing       = False # A flag to prevent beeps during typing
         self.entered      = False # A flag for reporting entering and exiting of the focused object area
+        self.processing   = False # A flag to avoid collisions upon fast subsequent keypresses
 
         self.lastMousePos = (-1, -1) # Used to detect that the mouse stopped moving so that we can stop the timer
         self.lastTime     = 0.0 # Used to detect how much time passed while mouse is stopped
@@ -141,11 +147,13 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         # Initial NVDA event bindings
         self.event_becomeNavigatorObject = self._on_becomeNavigatorObject
         self.event_caret = self._on_caret
+        inputCore.decide_executeGesture.register(self._on_keyDown)
         self.event_mouseMove = self._on_passThrough
 
     def terminate (self):
         self.timer.Stop()
         gui.mainFrame.Unbind(wx.EVT_TIMER, handler=self._on_mouseMonitor, source=self.timer)
+        inputCore.decide_executeGesture.unregister(self._on_keyDown)
 
     def playCoordinates (self, x, y, d=None):
         """
@@ -164,15 +172,15 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             beep(curPitch, (d or self.duration), left=leftVolume, right=rightVolume)
 
     @scriptHandler.script(
-        gesture="kb:Control+Shift+NumpadDelete",
-        # Translators: Object outline report gesture description in the input gesture dialog
-        description=_("Report focused object's outline via positional tones."),
+        gesture="kb:control+Shift+NumpadDelete",
+        # Translators: Focused object outline report gesture description in the input gesture dialog
+        description=_("Report outline of currently focused object via positional tones."),
         # Translators: Input gestures dialog category for objLocTones.
         category=_("Object Location Tones") )
     def script_objectOutline (self, gesture):
         """
         Plays positional tones for all 4 corners of the object's bounding box.
-        If the object is editable, adds final tone for the caret position.
+        If the object is editable, adds a final tone for the caret position.
         """
         try:
             obj = getFocusObject()
@@ -181,6 +189,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             wx.CallLater(self.duration+220, self.playCoordinates, rect.X2, rect.Y2, self.duration+20)
             wx.CallLater(self.duration+620, self.playCoordinates, rect.X3, rect.Y3, self.duration+20)
             wx.CallLater(self.duration+820, self.playCoordinates, rect.X4, rect.Y4, self.duration+20)
+            ui.message(getObjectDescription(obj))
             try:
                 if not isEditable(obj):
                     return
@@ -190,6 +199,45 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
                 pass
         except:
             ui.message(_("Location unavailable"))
+
+    @scriptHandler.script(
+        gesture="kb:control+Shift+alt+NumpadDelete",
+        # Translators: Parent object outline report gesture description in the input gesture dialog
+        description=_("Report outline of a parent of currently focused object via positional tones."),
+        # Translators: Input gestures dialog category for objLocTones.
+        category=_("Object Location Tones") )
+    def script_parentObjectOutline (self, gesture):
+        """
+        Plays positional tones for all 4 corners of the object parent's bounding box.
+        """
+        if self.processing:
+            return
+        self.processing = True
+        wx.CallLater(500, self.processParentObjectOutline, gesture)
+
+    def processParentObjectOutline (self, gesture):
+        count = scriptHandler.getLastScriptRepeatCount()
+        try:
+            obj = getFocusObject()
+            level = 0
+            for _ in range(count+1):
+                if not obj.parent or obj==obj.parent:
+                    break
+                obj = obj.parent
+                level += 1
+            if level==0:
+                ui.message("Parent object not available")
+                return
+            rect = BBox(obj)
+            wx.CallAfter(self.playCoordinates, rect.X1, rect.Y1, self.duration+20)
+            wx.CallLater(self.duration+220, self.playCoordinates, rect.X2, rect.Y2, self.duration+20)
+            wx.CallLater(self.duration+620, self.playCoordinates, rect.X3, rect.Y3, self.duration+20)
+            wx.CallLater(self.duration+820, self.playCoordinates, rect.X4, rect.Y4, self.duration+20)
+            wx.CallLater(self.duration+840+self.duration, setattr, self, "processing", False)
+            ui.message(getObjectDescription(obj)+", ancestor %i" % level)
+        except:
+            ui.message(_("Location unavailable"))
+            self.processing = False
 
     @scriptHandler.script(
         gesture="kb:Shift+NumpadDelete",
@@ -276,6 +324,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         if self.event_becomeNavigatorObject==self._on_passThrough:
             self.event_becomeNavigatorObject = self._on_becomeNavigatorObject
             self.event_caret = self._on_caret
+            inputCore.decide_executeGesture.register(self._on_keyDown)
             self.focusing = True
             self.typing = False
             # Translators: Message when positional tones are switched on
@@ -283,6 +332,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             return
         self.event_becomeNavigatorObject = self._on_passThrough
         self.event_caret = self._on_passThrough
+        inputCore.decide_executeGesture.register(self._on_keyDown)
         self.timer.Stop()
         self.event_mouseMove = self._on_passThrough
         self.lastMousePos = (-1, -1)
@@ -317,9 +367,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         """
         if self.focusing or self.typing:
             # Skip a beep right after text area gained focus
-            # or if caret movement during typing is to be ignored
             self.focusing = False
-            self.typing = False
             nextHandler()
             return
         try:
@@ -404,9 +452,9 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
 
     event_mouseMove = _on_passThrough
 
-    def event_typedCharacter (self, obj, nextHandler, ch):
+    def _on_keyDown (self, gesture):
         """
-        An event that notifies other relevant methods that typing has taken  place.
+        Notifies other relevant methods that typing has taken  place.
         """
-        self.typing = True
-        nextHandler()
+        self.typing = gesture.isCharacter
+        return True

@@ -1,0 +1,11 @@
+V2024.05.0 (0/9 realized):
+================
+- Delete and backspace consider as typing unless selection was removed
+- Fix "+" not being recognized as character
+- Use more: from scriptHandler explicit imports, instead of import scriptHandler
+- Update the README
+- See about using tree interceptors for caret position detection
+- Switch from module to package
+- Implement configuration saving
+- Implement settings panel
+- Consider backward compatibility (at least back to NVDA 2022.1

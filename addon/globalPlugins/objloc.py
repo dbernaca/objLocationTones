@@ -15,12 +15,12 @@ import ui
 import gui
 import wx
 
-from tones        import beep
-from speech import getObjectSpeech
-from api          import getDesktopObject, getNavigatorObject, getFocusObject
-from textInfos    import POSITION_CARET
-from winUser      import getCursorPos
-from controlTypes import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_PASSWORDEDIT, ROLE_DOCUMENT, OutputReason
+from tones           import beep
+from speech          import getObjectSpeech
+from api             import getDesktopObject, getNavigatorObject, getFocusObject
+from textInfos       import POSITION_CARET
+from winUser         import getCursorPos
+from controlTypes    import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_PASSWORDEDIT, ROLE_DOCUMENT, OutputReason
 
 try:
     from time import monotonic as time
@@ -456,5 +456,9 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         """
         Notifies other relevant methods that typing has taken  place.
         """
-        self.typing = gesture.isCharacter
+        name = gesture.mainKeyName
+        if len(name)==1 or name=="space" or name=="tab" or name=="delete" or name=="backspace" or name=="plus":
+            self.typing = True
+            return True
+        self.typing = False
         return True

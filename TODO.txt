@@ -1,7 +1,8 @@
-V2024.05.0 (0/10 realized):
+V2024.05.0 (1/10 realized):
 ================
-- Delete and backspace consider as typing unless selection was removed
-- Fix "+" not being recognized as character
+: Delete and backspace consider as typing unless selection was removed
+  (selection bit not implemented yet)
++ Fix "+" not being recognized as character
 - Fix caret location not reporting at the end of line on the document end
 - Use more: from scriptHandler explicit imports, instead of import scriptHandler
 - Update the README

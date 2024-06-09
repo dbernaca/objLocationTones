@@ -6,7 +6,6 @@
 # Brings NVDA Core issue 2559 to life.
 
 import globalPluginHandler
-import scriptHandler
 import inputCore
 
 import config
@@ -15,110 +14,20 @@ import ui
 import gui
 import wx
 
-from tones           import beep
-from speech          import getObjectSpeech
-from api             import getDesktopObject, getNavigatorObject, getFocusObject
-from textInfos       import POSITION_CARET
-from winUser         import getCursorPos
-from controlTypes    import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_PASSWORDEDIT, ROLE_DOCUMENT, OutputReason
+from scriptHandler import script, getLastScriptRepeatCount
+from tones         import beep
+from .utils        import *
+from .geometry     import *
 
 try:
     from time import monotonic as time
 except:
     from time import time
 
-class LocationError (LookupError):
-    """
-    An exception raised when unable to retrieve a desired location info from an object.
-    """
-
 # Some initial values from NVDA configuration
 minPitch  = config.conf['mouse']['audioCoordinates_minPitch']
 maxPitch  = config.conf['mouse']['audioCoordinates_maxPitch']
 maxVolume = config.conf['mouse']['audioCoordinates_maxVolume']
-
-def isEditable (obj):
-    """
-    Returns True if the *obj* is an editable field, False otherwise.
-    """
-    r = obj.role
-    return r==ROLE_EDITABLETEXT or r==ROLE_PASSWORDEDIT or r==ROLE_TERMINAL or r==ROLE_DOCUMENT
-
-def getObjectPos (obj=None, location=True, caret=False):
-    """
-    Returns x and y coordinates of the obj.
-    The obj argument is an object you wish to get the position for, or None (default).
-    If None, api.getFocusObject() is used to get the object to use.
-    If caret argument is True (defaults to False), function will return position of the caret
-    in case the obj is considered editable. If location is False (defaults to True),
-    and caret position is unavailable, then the centroid location of the editable
-    will be returned instead. In all other circumstances
-    the coordinates x, y of the center of mass for the
-    obj will be returned, and, if not available, LocationError()
-    will be raised.
-    """
-    try:
-        obj = obj or getFocusObject()
-        if caret:
-            try:
-                r = obj.role
-                if r==ROLE_EDITABLETEXT or r==ROLE_PASSWORDEDIT or r==ROLE_TERMINAL or r==ROLE_DOCUMENT:
-                    tei = obj.makeTextInfo(POSITION_CARET)
-                    return tei.pointAtStart
-            except:
-                if not location:
-                    raise
-        l = obj.location
-        return (l[0]+(l[2]//2), l[1]+(l[3]//2))
-    except:
-        pass
-    raise LocationError("Location unavailable")
-
-def getObjectDescription (obj):
-    return " ".join(x for x in getObjectSpeech(obj, OutputReason.FOCUSENTERED) if isinstance(x, str))
-
-class BBox (object):
-    """
-    Class for dealing with more complex information of object locations.
-    And providing potential operations regarding the same.
-    """
-    __slots__ = ("L", "T", "W", "H", "X1", "X2", "X3", "X4", "Y1", "Y2", "Y3", "Y4", "TL", "TR", "BR", "BL", "corners")
-    def __init__ (self, obj):
-        """
-        Takes an object and initializes its bounding box.
-        """
-        loc = obj.location
-        self.L, self.T, self.W, self.H = loc
-        # Left top corner
-        self.X1 = x1 = loc[0]
-        self.Y1 = y1 = loc[1]
-        self.TL = (x1, y1)
-        # Right top corner
-        self.X2 = x2 = loc[0]+loc[2]
-        self.Y2 = y2 = loc[1]
-        self.TR = (x2, y2)
-        # Right bottom corner
-        self.X3 = x3 = loc[0]+loc[2]
-        self.Y3 = y3 = loc[1]+loc[3]
-        self.BR = (x3, y3)
-        # Left Bottom corner
-        self.X4 = x4 = loc[0]
-        self.Y4 = y4 = loc[1]+loc[3]
-        self.BL = (x4, y4)
-        self.corners = ((x1, y1), (x2, y2), (x3, y3), (x4, y4))
-
-    def __contains__ (self, obj):
-        """
-        Checks whether a point (x, y) or a BBox() of an obj or obj itself given by argument obj,
-        occupies the space bounded by this bounding box.
-        Returns True if this BBox() and the operand obj share any points between them,
-        False otherwise. Intended use is, for example:
-        (10, 10) in BBox(obj)
-        """
-        if isinstance(obj, tuple):
-            return (self.X1 <= obj[0] <= self.X2) and (self.Y1 <= obj[1] <= self.Y4)
-        obj = obj if isinstance(obj, BBox) else BBox(obj)
-        return any((xy in self) for xy in obj.corners)
 
 class GlobalPlugin (globalPluginHandler.GlobalPlugin):
     def __init__ (self):
@@ -139,7 +48,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
 
         self.lastMousePos = (-1, -1) # Used to detect that the mouse stopped moving so that we can stop the timer
         self.lastTime     = 0.0 # Used to detect how much time passed while mouse is stopped
-
+        self.lastKey      = None
         # Mouse monitoring position playing timer
         self.timer = wx.Timer(gui.mainFrame)
         gui.mainFrame.Bind(wx.EVT_TIMER, self._on_mouseMonitor, self.timer)
@@ -171,7 +80,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
                 rightVolume = int((85 * (float(x) / screenWidth)) * self.volume)
             beep(curPitch, (d or self.duration), left=leftVolume, right=rightVolume)
 
-    @scriptHandler.script(
+    @script(
         gesture="kb:control+Shift+NumpadDelete",
         # Translators: Focused object outline report gesture description in the input gesture dialog
         description=_("Report outline of currently focused object via positional tones."),
@@ -200,7 +109,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         except:
             ui.message(_("Location unavailable"))
 
-    @scriptHandler.script(
+    @script(
         gesture="kb:control+Shift+alt+NumpadDelete",
         # Translators: Parent object outline report gesture description in the input gesture dialog
         description=_("Report outline of a parent of currently focused object via positional tones."),
@@ -216,7 +125,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         wx.CallLater(500, self.processParentObjectOutline, gesture)
 
     def processParentObjectOutline (self, gesture):
-        count = scriptHandler.getLastScriptRepeatCount()
+        count = getLastScriptRepeatCount()
         try:
             obj = getFocusObject()
             level = 0
@@ -239,7 +148,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             ui.message(_("Location unavailable"))
             self.processing = False
 
-    @scriptHandler.script(
+    @script(
         gesture="kb:Shift+NumpadDelete",
         # Translators: The toggle mouse location monitoring gesture description in the input gesture dialog
         description=_("Toggle a mouse cursor position in relation to focused object location reporting via positional tones."),
@@ -273,7 +182,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         speech.cancelSpeech()
         ui.message(_("Mouse location monitoring cancelled"))
 
-    @scriptHandler.script(
+    @script(
         gesture="kb:Windows+NumpadDelete",
         # Translators: Input dialog gesture description for on request of mouse cursor location
         description=_("Play a positional tone for a mouse cursor"),
@@ -293,7 +202,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.lastMousePos = (-1, -1)
         self.lastTime = 0.0
 
-    @scriptHandler.script(
+    @script(
         gesture="kb:NumpadDelete",
         # Translators: The gesture description for on request object location in the input gesture dialog
         description=_("Play a positional tone for currently focused object"),
@@ -310,7 +219,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         except:
             pass
 
-    @scriptHandler.script(
+    @script(
         gesture="kb:Control+NumpadDelete",
         # Translators: The toggle gesture description in the input gesture dialog
         description=_("Toggle automatic auditory description of object locations via positional tones."),
@@ -370,12 +279,27 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.focusing = False
             nextHandler()
             return
+        tei = obj.makeTextInfo(POSITION_CARET)
+        tei.expand(UNIT_CHARACTER)
         try:
-            tei = obj.makeTextInfo(POSITION_CARET)
             x, y = tei.pointAtStart
+            print((x, y))
             self.playCoordinates(x+3, y+8)
-        except:
-            pass
+        except LookupError:
+            tei.collapse(end=True)
+            tei.move(UNIT_CHARACTER, -1)
+            eol, y = tei.pointAtStart
+            tei.expand(UNIT_LINE)
+            sol, y = tei.pointAtStart
+            x = eol+5 if self.lastKey.endswith("end") else sol
+            empty = not bool("".join(tei.text.splitlines()))
+            x = x if empty else sol
+            if not self.lastKey.endswith("end") and empty:
+                y += 32
+            print(("z", x, y))
+            self.playCoordinates(x+3, y+8)
+        except Exception as e:
+            print("%s(%s)" % (e.__class__.__name__, str(e)))
         nextHandler()
 
     event_caret = _on_caret
@@ -457,6 +381,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         Notifies other relevant methods that typing has taken  place.
         """
         name = gesture.mainKeyName
+        self.lastKey = name
         if len(name)==1 or name=="space" or name=="tab" or name=="delete" or name=="backspace" or name=="plus":
             self.typing = True
             return True

@@ -1,13 +1,13 @@
-V2024.05.0 (1/10 realized):
+V2024.05.0 (3/10 realized):
 ================
 : Delete and backspace consider as typing unless selection was removed
   (selection bit not implemented yet)
 + Fix "+" not being recognized as character
 - Fix caret location not reporting at the end of line on the document end
-- Use more: from scriptHandler explicit imports, instead of import scriptHandler
++ Use more: from scriptHandler explicit imports, instead of import scriptHandler
 - Update the README
 - See about using tree interceptors for caret position detection
-- Switch from module to package
++ Switch from module to package
 - Implement configuration saving
 - Implement settings panel
 - Consider backward compatibility (at least back to NVDA 2022.1

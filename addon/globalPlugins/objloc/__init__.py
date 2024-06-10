@@ -91,6 +91,8 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         Plays positional tones for all 4 corners of the object's bounding box.
         If the object is editable, adds a final tone for the caret position.
         """
+        if self.processing or getLastScriptRepeatCount():
+            return
         try:
             obj = getFocusObject()
             rect = BBox(obj)
@@ -100,9 +102,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             wx.CallLater(self.duration+820, self.playCoordinates, rect.X4, rect.Y4, self.duration+20)
             ui.message(getObjectDescription(obj))
             try:
-                if not isEditable(obj):
-                    return
-                oX, oY = getObjectPos(obj, location=False, caret=True)
+                oX, oY = getCaretPos(obj)
                 wx.CallLater(self.duration+1120, self.playCoordinates, oX, oY, self.duration+150)
             except:
                 pass
@@ -279,27 +279,12 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.focusing = False
             nextHandler()
             return
-        tei = obj.makeTextInfo(POSITION_CARET)
-        tei.expand(UNIT_CHARACTER)
         try:
-            x, y = tei.pointAtStart
-            print((x, y))
-            self.playCoordinates(x+3, y+8)
-        except LookupError:
-            tei.collapse(end=True)
-            tei.move(UNIT_CHARACTER, -1)
-            eol, y = tei.pointAtStart
-            tei.expand(UNIT_LINE)
-            sol, y = tei.pointAtStart
-            x = eol+5 if self.lastKey.endswith("end") else sol
-            empty = not bool("".join(tei.text.splitlines()))
-            x = x if empty else sol
-            if not self.lastKey.endswith("end") and empty:
-                y += 32
-            print(("z", x, y))
-            self.playCoordinates(x+3, y+8)
-        except Exception as e:
-            print("%s(%s)" % (e.__class__.__name__, str(e)))
+            x, y = getCaretPos(obj)
+            self.playCoordinates(x, y)
+        except:
+            pass
+        self.focusing = True # event_caret gets fired twice in a row, why?
         nextHandler()
 
     event_caret = _on_caret

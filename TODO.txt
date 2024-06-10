@@ -1,12 +1,13 @@
-V2024.05.0 (3/10 realized):
+V2024.05.0 (5/11 realized):
 ================
+- See about getting the font size and using it to improve caret tone positioning
 : Delete and backspace consider as typing unless selection was removed
   (selection bit not implemented yet)
 + Fix "+" not being recognized as character
-- Fix caret location not reporting at the end of line on the document end
++ Fix caret location not reporting at the end of line on the document end
 + Use more: from scriptHandler explicit imports, instead of import scriptHandler
 - Update the README
-- See about using tree interceptors for caret position detection
++ See about using tree interceptors for caret position detection
 + Switch from module to package
 - Implement configuration saving
 - Implement settings panel

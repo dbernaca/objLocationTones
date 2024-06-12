@@ -1,4 +1,4 @@
-V2024.05.0 (5/12 realized):
+V2024.05.0 (6/12 realized):
 ================
 - See about getting the font size and using it to improve caret tone positioning
 : Delete and backspace consider as typing unless selection was removed
@@ -6,10 +6,10 @@ V2024.05.0 (5/12 realized):
 + Fix "+" not being recognized as character
 + Fix caret location not reporting at the end of line on the document end
 + Use more: from scriptHandler explicit imports, instead of import scriptHandler
-- Update the README
++ Update the README
 + See about using tree interceptors for caret position detection
 + Switch from module to package
 - Implement translations and put all translatable messages into separate module
 - Implement configuration saving
 - Implement settings panel
-- Consider backward compatibility (at least back to NVDA 2022.1
+- Consider backward compatibility (at least back to NVDA 2022.4

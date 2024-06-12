@@ -1,4 +1,4 @@
-V2024.05.0 (5/11 realized):
+V2024.05.0 (5/12 realized):
 ================
 - See about getting the font size and using it to improve caret tone positioning
 : Delete and backspace consider as typing unless selection was removed
@@ -9,6 +9,7 @@ V2024.05.0 (5/11 realized):
 - Update the README
 + See about using tree interceptors for caret position detection
 + Switch from module to package
+- Implement translations and put all translatable messages into separate module
 - Implement configuration saving
 - Implement settings panel
 - Consider backward compatibility (at least back to NVDA 2022.1

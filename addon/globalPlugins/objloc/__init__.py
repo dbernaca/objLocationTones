@@ -365,7 +365,10 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         """
         Notifies other relevant methods that typing has taken  place.
         """
-        name = gesture.mainKeyName
+        try:
+            name = gesture.mainKeyName
+        except AttributeError:
+            return True
         self.lastKey = name
         if len(name)==1 or name=="space" or name=="tab" or name=="delete" or name=="backspace" or name=="plus":
             self.typing = True

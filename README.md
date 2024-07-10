@@ -15,12 +15,18 @@ Features:
 * Explicitly report the mouse cursor location via positional tone using Windows+NumpadDelete gesture.
 * Report currently focused object's outline using positional tones by pressing Ctrl+Shift+NumpadDelete. This feature enables you to acquire a sense of both location and size of the a GUI control.
 * Report outline of a parent of the currently focused object using positional tones by pressing Ctrl+Alt+Shift+NumpadDelete. If triggered multiple times, it goes further down the ancestory list. This feature allows you to acquire a sense of location and size of the object's ancestors, thus, in conjunction with the regular layout feature, to ascertain locational and sizing relations between the GUI control and its ancestors. These two features are especially useful in GUI development.
-
 * Turn continuous mouse cursor location position in relation to the currently focused object reporting using Shift+NumpadDelete. This feature plays one tone for mouse cursor and another for currently focused object, or a system caret within text editable controls, until turned off by the same gesture, or mouse stopped moving for a time. It lets you navigate your mouse toward the focused object or a letter on a screen. It is most useful in applications or websites that will not let you activate the ocontrol or a context menu in no other way but by using the mouse. It, also, allows you to use the mouse, with some exercise, for text editing and text selection, which is otherwise pretty difficult to achieve non-visually.
 
 Important notes:
 
 * If a control is offscreen, tones will not be played.
 * There are some inaccurate caret location reports possible in certain types of input fields, mostly in apps with no native GUI controls
+* If another add-on is using emulated keypresses to achieve its goal, and
+  especially if it uses beeps additional to that,there might be some confusion until you decipher the tone interaction from both add-ons
+  One such example is Braille Extender when routing using emulated key presses
+* If another add-on monkeypatches certain parts of NVDA, and does not follow the original function closely enough,
+  likely because it is outdated, some events might not be detected by Object Location Tones.
+  E.g. Braille Extender might prevent Object Location Tones from detecting typing and thus
+  location of a caret will be reported while you type, which would most probably iritate you.
 
 [1]: https://addons.nvda-project.org/files/get.php?file=objLocTones

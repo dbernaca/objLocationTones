@@ -62,7 +62,7 @@ def getObjectPos (obj=None, location=True, caret=False):
     The obj argument is an object you wish to get the position for, or None (default).
     If None, api.getFocusObject() is used to get the object to use.
     If caret argument is True (defaults to False), function will return position of the caret
-    in case the obj is considered editable. If location is False (defaults to True),
+    but only if the obj is considered editable. If location is False (defaults to True),
     and caret position is unavailable, then the centroid location of the editable
     will be returned instead. In all other circumstances
     the coordinates x, y of the center of mass for the

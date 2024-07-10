@@ -1,15 +1,23 @@
-V2024.05.0 (6/12 realized):
+V2024.05.0 (6/16 realized):
 ================
 - See about getting the font size and using it to improve caret tone positioning
+- Try to improve caret reporting at the end of documents
 : Delete and backspace consider as typing unless selection was removed
   (selection bit not implemented yet)
+- Change the ancestor reporting request algorithm
+- Implement requestable location report stretching for a caret position in text editables
+  that is, enable users to hear the caret position in full pitch range regardless the actual caret position on the screen
+  so that the relation of the caret position to the size of the editable is felt
+  this may help those with less sensitive hearing to use the caret position reporting effectively
+  (consider implementing this for all objects instead, i.e. allow per client reporting)
 + Fix "+" not being recognized as character
 + Fix caret location not reporting at the end of line on the document end
 + Use more: from scriptHandler explicit imports, instead of import scriptHandler
 + Update the README
 + See about using tree interceptors for caret position detection
 + Switch from module to package
-- Implement translations and put all translatable messages into separate module
+- Implement translations and put all translatable messages into a separate module
 - Implement configuration saving
 - Implement settings panel
+- Update the add-on template to a new version
 - Consider backward compatibility (at least back to NVDA 2022.4

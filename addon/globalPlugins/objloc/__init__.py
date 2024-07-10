@@ -3,7 +3,7 @@
 # Copyright 2017-2024 Joseph Lee, released under GPL
 # Copyright      2024  Dalen Bernaca, released under GPL
 
-# Brings NVDA Core issue 2559 to life.
+# Brings NVDA Core issue 2559 to life and more besides
 
 import globalPluginHandler
 import inputCore
@@ -33,22 +33,31 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
     def __init__ (self):
         super(globalPluginHandler.GlobalPlugin, self).__init__()
 
+        # Configurable attributes (in the future)
         self.duration   = 40 # Duration of a positional tone in Msec
         self.volume     = maxVolume # Volume of positional tones in percents
         self.stereoSwap = False # Swap stereo sides
-        self.tolerance  = 20   # Mouse to location arrivall detection tolerance
-                               # distance between two points in pixels
-        self.timeout    = 2    # Timeout to stop the mouse monitoring automatically (in seconds)
-        self.caret      = True # Whether to report caret location for editable fields
+        self.tolerance  = 20   # Mouse to location arrivall detection tolerance,
+                               # refers to distance between two points in pixels
+        self.timeout    = 2    # Timeout after which to stop the mouse monitoring automatically (in seconds)
+        self.caret      = True # Whether to report caret location for editable fields or not
 
+        # Flow control flags
         self.focusing     = True  # A flag to prevent double beeps on focus of text area children
+                                  # right after a parent window is brought to top
+                                  # might not be needed in the future
         self.typing       = False # A flag to prevent beeps during typing
         self.entered      = False # A flag for reporting entering and exiting of the focused object area
-        self.processing   = False # A flag to avoid collisions upon fast subsequent keypresses
+        self.processing   = False # A flag to avoid collisions of positional audio upon fast subsequent keypresses
 
+        # Temporary variables for action checks
         self.lastMousePos = (-1, -1) # Used to detect that the mouse stopped moving so that we can stop the timer
-        self.lastTime     = 0.0 # Used to detect how much time passed while mouse is stopped
-        self.lastKey      = None
+        self.lastTime     = 0.0 # Used to detect how much time passed after mouse stopped moving
+        self.lastKey      = None # What was the last key pressed
+        self.lastCoords   = (-1, -1, 0.0) # Last coordinates played (for avoiding doubleing tones for any reason)
+                                          # values are (x, y, <tone duration>)
+        self.lastPlayed   = 0.0 # When the last tone was played (to detect tone doubles requested before their time) (in seconds)
+
         # Mouse monitoring position playing timer
         self.timer = wx.Timer(gui.mainFrame)
         gui.mainFrame.Bind(wx.EVT_TIMER, self._on_mouseMonitor, self.timer)
@@ -60,6 +69,10 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.event_mouseMove = self._on_passThrough
 
     def terminate (self):
+        """
+        Removes any unnecessary, and potentially dangerous when objloc is not running, events from NVDA.
+        This ensures smooth ending and reloading of the objloc add-on.
+        """
         self.timer.Stop()
         gui.mainFrame.Unbind(wx.EVT_TIMER, handler=self._on_mouseMonitor, source=self.timer)
         inputCore.decide_executeGesture.unregister(self._on_keyDown)
@@ -70,6 +83,12 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         relative to current desktop window size.
         """
         screenWidth, screenHeight = getDesktopObject().location[2:]
+        # If the same coordinates were just played, and asked to be played again before the last tone ended
+        # just don't do it and that is that.
+        t = time()
+        lx, ly, ld = self.lastCoords
+        if x==lx and ly==ly and t-self.lastPlayed<=ld:
+            return
         if 0 <= x <= screenWidth and 0 <= y <= screenHeight:
             curPitch = minPitch + ((maxPitch - minPitch) * ((screenHeight - y) / float(screenHeight)))
             if self.stereoSwap:
@@ -78,7 +97,10 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             else: 
                 leftVolume = int((85 * ((screenWidth - float(x)) / screenWidth)) * self.volume)
                 rightVolume = int((85 * (float(x) / screenWidth)) * self.volume)
-            beep(curPitch, (d or self.duration), left=leftVolume, right=rightVolume)
+            d = d or self.duration
+            beep(curPitch, d, left=leftVolume, right=rightVolume)
+            self.lastPlayed = t
+            self.lastCoords = (x, y, d/1000.0)
 
     @script(
         gesture="kb:control+Shift+NumpadDelete",
@@ -120,11 +142,26 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         Plays positional tones for all 4 corners of the object parent's bounding box.
         """
         if self.processing:
+            # Do not allow repeat before the last outline is played in full
+            # nor adding more requests for the processing using CallLater()
             return
         self.processing = True
+        # Delay before playing for a bit so that we can detect repeated gesture later
+        # and choose the requested ancestor accordingly
+        # Note that the script will be called multiple times if the gesture is repeated
+        # and the repeat counter will be increased,
+        # but only one processing will take place, after the delay timeout
+        # This is simple and stupid and a much better algorithm is planned for the future
+        # This one guarantees frustration if user cannot use the gesture fast enough
+        # and a long delay, as this one must be, after a requested action is not conducive in user interfaces anyway
         wx.CallLater(500, self.processParentObjectOutline, gesture)
 
     def processParentObjectOutline (self, gesture):
+        """
+        This method actually plays the positional outline for an ancestor object
+        after being called after a delay needed to detect how deep
+        in the ancestors tree the user wants to go.
+        """
         count = getLastScriptRepeatCount()
         try:
             obj = getFocusObject()
@@ -275,7 +312,8 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         Event handler that plays a positional tone upon caret movements.
         """
         if self.focusing or self.typing:
-            # Skip a beep right after text area gained focus
+            # Skip a caret beep right after text area gained focus because becomeNavigator fires first
+            # or if user is typing in the text
             self.focusing = False
             nextHandler()
             return
@@ -284,7 +322,6 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.playCoordinates(x, y)
         except:
             pass
-        self.focusing = True # event_caret gets fired twice in a row, why?
         nextHandler()
 
     event_caret = _on_caret
@@ -322,7 +359,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
 
     def _on_mouseMove (self, obj, nextHandler, x, y):
         """
-        Event used during mouse monitoring that checks for the current
+        NVDA event used during mouse monitoring that checks for the current
         location of mouse cursor in relation to focused object or caret position.
         If cursor is in tolerated distance, the hit is reported and monitoring ends.
         The event also reports entering and exiting the focused object.

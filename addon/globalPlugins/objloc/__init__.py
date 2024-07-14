@@ -81,6 +81,10 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         """
         Plays a positional tone for given x and y coordinates,
         relative to current desktop window size.
+        If the method is called more than once with same coordinates and already playing,
+        the duplicate call will not produce any tones.
+        If the coordinates represent a point that is located out of the screen,
+        the tone will also not be played.
         """
         screenWidth, screenHeight = getDesktopObject().location[2:]
         # If the same coordinates were just played, and asked to be played again before the last tone ended

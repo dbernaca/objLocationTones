@@ -18,6 +18,7 @@ from scriptHandler import script, getLastScriptRepeatCount
 from tones         import beep
 from .utils        import *
 from .geometry     import *
+from .UIStrings    import *
 
 try:
     from time import monotonic as time
@@ -108,10 +109,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
 
     @script(
         gesture="kb:control+Shift+NumpadDelete",
-        # Translators: Focused object outline report gesture description in the input gesture dialog
-        description=_("Report outline of currently focused object via positional tones."),
-        # Translators: Input gestures dialog category for objLocTones.
-        category=_("Object Location Tones") )
+        description=IG_OUTLINE, category=IG_CATEGORY)
     def script_objectOutline (self, gesture):
         """
         Plays positional tones for all 4 corners of the object's bounding box.
@@ -137,10 +135,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
 
     @script(
         gesture="kb:control+Shift+alt+NumpadDelete",
-        # Translators: Parent object outline report gesture description in the input gesture dialog
-        description=_("Report outline of a parent of currently focused object via positional tones."),
-        # Translators: Input gestures dialog category for objLocTones.
-        category=_("Object Location Tones") )
+        description=IG_PARENT_OUTLINE, category=IG_CATEGORY)
     def script_parentObjectOutline (self, gesture):
         """
         Plays positional tones for all 4 corners of the object parent's bounding box.
@@ -176,7 +171,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
                 obj = obj.parent
                 level += 1
             if level==0:
-                ui.message("Parent object not available")
+                ui.message(MSG_PARENT_NOT_AVAILABLE)
                 return
             rect = BBox(obj)
             wx.CallAfter(self.playCoordinates, rect.X1, rect.Y1, self.duration+20)
@@ -184,17 +179,14 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             wx.CallLater(self.duration+620, self.playCoordinates, rect.X3, rect.Y3, self.duration+20)
             wx.CallLater(self.duration+820, self.playCoordinates, rect.X4, rect.Y4, self.duration+20)
             wx.CallLater(self.duration+840+self.duration, setattr, self, "processing", False)
-            ui.message(getObjectDescription(obj)+", ancestor %i" % level)
+            ui.message(MSG_ANCESTOR % (getObjectDescription(obj), level))
         except:
-            ui.message(_("Location unavailable"))
+            ui.message(MSG_LOCATION_UNAVAILABLE)
             self.processing = False
 
     @script(
         gesture="kb:Shift+NumpadDelete",
-        # Translators: The toggle mouse location monitoring gesture description in the input gesture dialog
-        description=_("Toggle a mouse cursor position in relation to focused object location reporting via positional tones."),
-        # Translators: Input gestures dialog category for objLocTones.
-        category=_("Object Location Tones") )
+        description=IG_TOGGLE_MOUSE_MONITOR, category=IG_CATEGORY)
     def script_toggleMouseMonitor (self, gesture):
         """
         Activates or deactivates real-time mouse location monitoring.
@@ -206,12 +198,12 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
                 oX, oY = getObjectPos(caret=self.caret)
                 mX, mY = getCursorPos()
             except:
-                ui.message(_("Location unavailable"))
+                ui.message(MSG_LOCATION_UNAVAILABLE)
                 return
             dist = abs(oX-mX) + abs(oY-mY)
             if dist<=self.tolerance:
                 self.playCoordinates(oX, oY, self.duration+150)
-                ui.message(_("Mouse already there"))
+                ui.message(MSG_MOUSE_ALREADY_THERE)
                 return
             self.event_mouseMove = self._on_mouseMove
             self.timer.Start(200)
@@ -221,14 +213,11 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.lastTime = 0.0
         self.event_mouseMove = self._on_passThrough
         speech.cancelSpeech()
-        ui.message(_("Mouse location monitoring cancelled"))
+        ui.message(MSG_MOUSE_MONITOR_CANCELLED)
 
     @script(
         gesture="kb:Windows+NumpadDelete",
-        # Translators: Input dialog gesture description for on request of mouse cursor location
-        description=_("Play a positional tone for a mouse cursor"),
-        # Translators: Input gestures dialog category for objLocTones.
-        category=_("Object Location Tones") )
+        description=IG_MOUSE_POSITION, category=IG_CATEGORY)
     def script_mouse (self, gesture):
         """
         Plays positional tone for a mouse cursor location on demand.
@@ -245,10 +234,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
 
     @script(
         gesture="kb:NumpadDelete",
-        # Translators: The gesture description for on request object location in the input gesture dialog
-        description=_("Play a positional tone for currently focused object"),
-        # Translators: Input gestures dialog category for objLocTones.
-        category=_("Object Location Tones") )
+        description=IG_OBJECT_LOCATION, category=IG_CATEGORY)
     def script_locate (self, gesture):
         """
         Plays positional tone for currently focused object location on demand
@@ -262,10 +248,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
 
     @script(
         gesture="kb:Control+NumpadDelete",
-        # Translators: The toggle gesture description in the input gesture dialog
-        description=_("Toggle automatic auditory description of object locations via positional tones."),
-        # Translators: Input gestures dialog category for objLocTones.
-        category=_("Object Location Tones") )
+        description=IG_TOGGLE_LOCATION_REPORTING, category=IG_CATEGORY)
     def script_toggle (self, gesture):
         """
         Toggles positional tones on or off by swapping
@@ -277,18 +260,16 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             inputCore.decide_executeGesture.register(self._on_keyDown)
             self.focusing = True
             self.typing = False
-            # Translators: Message when positional tones are switched on
-            ui.message(_("Positional tones on"))
+            ui.message(MSG_POSITIONAL_TONES_ON)
             return
         self.event_becomeNavigatorObject = self._on_passThrough
         self.event_caret = self._on_passThrough
-        inputCore.decide_executeGesture.register(self._on_keyDown)
+        inputCore.decide_executeGesture.unregister(self._on_keyDown)
         self.timer.Stop()
         self.event_mouseMove = self._on_passThrough
         self.lastMousePos = (-1, -1)
         self.lastTime = 0.0
-        # Translators: Message when positional tones are switched off
-        ui.message(_("Positional tones off"))
+        ui.message(MSG_POSITIONAL_TONES_OFF)
 
     def _on_passThrough (self, obj, nextHandler, *args, **kwargs):
         """
@@ -343,7 +324,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.lastMousePos = (-1, -1)
             self.lastTime     = 0.0
             self.event_mouseMove = self._on_passThrough
-            ui.message(_("Location unavailable"))
+            ui.message(MSG_LOCATION_UNAVAILABLE)
             return
         # If mouse is stationary for too long, automatically stop monitoring:
         t   = time()
@@ -353,7 +334,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.lastTime     = 0.0
             self.timer.Stop()
             self.event_mouseMove = self._on_passThrough
-            ui.message(_("Mouse location monitoring stopped"))
+            ui.message(MSG_MOUSE_MONITOR_STOPPED)
             return
         if lmp!=mp:
             self.lastMousePos = mp
@@ -376,18 +357,18 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.lastMousePos = (-1, -1)
             self.lastTime     = 0.0
             self.event_mouseMove = self._on_passThrough
-            ui.message(_("Location unavailable"))
+            ui.message(MSG_LOCATION_UNAVAILABLE)
             nextHandler()
             return
         if (x, y) in BBox(fobj):
             if not self.entered:
                 self.entered = True
                 speech.cancelSpeech()
-                ui.message(_("Entering focused object"))
+                ui.message(MSG_ENTERING)
         else:
             if self.entered:
                 speech.cancelSpeech()
-                ui.message(_("Exiting focused object"))
+                ui.message(MSG_EXITING)
             self.entered = False
         dist = abs(oX-x) + abs(oY-y)
         if dist<=self.tolerance:
@@ -397,7 +378,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.lastMousePos = (-1, -1)
             self.lastTime     = 0.0
             speech.cancelSpeech()
-            ui.message(_("Location reached"))
+            ui.message(MSG_LOCATION_REACHED)
         nextHandler()
 
     event_mouseMove = _on_passThrough

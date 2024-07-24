@@ -19,7 +19,7 @@ from tones         import beep
 from .utils        import *
 from .geometry     import *
 from .UIStrings    import *
-
+from .settings     import *
 try:
     from time import monotonic as time
 except:
@@ -35,13 +35,21 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         super(globalPluginHandler.GlobalPlugin, self).__init__()
 
         # Configurable attributes (in the future)
+        self.active     = True # Is real time reporting on or off
         self.duration   = 40 # Duration of a positional tone in Msec
-        self.volume     = maxVolume # Volume of positional tones in percents
+        self.volume     = maxVolume # Volume of positional tones, float in range 0.0 to 1.0
         self.stereoSwap = False # Swap stereo sides
         self.tolerance  = 20   # Mouse to location arrivall detection tolerance,
                                # refers to distance between two points in pixels
-        self.timeout    = 2    # Timeout after which to stop the mouse monitoring automatically (in seconds)
+        self.timeout    = 2.0  # Timeout after which to stop the mouse monitoring automatically (in seconds)
         self.caret      = True # Whether to report caret location for editable fields or not
+
+        # Load the configurables from settings if possible
+        self.settings = Settings()
+        try:
+            self.settings.load(self)
+        except SettingsError as e:
+            print(e)
 
         # Flow control flags
         self.focusing     = True  # A flag to prevent double beeps on focus of text area children
@@ -64,19 +72,29 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         gui.mainFrame.Bind(wx.EVT_TIMER, self._on_mouseMonitor, self.timer)
 
         # Initial NVDA event bindings
-        self.event_becomeNavigatorObject = self._on_becomeNavigatorObject
-        self.event_caret = self._on_caret
-        inputCore.decide_executeGesture.register(self._on_keyDown)
+        if self.active:
+            self.event_becomeNavigatorObject = self._on_becomeNavigatorObject
+            self.event_caret = self._on_caret
+            inputCore.decide_executeGesture.register(self._on_keyDown)
+        else:
+            self.event_becomeNavigatorObject = self._on_passThrough
+            self.event_caret = self._on_passThrough
         self.event_mouseMove = self._on_passThrough
 
     def terminate (self):
         """
         Removes any unnecessary, and potentially dangerous when objloc is not running, events from NVDA.
+        Also, saves all current settings.
         This ensures smooth ending and reloading of the objloc add-on.
         """
         self.timer.Stop()
         gui.mainFrame.Unbind(wx.EVT_TIMER, handler=self._on_mouseMonitor, source=self.timer)
         inputCore.decide_executeGesture.unregister(self._on_keyDown)
+        try:
+            self.settings.save(self)
+        except SettingsError as e:
+            print(e)
+        del self.settings
 
     def playCoordinates (self, x, y, d=None):
         """
@@ -131,7 +149,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             except:
                 pass
         except:
-            ui.message(_("Location unavailable"))
+            ui.message(MSG_LOCATION_UNAVAILABLE)
 
     @script(
         gesture="kb:control+Shift+alt+NumpadDelete",
@@ -222,15 +240,15 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         """
         Plays positional tone for a mouse cursor location on demand.
         """
+        self.timer.Stop()
+        self.event_mouseMove = self._on_passThrough
+        self.lastMousePos = (-1, -1)
+        self.lastTime = 0.0
         try:
             x, y = getCursorPos()
             self.playCoordinates(x, y, self.duration+50)
         except:
             pass
-        self.timer.Stop()
-        self.event_mouseMove = self._on_passThrough
-        self.lastMousePos = (-1, -1)
-        self.lastTime = 0.0
 
     @script(
         gesture="kb:NumpadDelete",
@@ -240,6 +258,9 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         Plays positional tone for currently focused object location on demand
         """
         self.timer.Stop()
+        self.event_mouseMove = self._on_passThrough
+        self.lastMousePos = (-1, -1)
+        self.lastTime = 0.0
         try:
             x, y = getObjectPos(caret=self.caret)
             self.playCoordinates(x, y, self.duration+30)
@@ -254,13 +275,14 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         Toggles positional tones on or off by swapping
         relevant event handlers accordingly.
         """
-        if self.event_becomeNavigatorObject==self._on_passThrough:
+        if not self.active:
             self.event_becomeNavigatorObject = self._on_becomeNavigatorObject
             self.event_caret = self._on_caret
             inputCore.decide_executeGesture.register(self._on_keyDown)
             self.focusing = True
             self.typing = False
             ui.message(MSG_POSITIONAL_TONES_ON)
+            self.active = True
             return
         self.event_becomeNavigatorObject = self._on_passThrough
         self.event_caret = self._on_passThrough
@@ -270,6 +292,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.lastMousePos = (-1, -1)
         self.lastTime = 0.0
         ui.message(MSG_POSITIONAL_TONES_OFF)
+        self.active = False
 
     def _on_passThrough (self, obj, nextHandler, *args, **kwargs):
         """

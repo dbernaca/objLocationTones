@@ -22,13 +22,13 @@ except addonHandler.AddonError:
 IG_CATEGORY = _("Object Location Tones") 
 
 # Focused object outline report gesture description in the input gesture dialog
-IG_OUTLINE = _("Report outline of currently focused object via positional tones.")
+IG_OUTLINE = _("Report outline of currently focused object via positional tones")
 
 # Parent object outline report gesture description in the input gesture dialog
-IG_PARENT_OUTLINE = _("Report outline of a parent of currently focused object via positional tones.")
+IG_PARENT_OUTLINE = _("Report outline of a parent of currently focused object via positional tones")
 
 # The toggle mouse location monitoring gesture description in the input gesture dialog
-IG_TOGGLE_MOUSE_MONITOR = _("Toggle a mouse cursor position in relation to focused object location reporting via positional tones.")
+IG_TOGGLE_MOUSE_MONITOR = _("Toggle a mouse cursor position in relation to focused object location reporting via positional tones")
 
 # Input dialog gesture description for on request of mouse cursor location
 IG_MOUSE_POSITION = _("Play a positional tone for a mouse cursor")
@@ -79,6 +79,3 @@ MSG_POSITIONAL_TONES_ON = _("Positional tones on")
 
 # ui.message() when positional tones are switched off via gesture
 MSG_POSITIONAL_TONES_OFF = _("Positional tones off")
-
-
-

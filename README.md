@@ -5,7 +5,7 @@
 * Download [stable version][1]
 * NVDA compatibility: 2023.1 and later
 
-After installing this add-on and restarting NVDA (or when you enable this add-on), as you navigate to different controls, you will hear tones to indicate where the object is located on screen. To turn object location tones off, press Ctrl+NumpadDelete. To enable it once more, use the same gesture again.
+After installing this add-on and restarting NVDA, as you navigate to different controls, you will hear tones to indicate where the object is located on screen. To turn object location tones off, press Ctrl+NumpadDelete. To enable it once more, use the same gesture again. Object Location Tones will save your choice and when NVDA starts again, it will keep its last state. The state will be kept even after disabling and reenabling the add-on.
 
 Features:
 

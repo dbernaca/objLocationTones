@@ -15,6 +15,7 @@ import gui
 import wx
 
 from scriptHandler import script, getLastScriptRepeatCount
+from logHandler    import log
 from tones         import beep
 from .utils        import *
 from .geometry     import *
@@ -35,21 +36,21 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         super(globalPluginHandler.GlobalPlugin, self).__init__()
 
         # Configurable attributes (in the future)
-        self.active     = True # Is real time reporting on or off
-        self.duration   = 40 # Duration of a positional tone in Msec
-        self.volume     = maxVolume # Volume of positional tones, float in range 0.0 to 1.0
-        self.stereoSwap = False # Swap stereo sides
-        self.tolerance  = 20   # Mouse to location arrivall detection tolerance,
+        self.active     = Settable(True) # Is real time reporting on or off
+        self.duration   = Settable(40) # Duration of a positional tone in Msec
+        self.volume     = Settable(maxVolume) # Volume of positional tones, float in range 0.0 to 1.0
+        self.stereoSwap = Settable(False) # Swap stereo sides
+        self.tolerance  = Settable(20)   # Mouse to location arrivall detection tolerance,
                                # refers to distance between two points in pixels
-        self.timeout    = 2.0  # Timeout after which to stop the mouse monitoring automatically (in seconds)
-        self.caret      = True # Whether to report caret location for editable fields or not
+        self.timeout    = Settable(2.0)  # Timeout after which to stop the mouse monitoring automatically (in seconds)
+        self.caret      = Settable(True) # Whether to report caret location for editable fields or not
 
         # Load the configurables from settings if possible
         self.settings = Settings()
         try:
             self.settings.load(self)
         except SettingsError as e:
-            print(e)
+            log.warning(str(e))
 
         # Flow control flags
         self.focusing     = True  # A flag to prevent double beeps on focus of text area children
@@ -93,7 +94,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         try:
             self.settings.save(self)
         except SettingsError as e:
-            print(e)
+            log.warning(str(e))
         del self.settings
 
     def playCoordinates (self, x, y, d=None):

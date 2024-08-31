@@ -1,4 +1,4 @@
-V2024.06.0 (4/12 realized):
+V2024.06.1 (5/12 realized):
 ===========================
 + Switch from print() function to logHandler module for warnings
 - Fix treating single line editables as multiline when trying to detect end of a document
@@ -15,11 +15,11 @@ V2024.06.0 (4/12 realized):
 + Implement translations and put all translatable messages into a separate module
 + Implement configuration saving
 - Implement settings panel
-- Update the add-on template to a new version
++ Update the add-on template to a new version
 + Consider backward compatibility (at least back to NVDA 2022.4
   * Considered!!! 2023.1 stays.
 
-V2024.05.0 (9/17 realized):
+V2024.05.0 (10/17 realized):
 ===========================
 - Fix treating single line editables as multiline when trying to detect end of a document
 - See about getting the font size and using it to improve caret tone positioning
@@ -41,6 +41,6 @@ V2024.05.0 (9/17 realized):
 + Implement translations and put all translatable messages into a separate module
 + Implement configuration saving
 - Implement settings panel
-- Update the add-on template to a new version
++ Update the add-on template to a new version
 + Consider backward compatibility (at least back to NVDA 2022.4
   * Considered!!! 2023.1 stays.

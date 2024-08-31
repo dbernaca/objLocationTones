@@ -38,7 +38,8 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         # Configurable attributes (in the future)
         self.active     = Settable(True) # Is real time reporting on or off
         self.duration   = Settable(40) # Duration of a positional tone in Msec
-        self.volume     = Settable(maxVolume) # Volume of positional tones, float in range 0.0 to 1.0
+        self.lVolume    = Settable(maxVolume) # Volume of positional tones on the left stereo channel, float in range 0.0 to 1.0
+        self.rVolume    = Settable(maxVolume) # Volume of positional tones on the right stereo channel, float in range 0.0 to 1.0
         self.stereoSwap = Settable(False) # Swap stereo sides
         self.tolerance  = Settable(20)   # Mouse to location arrivall detection tolerance,
                                # refers to distance between two points in pixels
@@ -116,11 +117,11 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         if 0 <= x <= screenWidth and 0 <= y <= screenHeight:
             curPitch = minPitch + ((maxPitch - minPitch) * ((screenHeight - y) / float(screenHeight)))
             if self.stereoSwap:
-                rightVolume = int((85 * ((screenWidth - float(x)) / screenWidth)) * self.volume)
-                leftVolume = int((85 * (float(x) / screenWidth)) * self.volume)
+                rightVolume = int((85 * ((screenWidth - float(x)) / screenWidth)) * self.rVolume)
+                leftVolume = int((85 * (float(x) / screenWidth)) * self.lVolume)
             else: 
-                leftVolume = int((85 * ((screenWidth - float(x)) / screenWidth)) * self.volume)
-                rightVolume = int((85 * (float(x) / screenWidth)) * self.volume)
+                leftVolume = int((85 * ((screenWidth - float(x)) / screenWidth)) * self.lVolume)
+                rightVolume = int((85 * (float(x) / screenWidth)) * self.rVolume)
             d = d or self.duration
             beep(curPitch, d, left=leftVolume, right=rightVolume)
             self.lastPlayed = t

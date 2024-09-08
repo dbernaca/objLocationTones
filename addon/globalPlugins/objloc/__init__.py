@@ -36,22 +36,31 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         super(globalPluginHandler.GlobalPlugin, self).__init__()
 
         # Configurable attributes (in the future)
-        self.active     = Settable(True) # Is real time reporting on or off
-        self.duration   = Settable(40) # Duration of a positional tone in Msec
-        self.lVolume    = Settable(maxVolume) # Volume of positional tones on the left stereo channel, float in range 0.0 to 1.0
-        self.rVolume    = Settable(maxVolume) # Volume of positional tones on the right stereo channel, float in range 0.0 to 1.0
-        self.stereoSwap = Settable(False) # Swap stereo sides
-        self.tolerance  = Settable(20)   # Mouse to location arrivall detection tolerance,
-                               # refers to distance between two points in pixels
-        self.timeout    = Settable(2.0)  # Timeout after which to stop the mouse monitoring automatically (in seconds)
+        self.active     = Settable(True, # Is real time reporting on or off
+                          label=SET_POSITIONAL_AUDIO, ordinal=0)
+        self.duration   = Settable(40, # Duration of a positional tone in Msec
+                          label=SET_TONE_DURATION, ordinal=1)
+        self.lVolume    = Settable(maxVolume, # Volume of positional tones on the left stereo channel, float in range 0.0 to 1.0
+                          label=SET_LEFT_VOLUME, min=1, max=100, ratio=100, ordinal=5)
+        self.rVolume    = Settable(maxVolume, # Volume of positional tones on the right stereo channel, float in range 0.0 to 1.0
+                          label=SET_RIGHT_VOLUME, min=1, max=100, ratio=100, ordinal=6)
+        self.stereoSwap = Settable(False, # Swap stereo sides
+                          label=SET_SWAP_STEREO_CHANNELS, ordinal=7)
+        self.tolerance  = Settable(20, # Mouse to location arrivall detection tolerance,
+                                       # refers to distance between two points in pixels
+                          label=SET_MOUSE_TOLERANCE, ordinal=2)
+        self.timeout    = Settable(2.0, # Timeout after which to stop the mouse monitoring automatically (in seconds)
+                          label=SET_MOUSE_MONITOR_TIMEOUT, ordinal=3)
         self.caret      = Settable(True) # Whether to report caret location for editable fields or not
 
         # Load the configurables from settings if possible
-        self.settings = Settings()
+        self.settings = S = Settings()
         try:
-            self.settings.load(self)
+            S.load(self)
         except SettingsError as e:
             log.warning(str(e))
+        # Setup a settings panel
+        SetPanel(S, self)
 
         # Flow control flags
         self.focusing     = True  # A flag to prevent double beeps on focus of text area children
@@ -97,6 +106,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         except SettingsError as e:
             log.warning(str(e))
         del self.settings
+        RemovePanel()
 
     def playCoordinates (self, x, y, d=None):
         """

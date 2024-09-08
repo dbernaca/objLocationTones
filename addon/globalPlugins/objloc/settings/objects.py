@@ -4,6 +4,8 @@
 from logHandler import log
 from inspect import currentframe as getframe, isclass
 from .exceptions import *
+from gui.guiHelper import associateElements
+import wx
 
 class Attribute (object):
     """
@@ -14,7 +16,8 @@ class Attribute (object):
     All such attributes will be included in settings and replaced with their real value.
     To define an Attribute() within your instance, use the Settable() factory function.
     """
-    __slots__ = ("instance", "name", "type", "_value", "nickname", "default", "original", "args", "_firstset")
+    __slots__ = ("instance", "name", "type", "_value", "nickname", "default", "original", "args", "_firstset",
+                 "__getitem__", "__setitem__", "__delitem__", "__contains__")
     def __init__ (self, instance, name, type, value, nickname, args):
         if instance is not Ellipsis:
             # If instance is Ellipsis, the __set_name__() is expected to set it, otherwise:
@@ -34,6 +37,10 @@ class Attribute (object):
         object.__setattr__(self, "default", self.value) # Use self.value here to check for type mismatch
         object.__setattr__(self, "original", value)
         object.__setattr__(self, "args", (args or {}))
+        object.__setattr__(self, "__getitem__", self.args.__getitem__)
+        object.__setattr__(self, "__setitem__", self.args.__setitem__)
+        object.__setattr__(self, "__delitem__", self.args.__delitem__)
+        object.__setattr__(self, "__contains__", self.args.__contains__)
         object.__setattr__(self, "_firstset", True)
 
     @staticmethod
@@ -109,6 +116,12 @@ class Attribute (object):
         """
         setattr(self.instance, self.name, self.value)
 
+    def reset (self):
+        """
+        Assigns the Attribute() object to the instance's attribute.
+        """
+        setattr(self.instance, self.name, self)
+
     def get (self):
         """
         Returns the value of an attribute.
@@ -140,7 +153,7 @@ class Attribute (object):
         kwargs = dict((arg, value) for arg, value in self.args if isinstance(arg, str))
         args.sort()
         return args, kwargs
-
+        
     def status (self):
         if self._firstset:
             return "set to default"
@@ -164,6 +177,36 @@ class Attribute (object):
 
     def flip_allegiance (self, instance):
         object.__setattr__(self, "instance", instance)
+
+    def create_gui_control (self, parent):
+        if self.type==bool:
+            ctrl = wx.CheckBox(parent, label=self.args["label"])
+            ctrl.SetValue(self.get())
+            return ctrl
+        if self.type==str:
+            ctrl = wx.TextCtrl(parent, value=self.get())
+            if "label" in self.args:
+                label = wx.StaticText(parent, wx.ID_ANY, label=self.args["label"])
+                return associateElements(label, ctrl)
+            return ctrl
+        if self.type==int:
+            label = wx.StaticText(parent, wx.ID_ANY, label=self.args["label"])
+            if "min" not in self.args and "max" not in self.args:
+                return associateElements(label, wx.TextCtrl(parent, value=str(self.get())))
+            minval = self.args.get("min", 0)
+            maxval = self.args.get("max", minval+100)
+            label  = wx.StaticText(parent, wx.ID_ANY, label=self.args["label"])
+            slider = wx.Slider(parent, wx.ID_ANY, minValue=minval, maxValue=maxval, value=self.get())
+            return associateElements(label, slider)
+        if self.type==float:
+            label = wx.StaticText(parent, wx.ID_ANY, label=self.args["label"])
+            if "min" not in self.args and "max" not in self.args:
+                return associateElements(label, wx.TextCtrl(parent, value=str(self.get())))
+            minval = self.args.get("min", 0)
+            maxval = self.args.get("max", minval+100)
+            label  = wx.StaticText(parent, wx.ID_ANY, label=self.args["label"])
+            slider = wx.Slider(parent, wx.ID_ANY, minValue=minval, maxValue=maxval, value=int(round(self.get()*self.args.get("ratio", 1))))
+            return associateElements(label, slider)
 
 def Settable (value, nickname=None, *args, **kwargs):
     """

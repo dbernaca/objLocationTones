@@ -79,3 +79,23 @@ MSG_POSITIONAL_TONES_ON = _("Positional tones on")
 
 # ui.message() when positional tones are switched off via gesture
 MSG_POSITIONAL_TONES_OFF = _("Positional tones off")
+
+# UI strings defined in objLocTones 24.06.1
+# =========================================
+
+# A category name in the NVDA settings dialog
+SET_CATEGORY = _("Object Location Tones")
+
+SET_POSITIONAL_AUDIO = _("Play positional tones during navigation")
+
+SET_TONE_DURATION = _("Positional tone duration (msec):")
+
+SET_MOUSE_TOLERANCE = _("Mouse point matching tolerance (px):")
+
+SET_MOUSE_MONITOR_TIMEOUT = _("Turn off mouse monitoring automatically after (sec):")
+
+SET_LEFT_VOLUME = _("Left speaker volume:")
+
+SET_RIGHT_VOLUME = _("Right speaker volume:")
+
+SET_SWAP_STEREO_CHANNELS = _("Swap stereo channels")

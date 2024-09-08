@@ -7,8 +7,9 @@ import json
 from logHandler import log
 from .objects import *
 from .exceptions import *
+from .panel import SetPanel, RemovePanel
 
-__all__ = ["SettingsError", "Attribute", "Settable", "Settings"]
+__all__ = ["SettingsError", "Attribute", "Settable", "Settings", "SetPanel", "RemovePanel"]
 
 class Settings:
     path     = None # A settings file
@@ -121,3 +122,12 @@ class Settings:
         for attr in self.attributes:
             attr.value = attr.original
             attr.set()
+
+    def __getitem__ (self, i):
+        for attr in self.attributes:
+            if attr.name==i:
+                return attr
+        raise KeyError("'%s' not found" % i)
+
+    def __contains__ (self, i):
+        return (i in (attr.name for attr in self.attributes))

@@ -20,7 +20,7 @@ V2024.06.1 (5/12 realized):
   * Considered!!! 2023.1 stays.
 
 V2024.05.0 (10/17 realized):
-===========================
+============================
 - Fix treating single line editables as multiline when trying to detect end of a document
 - See about getting the font size and using it to improve caret tone positioning
 - Try to improve caret reporting at the end of documents some more

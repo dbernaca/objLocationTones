@@ -182,6 +182,8 @@ class Attribute (object):
         if self.type==bool:
             ctrl = wx.CheckBox(parent, label=self.args["label"])
             ctrl.SetValue(self.get())
+            if "callable" in self.args:
+                parent.Bind(wx.EVT_CHECKBOX, self.args["callable"], ctrl)
             return ctrl
         if self.type==str:
             ctrl = wx.TextCtrl(parent, value=self.get())

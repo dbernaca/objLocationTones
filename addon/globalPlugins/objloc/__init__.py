@@ -37,7 +37,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
 
         # Configurable attributes (in the future)
         self.active     = Settable(True, # Is real time reporting on or off
-                          label=SET_POSITIONAL_AUDIO, ordinal=0)
+                          label=SET_POSITIONAL_AUDIO, ordinal=0, callable=self.Toggle)
         self.duration   = Settable(40, # Duration of a positional tone in Msec
                           label=SET_TONE_DURATION, ordinal=1)
         self.lVolume    = Settable(maxVolume, # Volume of positional tones on the left stereo channel, float in range 0.0 to 1.0
@@ -91,6 +91,26 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.event_becomeNavigatorObject = self._on_passThrough
             self.event_caret = self._on_passThrough
         self.event_mouseMove = self._on_passThrough
+
+    def Activate (self):
+        self.event_becomeNavigatorObject = self._on_becomeNavigatorObject
+        self.event_caret = self._on_caret
+        inputCore.decide_executeGesture.register(self._on_keyDown)
+        self.focusing = True
+        self.typing = False
+
+    def Deactivate (self):
+        self.event_becomeNavigatorObject = self._on_passThrough
+        self.event_caret = self._on_passThrough
+        inputCore.decide_executeGesture.unregister(self._on_keyDown)
+
+    def Toggle (self, *args, **kwargs):
+        if self.active:
+            self.Deactivate()
+            self.active = False
+        else:
+            self.Activate()
+            self.active = True
 
     def terminate (self):
         """
@@ -288,17 +308,11 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         relevant event handlers accordingly.
         """
         if not self.active:
-            self.event_becomeNavigatorObject = self._on_becomeNavigatorObject
-            self.event_caret = self._on_caret
-            inputCore.decide_executeGesture.register(self._on_keyDown)
-            self.focusing = True
-            self.typing = False
+            self.Activate()
             ui.message(MSG_POSITIONAL_TONES_ON)
             self.active = True
             return
-        self.event_becomeNavigatorObject = self._on_passThrough
-        self.event_caret = self._on_passThrough
-        inputCore.decide_executeGesture.unregister(self._on_keyDown)
+        self.Deactivate()
         self.timer.Stop()
         self.event_mouseMove = self._on_passThrough
         self.lastMousePos = (-1, -1)

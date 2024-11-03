@@ -3,6 +3,7 @@
 
 from logHandler import log
 from inspect import currentframe as getframe, isclass
+from .controls   import IntCtrl, FloatCtrl
 from .exceptions import *
 from gui.guiHelper import associateElements
 import wx
@@ -149,9 +150,8 @@ class Attribute (object):
         object.__setattr__(self, "instance", owner)
 
     def getargs (self):
-        args   = [value for arg, value in self.args.items() if isinstance(arg, int)]
+        args   = [value for arg, value in sorted((item for item in self.args.items() if isinstance(item[0], int)), key=lambda x: x[0])]
         kwargs = dict((arg, value) for arg, value in self.args if isinstance(arg, str))
-        args.sort()
         return args, kwargs
         
     def status (self):
@@ -194,7 +194,7 @@ class Attribute (object):
         if self.type==int:
             label = wx.StaticText(parent, wx.ID_ANY, label=self.args["label"])
             if "min" not in self.args and "max" not in self.args:
-                return associateElements(label, wx.TextCtrl(parent, value=str(self.get())))
+                return associateElements(label, IntCtrl(parent, value=str(self.get())))
             minval = self.args.get("min", 0)
             maxval = self.args.get("max", minval+100)
             label  = wx.StaticText(parent, wx.ID_ANY, label=self.args["label"])
@@ -203,7 +203,7 @@ class Attribute (object):
         if self.type==float:
             label = wx.StaticText(parent, wx.ID_ANY, label=self.args["label"])
             if "min" not in self.args and "max" not in self.args:
-                return associateElements(label, wx.TextCtrl(parent, value=str(self.get())))
+                return associateElements(label, FloatCtrl(parent, value=str(self.get())))
             minval = self.args.get("min", 0)
             maxval = self.args.get("max", minval+100)
             label  = wx.StaticText(parent, wx.ID_ANY, label=self.args["label"])

@@ -45,14 +45,14 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.rVolume    = Settable(maxVolume, # Volume of positional tones on the right stereo channel, float in range 0.0 to 1.0
                           label=SET_RIGHT_VOLUME, min=1, max=100, ratio=100, ordinal=6)
         self.stereoSwap = Settable(False, # Swap stereo sides
-                          label=SET_SWAP_STEREO_CHANNELS, ordinal=7)
+                          label=SET_SWAP_STEREO_CHANNELS, ordinal=7, callable=self.SwapChannels)
         self.tolerance  = Settable(20, # Mouse to location arrivall detection tolerance,
                                        # refers to distance between two points in pixels
                           label=SET_MOUSE_TOLERANCE, ordinal=2)
         self.timeout    = Settable(2.0, # Timeout after which to stop the mouse monitoring automatically (in seconds)
                           label=SET_MOUSE_MONITOR_TIMEOUT, ordinal=3)
         self.caret      = Settable(True) # Whether to report caret location for editable fields or not
-
+                                         # Not yet included in settings panel
         # Load the configurables from settings if possible
         self.settings = S = Settings()
         try:
@@ -105,12 +105,21 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         inputCore.decide_executeGesture.unregister(self._on_keyDown)
 
     def Toggle (self, *args, **kwargs):
+        """
+        Used primarily to enable immediate activation/deactivation of positional tones from settings panel.
+        """
         if self.active:
             self.Deactivate()
             self.active = False
         else:
             self.Activate()
             self.active = True
+
+    def SwapChannels (self, e):
+        """
+        Used primarily to swap channels immediately from settings panel.
+        """
+        self.stereoSwap = e.IsChecked()
 
     def terminate (self):
         """

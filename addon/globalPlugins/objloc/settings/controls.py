@@ -4,6 +4,7 @@ class IntCtrl (wx.TextCtrl):
     def __init__ (self, *args, **kwargs):
         wx.TextCtrl.__init__(self, *args, **kwargs)
         self.Bind(wx.EVT_CHAR, self.OnChar)
+        self.OriginalValue = wx.TextCtrl.GetValue(self)
 
     def OnChar (self, e):
         key = e.GetKeyCode()
@@ -21,10 +22,18 @@ class IntCtrl (wx.TextCtrl):
         else:
             wx.Bell()
 
+    def GetValue (self):
+        v = wx.TextCtrl.GetValue(self)
+        try:
+            return int(v)
+        except:
+            return int(self.OriginalValue)
+
 class FloatCtrl (wx.TextCtrl):
     def __init__ (self, *args, **kwargs):
         wx.TextCtrl.__init__(self, *args, **kwargs)
         self.Bind(wx.EVT_CHAR, self.OnChar)
+        self.OriginalValue = wx.TextCtrl.GetValue(self)
 
     def OnChar (self, e):
         key = e.GetKeyCode()
@@ -46,3 +55,10 @@ class FloatCtrl (wx.TextCtrl):
                 wx.Bell()
         else:
             wx.Bell()
+
+    def GetValue (self):
+        v = wx.TextCtrl.GetValue(self)
+        try:
+            return float(v)
+        except:
+            return float(self.OriginalValue)

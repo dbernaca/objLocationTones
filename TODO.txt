@@ -1,5 +1,5 @@
-V2024.07.0 (0/10 realized):
-===========================
+V24.07.0 (0/10 realized):
+=========================
 - Either translate the addon to other languages by myself or introduce it to translation system
 - Consider fixing checkboxes in settings panel staying in effect even after Cancel is chosen
 - Implement possibility of changing caret position reporting behaviour
@@ -16,8 +16,8 @@ V2024.07.0 (0/10 realized):
   this may help those with less sensitive hearing to use the caret position reporting effectively
   (consider implementing this for all objects instead, i.e. allow per client reporting)
 
-V2024.06.1 (6/12 realized):
-===========================
+V24.06.1 (6/12 realized):
+=========================
 + Switch from print() function to logHandler module for warnings
 - Fix treating single line editables as multiline when trying to detect end of a document
 - See about getting the font size and using it to improve caret tone positioning
@@ -37,8 +37,8 @@ V2024.06.1 (6/12 realized):
 + Consider backward compatibility (at least back to NVDA 2022.4
   * Considered!!! 2023.1 stays.
 
-V2024.05.0 (11/17 realized):
-============================
+V24.05.0 (11/17 realized):
+==========================
 - Fix treating single line editables as multiline when trying to detect end of a document
 - See about getting the font size and using it to improve caret tone positioning
 - Try to improve caret reporting at the end of documents some more

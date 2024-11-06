@@ -31,6 +31,11 @@ minPitch  = config.conf['mouse']['audioCoordinates_minPitch']
 maxPitch  = config.conf['mouse']['audioCoordinates_maxPitch']
 maxVolume = config.conf['mouse']['audioCoordinates_maxVolume']
 
+def valset (attr, value):
+    if value<=0:
+        return attr.original
+    return value
+
 class GlobalPlugin (globalPluginHandler.GlobalPlugin):
     def __init__ (self):
         super(globalPluginHandler.GlobalPlugin, self).__init__()
@@ -39,7 +44,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.active     = Settable(True, # Is real time reporting on or off
                           label=SET_POSITIONAL_AUDIO, ordinal=0, callable=self.Toggle)
         self.duration   = Settable(40, # Duration of a positional tone in Msec
-                          label=SET_TONE_DURATION, ordinal=1)
+                          label=SET_TONE_DURATION, validator=valset, ordinal=1)
         self.lVolume    = Settable(maxVolume, # Volume of positional tones on the left stereo channel, float in range 0.0 to 1.0
                           label=SET_LEFT_VOLUME, min=1, max=100, ratio=100, ordinal=5)
         self.rVolume    = Settable(maxVolume, # Volume of positional tones on the right stereo channel, float in range 0.0 to 1.0
@@ -48,9 +53,9 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
                           label=SET_SWAP_STEREO_CHANNELS, ordinal=7, callable=self.SwapChannels)
         self.tolerance  = Settable(20, # Mouse to location arrivall detection tolerance,
                                        # refers to distance between two points in pixels
-                          label=SET_MOUSE_TOLERANCE, ordinal=2)
+                          label=SET_MOUSE_TOLERANCE, validator=valset, ordinal=2)
         self.timeout    = Settable(2.0, # Timeout after which to stop the mouse monitoring automatically (in seconds)
-                          label=SET_MOUSE_MONITOR_TIMEOUT, ordinal=3)
+                          label=SET_MOUSE_MONITOR_TIMEOUT, validator=valset, ordinal=3)
         self.caret      = Settable(True) # Whether to report caret location for editable fields or not
                                          # Not yet included in settings panel
         # Load the configurables from settings if possible

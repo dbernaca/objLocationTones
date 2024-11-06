@@ -30,4 +30,4 @@ Important notes:
   E.g. Braille Extender might prevent Object Location Tones from detecting typing and thus
   location of a caret will be reported while you type, which would most probably iritate you.
 
-[1]: https://github.com/dbernaca/objLocationTones/releases/24.06.2
+[1]: https://github.com/dbernaca/objLocationTones/releases/24.06.3

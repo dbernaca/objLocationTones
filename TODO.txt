@@ -19,7 +19,7 @@ V24.07.0 (0/12 realized):
   this may help those with less sensitive hearing to use the caret position reporting effectively
   (consider implementing this for all objects instead, i.e. allow per client reporting)
 
-V24.06.1 (6/12 realized):
+V24.06.3 (6/12 realized):
 =========================
 + Switch from print() function to logHandler module for warnings
 - Fix treating single line editables as multiline when trying to detect end of a document

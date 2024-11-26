@@ -25,7 +25,7 @@ addon_info = {
 	# Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 	"addon_description": _("""Announce location of objects via tones"""),
 	# version
-	"addon_version": "24.06.3",
+	"addon_version": "24.06.4",
 	# Author(s)
 	"addon_author": "Joseph Lee <joseph.lee22590@gmail.com>, Dalen Bernaca <dbernaca@gmail.com>",
 	# URL for the add-on documentation support

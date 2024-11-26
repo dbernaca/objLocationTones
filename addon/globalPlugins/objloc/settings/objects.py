@@ -3,7 +3,7 @@
 
 from logHandler import log
 from inspect import currentframe as getframe, isclass
-from .controls   import IntCtrl, FloatCtrl
+from .controls   import IntCtrl, FloatCtrl, SliderCtrl
 from .exceptions import *
 from gui.guiHelper import associateElements
 import wx
@@ -26,9 +26,9 @@ class Attribute (object):
         if name is not Ellipsis:
             # If name is not set, the __getattr__() is going to find it within the self.instance and set it.
             self.name = name
-        # If None, then it is the same as the name (which may be undefined, i.e. Ellipsis),
+        # If nickname is None, then it is the same as the name (which may be undefined, i.e. Ellipsis),
         # and if Ellipsis, then __getattr__() will set it to name if called and not set in the midtime.
-        # We set it only if it is defined
+        # We set it only if it is defined in args or if it is not, only if name is defined
         if nickname:
             self.nickname = nickname
         elif name is not Ellipsis:
@@ -198,7 +198,7 @@ class Attribute (object):
             minval = self.args.get("min", 0)
             maxval = self.args.get("max", minval+100)
             label  = wx.StaticText(parent, wx.ID_ANY, label=self.args["label"])
-            slider = wx.Slider(parent, wx.ID_ANY, minValue=minval, maxValue=maxval, value=self.get())
+            slider = SliderCtrl(parent, wx.ID_ANY, minValue=minval, maxValue=maxval, value=self.get())
             return associateElements(label, slider)
         if self.type==float:
             label = wx.StaticText(parent, wx.ID_ANY, label=self.args["label"])
@@ -207,7 +207,7 @@ class Attribute (object):
             minval = self.args.get("min", 0)
             maxval = self.args.get("max", minval+100)
             label  = wx.StaticText(parent, wx.ID_ANY, label=self.args["label"])
-            slider = wx.Slider(parent, wx.ID_ANY, minValue=minval, maxValue=maxval, value=int(round(self.get()*self.args.get("ratio", 1))))
+            slider = SliderCtrl(parent, wx.ID_ANY, minValue=minval, maxValue=maxval, value=int(round(self.get()*self.args.get("ratio", 1))))
             return associateElements(label, slider)
 
 def Settable (value, nickname=None, *args, **kwargs):

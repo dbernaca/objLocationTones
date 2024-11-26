@@ -1,8 +1,8 @@
-V24.07.0 (0/12 realized):
+V24.07.0 (2/13 realized):
 =========================
-- Implement installTask() to preserve settings after update from 24.05 and later
++ Implement installTask() to preserve settings after update from 24.05 and later
 - Change settings panel by using more API methods to notify users about wrong input instead of just ignoring it
-- Flip settings panel sliders to lower with downarrow
++ Flip settings panel sliders to lower with downarrow
 - Either translate the addon to other languages by myself or introduce it to translation system
 - Consider fixing checkboxes in settings panel staying in effect even after Cancel is chosen
 - Implement possibility of changing caret position reporting behaviour (no reporting, reporting only lines, reporting only rows, reporting lines and rows)

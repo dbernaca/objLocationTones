@@ -16,20 +16,17 @@ import wx
 
 from scriptHandler import script, getLastScriptRepeatCount
 from logHandler    import log
-from tones         import beep
+
+from .posTones     import *
 from .utils        import *
 from .geometry     import *
 from .UIStrings    import *
 from .settings     import *
+
 try:
     from time import monotonic as time
 except:
     from time import time
-
-# Some initial values from NVDA configuration
-minPitch  = config.conf['mouse']['audioCoordinates_minPitch']
-maxPitch  = config.conf['mouse']['audioCoordinates_maxPitch']
-maxVolume = config.conf['mouse']['audioCoordinates_maxVolume']
 
 def valset (attr, value):
     if value<=0:
@@ -40,7 +37,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
     def __init__ (self):
         super(globalPluginHandler.GlobalPlugin, self).__init__()
 
-        # Configurable attributes (in the future)
+        # Configurable attributes
         self.active     = Settable(True, # Is real time reporting on or off
                           label=SET_POSITIONAL_AUDIO, ordinal=0, callable=self.Toggle)
         self.duration   = Settable(40, # Duration of a positional tone in Msec
@@ -79,9 +76,6 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.lastMousePos = (-1, -1) # Used to detect that the mouse stopped moving so that we can stop the timer
         self.lastTime     = 0.0 # Used to detect how much time passed after mouse stopped moving
         self.lastKey      = None # What was the last key pressed
-        self.lastCoords   = (-1, -1, 0.0) # Last coordinates played (for avoiding doubleing tones for any reason)
-                                          # values are (x, y, <tone duration>)
-        self.lastPlayed   = 0.0 # When the last tone was played (to detect tone doubles requested before their time) (in seconds)
 
         # Mouse monitoring position playing timer
         self.timer = wx.Timer(gui.mainFrame)
@@ -109,18 +103,26 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.event_caret = self._on_passThrough
         inputCore.decide_executeGesture.unregister(self._on_keyDown)
 
-    def Toggle (self, *args, **kwargs):
+    def Toggle (self, e=None):
         """
         Used primarily to enable immediate activation/deactivation of positional tones from settings panel.
         """
         if self.active:
             self.Deactivate()
             self.active = False
-        else:
-            self.Activate()
-            self.active = True
+            return
+        self.Activate()
+        self.active = True
+        if e is None:
+            return
+        # Play coordinates of the checkbox to indicate activation
+        try:
+            x, y = getObjectPos(caret=self.caret)
+            playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
+        except:
+            pass
 
-    def SwapChannels (self, e):
+    def SwapChannels (self, e=None):
         """
         Used primarily to swap channels immediately from settings panel.
         """
@@ -142,35 +144,6 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         del self.settings
         RemovePanel()
 
-    def playCoordinates (self, x, y, d=None):
-        """
-        Plays a positional tone for given x and y coordinates,
-        relative to current desktop window size.
-        If the method is called more than once with same coordinates and already playing,
-        the duplicate call will not produce any tones.
-        If the coordinates represent a point that is located out of the screen,
-        the tone will also not be played.
-        """
-        screenWidth, screenHeight = getDesktopObject().location[2:]
-        # If the same coordinates were just played, and asked to be played again before the last tone ended
-        # just don't do it and that is that.
-        t = time()
-        lx, ly, ld = self.lastCoords
-        if x==lx and ly==ly and t-self.lastPlayed<=ld:
-            return
-        if 0 <= x <= screenWidth and 0 <= y <= screenHeight:
-            curPitch = minPitch + ((maxPitch - minPitch) * ((screenHeight - y) / float(screenHeight)))
-            if self.stereoSwap:
-                rightVolume = int((85 * ((screenWidth - float(x)) / screenWidth)) * self.rVolume)
-                leftVolume = int((85 * (float(x) / screenWidth)) * self.lVolume)
-            else: 
-                leftVolume = int((85 * ((screenWidth - float(x)) / screenWidth)) * self.lVolume)
-                rightVolume = int((85 * (float(x) / screenWidth)) * self.rVolume)
-            d = d or self.duration
-            beep(curPitch, d, left=leftVolume, right=rightVolume)
-            self.lastPlayed = t
-            self.lastCoords = (x, y, d/1000.0)
-
     @script(
         gesture="kb:control+Shift+NumpadDelete",
         description=IG_OUTLINE, category=IG_CATEGORY)
@@ -184,14 +157,15 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         try:
             obj = getFocusObject()
             rect = BBox(obj)
-            wx.CallAfter(self.playCoordinates, rect.X1, rect.Y1, self.duration+20)
-            wx.CallLater(self.duration+220, self.playCoordinates, rect.X2, rect.Y2, self.duration+20)
-            wx.CallLater(self.duration+620, self.playCoordinates, rect.X3, rect.Y3, self.duration+20)
-            wx.CallLater(self.duration+820, self.playCoordinates, rect.X4, rect.Y4, self.duration+20)
+            after = playPoints(200, rect.corners, self.duration+20, self.lVolume, self.rVolume, self.stereoSwap)
+            #wx.CallAfter(self.playCoordinates, rect.X1, rect.Y1, self.duration+20)
+            #wx.CallLater(self.duration+220, self.playCoordinates, rect.X2, rect.Y2, self.duration+20)
+            #wx.CallLater(self.duration+620, self.playCoordinates, rect.X3, rect.Y3, self.duration+20)
+            #wx.CallLater(self.duration+820, self.playCoordinates, rect.X4, rect.Y4, self.duration+20)
             ui.message(getObjectDescription(obj))
             try:
                 oX, oY = getCaretPos(obj)
-                wx.CallLater(self.duration+1120, self.playCoordinates, oX, oY, self.duration+150)
+                wx.CallLater(after+40, playCoordinates, oX, oY, self.duration+150, self.lVolume, self.rVolume, self.stereoSwap)
             except:
                 pass
         except:
@@ -238,11 +212,12 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
                 ui.message(MSG_PARENT_NOT_AVAILABLE)
                 return
             rect = BBox(obj)
-            wx.CallAfter(self.playCoordinates, rect.X1, rect.Y1, self.duration+20)
-            wx.CallLater(self.duration+220, self.playCoordinates, rect.X2, rect.Y2, self.duration+20)
-            wx.CallLater(self.duration+620, self.playCoordinates, rect.X3, rect.Y3, self.duration+20)
-            wx.CallLater(self.duration+820, self.playCoordinates, rect.X4, rect.Y4, self.duration+20)
-            wx.CallLater(self.duration+840+self.duration, setattr, self, "processing", False)
+            after = playPoints(200, rect.corners, self.duration+20, self.lVolume, self.rVolume, self.stereoSwap)
+            #wx.CallAfter(self.playCoordinates, rect.X1, rect.Y1, self.duration+20)
+            #wx.CallLater(self.duration+220, self.playCoordinates, rect.X2, rect.Y2, self.duration+20)
+            #wx.CallLater(self.duration+620, self.playCoordinates, rect.X3, rect.Y3, self.duration+20)
+            #wx.CallLater(self.duration+820, self.playCoordinates, rect.X4, rect.Y4, self.duration+20)
+            wx.CallLater(after+self.duration+20, setattr, self, "processing", False)
             ui.message(MSG_ANCESTOR % (getObjectDescription(obj), level))
         except:
             ui.message(MSG_LOCATION_UNAVAILABLE)
@@ -266,7 +241,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
                 return
             dist = abs(oX-mX) + abs(oY-mY)
             if dist<=self.tolerance:
-                self.playCoordinates(oX, oY, self.duration+150)
+                playCoordinates(oX, oY, self.duration+150, self.lVolume, self.rVolume, self.stereoSwap)
                 ui.message(MSG_MOUSE_ALREADY_THERE)
                 return
             self.event_mouseMove = self._on_mouseMove
@@ -292,7 +267,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.lastTime = 0.0
         try:
             x, y = getCursorPos()
-            self.playCoordinates(x, y, self.duration+50)
+            playCoordinates(x, y, self.duration+50, self.lVolume, self.rVolume, self.stereoSwap)
         except:
             pass
 
@@ -309,7 +284,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.lastTime = 0.0
         try:
             x, y = getObjectPos(caret=self.caret)
-            self.playCoordinates(x, y, self.duration+30)
+            playCoordinates(x, y, self.duration+30, self.lVolume, self.rVolume, self.stereoSwap)
         except:
             pass
 
@@ -348,7 +323,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.focusing = True # Prevent beep of the caret event right after text area gains focus
         try:
             x, y = getObjectPos(obj, caret=self.caret)
-            self.playCoordinates(x, y)
+            playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
         except:
             pass
         nextHandler()
@@ -367,7 +342,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             return
         try:
             x, y = getCaretPos(obj)
-            self.playCoordinates(x, y)
+            playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
         except:
             pass
         nextHandler()
@@ -402,8 +377,8 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         if lmp!=mp:
             self.lastMousePos = mp
             self.lastTime = t
-        wx.CallAfter(self.playCoordinates, mp[0], mp[1], self.duration+40)
-        wx.CallLater(self.duration+100, self.playCoordinates, oX, oY, self.duration+70)
+        wx.CallAfter(playCoordinates, mp[0], mp[1], self.duration+40, self.lVolume, self.rVolume, self.stereoSwap)
+        wx.CallLater(self.duration+100, playCoordinates, oX, oY, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
 
     def _on_mouseMove (self, obj, nextHandler, x, y):
         """
@@ -435,7 +410,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.entered = False
         dist = abs(oX-x) + abs(oY-y)
         if dist<=self.tolerance:
-            self.playCoordinates(oX, oY, self.duration+150)
+            playCoordinates(oX, oY, self.duration+150, self.lVolume, self.rVolume, self.stereoSwap)
             self.timer.Stop()
             self.event_mouseMove = self._on_passThrough
             self.lastMousePos = (-1, -1)

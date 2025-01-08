@@ -24,7 +24,7 @@ class IntCtrl (wx.TextCtrl):
 
     def OnChar (self, e):
         key = e.GetKeyCode()
-        if chr(key) in "1234567890":
+        if chr(key).isdigit():
             e.Skip()
         elif chr(key)=="-":
             # A minus can be only one, and only at the beginning
@@ -35,7 +35,7 @@ class IntCtrl (wx.TextCtrl):
                 return e.Skip()
             wx.Bell()
         # Support navigation and deletions
-        elif key in (wx.WXK_LEFT, wx.WXK_RIGHT, wx.WXK_DELETE, wx.WXK_BACK):
+        elif key in (wx.WXK_LEFT, wx.WXK_RIGHT, wx.WXK_DOWN, wx.WXK_UP, wx.WXK_HOME, wx.WXK_END, wx.WXK_DELETE, wx.WXK_BACK):
             e.Skip()
         else:
             wx.Bell()
@@ -63,7 +63,7 @@ class FloatCtrl (wx.TextCtrl):
 
     def OnChar (self, e):
         key = e.GetKeyCode()
-        if chr(key) in "1234567890":
+        if chr(key).isdigit():
             e.Skip()
         elif chr(key)=="-":
             # A minus can be only one, and only at the beginning
@@ -73,7 +73,7 @@ class FloatCtrl (wx.TextCtrl):
             if not self.GetInsertionPoint():
                 return e.Skip()
             wx.Bell()
-        elif key in (wx.WXK_LEFT, wx.WXK_RIGHT, wx.WXK_DELETE, wx.WXK_BACK):
+        elif key in (wx.WXK_LEFT, wx.WXK_RIGHT, wx.WXK_DOWN, wx.WXK_UP, wx.WXK_HOME, wx.WXK_END, wx.WXK_DELETE, wx.WXK_BACK):
             e.Skip()
         elif chr(key)==".":
             # A decimal point can be only one

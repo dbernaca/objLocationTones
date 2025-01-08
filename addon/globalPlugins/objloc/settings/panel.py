@@ -1,3 +1,4 @@
+from logHandler import log
 from gui.guiHelper import BoxSizerHelper
 try:
     from gui.settingsDialogs import SettingsPanel
@@ -5,7 +6,7 @@ except:
     from gui import SettingsPanel
 
 from globalPlugins.objloc.UIStrings import SET_CATEGORY
-from .objects import Attribute
+from .objects import Flag, Attribute
 
 import weakref
 import gui
@@ -41,23 +42,28 @@ def getValue (attr, obj):
     The function aims to be universal across all types of controls.
     """
     obj = getCtrl(obj)
-    value = obj.GetStringSelection() if hasattr(obj, "SetStringSelection") else obj.GetValue()
+    value = (obj.GetStringSelection() if attr.type==str else obj.GetSelection()) if hasattr(obj, "SetStringSelection") else obj.GetValue()
     value = attr.type(value)
     if "ratio" in attr.args:
         value /= attr.args["ratio"]
-    if "validator" in attr.args:
-        value = attr.args["validator"](attr, value)
+    if "filter" in attr.args:
+        value = attr.args["filter"](attr, value)
     return value
 
-def setValue (attr, obj, value):
+def setValue (attr, obj, value=Ellipsis):
     """
     Sets a value to the interactive UI control.
     If the obj is a sizer, the first available UI control within the sizer will be used.
     The function aims to be universal across all types of controls.
+    If value argument is not given or Ellipsis (default) the attr's value will be updated and used instead.
     """
     obj = getCtrl(obj)
+    if value is Ellipsis:
+        value = attr.get()
     if "ratio" in attr.args:
-        value *= attr.args["ratio"]
+        value = int(round(value*attr.args["ratio"]))
+    if "adjuster" in attr.args:
+        value = attr.args["adjuster"](attr, value)
     if isinstance(obj, wx.TextCtrl):
         value = str(value)
     elif hasattr(obj, "SetStringSelection"):
@@ -74,6 +80,7 @@ class Panel (SettingsPanel):
     title       = SET_CATEGORY
     currentset  = lambda: None # Current settings instance to use stored as a weakref
     currentinst = lambda: None # Target instance on which the settings will be applied
+    opened = Flag(False) # Are there any instances of the Panel()
 
     @classmethod
     def setActiveSettings (cls, settings_obj, target_instance):
@@ -81,18 +88,38 @@ class Panel (SettingsPanel):
         cls.currentinst = weakref.ref(target_instance)
 
     def makeSettings (self, settingsSizer):
+        self.opened.set()
         self.controls = ctrls = {}
         settings = self.currentset()
         inst = self.currentinst()
         helper = BoxSizerHelper(self, sizer=settingsSizer)
-        for attr in sorted(settings.attributes, key=(lambda x: x.args.get("ordinal", 0))):
+        groups = {}
+        for attr in sorted(settings.attributes, key=(lambda x: x.args.get("ordinal", x.id))):
             if not attr.belongs_to(inst):
                 continue
             if "label" not in attr.args:
                 continue
-            item = attr.create_gui_control(self)
-            helper.addItem(item)
-            ctrls[attr] = item
+            if not attr.show:
+                continue
+            group = attr.args.get("group", None)
+            if group:
+                if group in groups:
+                    box, ghelper = groups[group]
+                    item = attr.create_gui_control(box)
+                    ghelper.addItem(item)
+                else:
+                    box = wx.StaticBox(self, label=group)
+                    ghelper = BoxSizerHelper(self, sizer=wx.StaticBoxSizer(box, wx.VERTICAL))
+                    item = attr.create_gui_control(box)
+                    ghelper.addItem(item)
+                    groups[group] = (box, ghelper)
+                    helper.addItem(ghelper)
+            else:
+                item = attr.create_gui_control(self)
+                helper.addItem(item)
+            if attr.value!=Ellipsis:
+                # If not a button
+                ctrls[attr] = item
 
     def onSave (self):
         try:
@@ -102,14 +129,17 @@ class Panel (SettingsPanel):
                 try:
                     attr.value = getValue(attr, ctrl)
                 except:
-                    print(attr.name)
+                    log.warning(attr.name)
                     raise
                 attr.set()
-            self.controls.clear()
-            del self.controls
             settings.save(inst)
         except Exception as e:
-            print(e)
+            log.warning(str(e))
+
+    def __del__ (self):
+        self.controls.clear()
+        del self.controls
+        self.opened.clear()
 
 def SetPanel (settings_obj, target_instance):
     """

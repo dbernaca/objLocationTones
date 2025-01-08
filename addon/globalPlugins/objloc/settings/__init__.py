@@ -4,12 +4,13 @@
 
 import os
 import json
-from logHandler import log
-from .objects import *
+from logHandler  import log
+from .objects    import *
 from .exceptions import *
-from .panel import SetPanel, RemovePanel
+from .factory    import *
+from .panel      import SetPanel, RemovePanel, Panel, setValue
 
-__all__ = ["SettingsError", "Attribute", "Settable", "Settings", "SetPanel", "RemovePanel"]
+__all__ = ["SettingsError", "Attribute", "Settable", "Activator", "Settings", "SetPanel", "RemovePanel"]
 
 class Settings:
     path     = None # A settings file
@@ -67,6 +68,8 @@ class Settings:
             if not attr.belongs_to(instance):
                 # If settings is shared between multiple instances, skip attributes which do not belong to this one
                 continue
+            if attr.skip:
+                continue
             try:
                 value = d[attr.nickname]
                 attr.value = value
@@ -97,6 +100,8 @@ class Settings:
         d = {"version": self.version} # Save the protocol version, so we may adapt to older settings if it changes in the future
         changed = []
         for attr in self.attributes:
+            if not attr.save:
+                continue
             if not attr.belongs_to(instance):
                 # Do not change settings from other instances
                 # but make sure they are written to file
@@ -143,6 +148,23 @@ class Settings:
     def __contains__ (self, i):
         return (i in (attr.name for attr in self.attributes))
 
+    def refresh_panel (self, instance, specific=None):
+        if not Panel.opened:
+            return
+        if specific:
+            for attr in self.attributes:
+                if not attr.belongs_to(instance):
+                    continue
+                if (attr.name==specific or attr.nickname==specific or attr==specific) and (attr.value!=Ellipsis and attr.has_gui_control()):
+                    setValue(attr, attr.get_gui_control())
+                    break
+            return
+        for attr in self.attributes:
+            if not attr.belongs_to(instance):
+                continue
+            if attr.value!=Ellipsis and attr.has_gui_control():
+                setValue(attr, attr.get_gui_control())
+
     def generate_instance (self):
         """
         Returns a holder instance containing all attributes from the settings file,
@@ -164,7 +186,7 @@ class Settings:
         class holder:
             pass
         obj = holder()
-        d.pop("version", 123)
+        d.pop("version", 1)
         for key, value in d.items():
             attr = Attribute(obj, key, type(value), value, key, {})
             try:

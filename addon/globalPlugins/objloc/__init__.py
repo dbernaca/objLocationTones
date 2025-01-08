@@ -1,60 +1,82 @@
 # Object Location Tones
 # A global plugin for NVDA
 # Copyright 2017-2024 Joseph Lee, released under GPL
-# Copyright      2024  Dalen Bernaca, released under GPL
+# Copyright 2024-2025 Dalen Bernaca, released under GPL
 
 # Brings NVDA Core issue 2559 to life and more besides
 
 import globalPluginHandler
 import inputCore
 
-import config
 import speech
 import ui
 import gui
 import wx
 
-from scriptHandler import script, getLastScriptRepeatCount
-from logHandler    import log
+from scriptHandler   import script, getLastScriptRepeatCount
+from keyboardHandler import KeyboardInputGesture
+from logHandler      import log
 
 from .posTones     import *
 from .utils        import *
 from .geometry     import *
 from .UIStrings    import *
 from .settings     import *
-
-try:
-    from time import monotonic as time
-except:
-    from time import time
-
-def valset (attr, value):
-    if value<=0:
-        return attr.original
-    return value
+from time import monotonic as time
 
 class GlobalPlugin (globalPluginHandler.GlobalPlugin):
     def __init__ (self):
         super(globalPluginHandler.GlobalPlugin, self).__init__()
 
         # Configurable attributes
-        self.active     = Settable(True, # Is real time reporting on or off
-                          label=SET_POSITIONAL_AUDIO, ordinal=0, callable=self.Toggle)
-        self.duration   = Settable(40, # Duration of a positional tone in Msec
-                          label=SET_TONE_DURATION, validator=valset, ordinal=1)
-        self.lVolume    = Settable(maxVolume, # Volume of positional tones on the left stereo channel, float in range 0.0 to 1.0
-                          label=SET_LEFT_VOLUME, min=1, max=100, ratio=100, ordinal=5)
-        self.rVolume    = Settable(maxVolume, # Volume of positional tones on the right stereo channel, float in range 0.0 to 1.0
-                          label=SET_RIGHT_VOLUME, min=1, max=100, ratio=100, ordinal=6)
-        self.stereoSwap = Settable(False, # Swap stereo sides
-                          label=SET_SWAP_STEREO_CHANNELS, ordinal=7, callable=self.SwapChannels)
-        self.tolerance  = Settable(20, # Mouse to location arrivall detection tolerance,
-                                       # refers to distance between two points in pixels
-                          label=SET_MOUSE_TOLERANCE, validator=valset, ordinal=2)
-        self.timeout    = Settable(2.0, # Timeout after which to stop the mouse monitoring automatically (in seconds)
-                          label=SET_MOUSE_MONITOR_TIMEOUT, validator=valset, ordinal=3)
-        self.caret      = Settable(True) # Whether to report caret location for editable fields or not
-                                         # Not yet included in settings panel
+        # Note: Settings() later manages auto save and additional args makes them show in settings panel and react to events there
+
+        # Filter function for ints and floats:
+        valset = lambda attr, value: attr.original if value<=0 else value
+
+        # Navigation:
+        self.active        = Settable(True, # Is real time reporting on or off
+                             label=SET_POSITIONAL_AUDIO, group=SET_GROUP_NAVIGATION,
+                             reactor=self.Toggle)
+        self.duration      = Settable(40, # Duration of a positional tone in Msec
+                             label=SET_TONE_DURATION, group=SET_GROUP_NAVIGATION,
+                             filter=valset)
+        # Caret:
+        self.caret         = Settable(True, label=SET_CARET, group=SET_GROUP_CARET, # Whether to report caret location in editable fields or not
+                             reactor=self.ToggleCaret)
+        self.caretMode     = Settable(SET_CARET_CHOICES.index(SET_CARET_BOTH), # Whether to report vertical, horizontal, both or none of caret movements
+                             choices=tuple(SET_CARET_CHOICES), # tuple() means wx.Choice(), instead of wx.ListBox() in settings panel
+                             label=SET_CARET_REPORT, group=SET_GROUP_CARET,
+                             reactor=lambda e: ( setattr(self, "caretMode", e.GetSelection()), e.Skip() ) )
+        self.caretTyping   = Settable(False, # Whether to report caret location while typing or not
+                             label=SET_CARET_TYPING, group=SET_GROUP_CARET,
+                             reactor=lambda e: (setattr(self, "caretTyping", e.IsChecked()), e.Skip()) )
+        self.durationCaret = Settable(40, # Duration of a positional tone for caret reporting in Msec
+                             label=SET_TONE_DURATION_CARET, group=SET_GROUP_CARET,
+                             filter=valset)
+        # Mouse:
+        self.tolerance     = Settable(20, # Mouse to location arrivall detection tolerance,
+                                          # refers to distance between two points in pixels
+                             label=SET_MOUSE_TOLERANCE, group=SET_GROUP_MOUSE,
+                             filter=valset)
+        self.timeout       = Settable(2.0, # Timeout after which to stop the mouse monitoring automatically (in seconds)
+                             label=SET_MOUSE_MONITOR_TIMEOUT, group=SET_GROUP_MOUSE,
+                             filter=valset)
+        self.autoMouse     = Settable(False,
+                             label=SET_MOUSE_MONITOR_AUTO_START, group=SET_GROUP_MOUSE,
+                             reactor=self.ToggleMouseMonitorAutostart)
+        # Tones:
+        self.lVolume       = Settable(maxVolume, # Volume of positional tones on the left stereo channel, float in range 0.0 to 1.0
+                             label=SET_LEFT_VOLUME, group=SET_GROUP_TONES,
+                             min=1, max=100, ratio=100)
+        self.rVolume       = Settable(maxVolume, # Volume of positional tones on the right stereo channel, float in range 0.0 to 1.0
+                             label=SET_RIGHT_VOLUME, group=SET_GROUP_TONES,
+                             min=1, max=100, ratio=100)
+        self.stereoSwap    = Settable(False, # Swap stereo sides
+                             label=SET_SWAP_STEREO_CHANNELS, group=SET_GROUP_TONES,
+                             reactor=self.SwapChannels)
+
+        #self.restore = Activator("Restore defaults", lambda e: (self.settings.restore_defaults(), self.settings.refresh_panel(self), e.Skip()))
         # Load the configurables from settings if possible
         self.settings = S = Settings()
         try:
@@ -75,7 +97,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         # Temporary variables for action checks
         self.lastMousePos = (-1, -1) # Used to detect that the mouse stopped moving so that we can stop the timer
         self.lastTime     = 0.0 # Used to detect how much time passed after mouse stopped moving
-        self.lastKey      = None # What was the last key pressed
+        self.lastKey      = None # What was the last key pressed (InputKeyboardGesture() object)
 
         # Mouse monitoring position playing timer
         self.timer = wx.Timer(gui.mainFrame)
@@ -83,25 +105,52 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
 
         # Initial NVDA event bindings
         if self.active:
-            self.event_becomeNavigatorObject = self._on_becomeNavigatorObject
-            self.event_caret = self._on_caret
-            inputCore.decide_executeGesture.register(self._on_keyDown)
+            self.Activate()
         else:
             self.event_becomeNavigatorObject = self._on_passThrough
-            self.event_caret = self._on_passThrough
-        self.event_mouseMove = self._on_passThrough
+            if self.caret:
+                self.ActivateCaret()
+            else:
+                self.event_caret = self._on_passThrough
+        if self.autoMouse:
+            self.event_mouseMove = self._on_autoMouseMove
+        else:
+            self.event_mouseMove = self._on_passThrough
 
     def Activate (self):
         self.event_becomeNavigatorObject = self._on_becomeNavigatorObject
-        self.event_caret = self._on_caret
-        inputCore.decide_executeGesture.register(self._on_keyDown)
+        if self.caret:
+            self.ActivateCaret()
         self.focusing = True
         self.typing = False
 
     def Deactivate (self):
         self.event_becomeNavigatorObject = self._on_passThrough
-        self.event_caret = self._on_passThrough
-        inputCore.decide_executeGesture.unregister(self._on_keyDown)
+        self.DeactivateCaret()
+
+    def ActivateCaret (self):
+        if self.event_caret==self._on_passThrough:
+            self.event_caret = self._on_caret
+            inputCore.decide_executeGesture.register(self._on_keyDown)
+
+    def DeactivateCaret (self):
+        if self.event_caret!=self._on_passThrough:
+            self.event_caret = self._on_passThrough
+            inputCore.decide_executeGesture.unregister(self._on_keyDown)
+
+    def ActivateMouseMonitor (self):
+        if self.event_mouseMove!=self._on_mouseMove:
+            self.event_mouseMove = self._on_mouseMove
+            self.timer.Start(200)
+
+    def DeactivateMouseMonitor (self):
+        self.timer.Stop()
+        if self.autoMouse:
+            self.event_mouseMove = self._on_autoMouseMove
+        else:
+            self.event_mouseMove = self._on_passThrough
+        self.lastMousePos = (-1, -1)
+        self.lastTime = 0.0
 
     def Toggle (self, e=None):
         """
@@ -110,6 +159,8 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         if self.active:
             self.Deactivate()
             self.active = False
+            if e:
+                e.Skip()
             return
         self.Activate()
         self.active = True
@@ -121,12 +172,41 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
         except:
             pass
+        e.Skip()
 
-    def SwapChannels (self, e=None):
+    def SwapChannels (self, e):
         """
         Used primarily to swap channels immediately from settings panel.
         """
         self.stereoSwap = e.IsChecked()
+        e.Skip()
+        # Play coordinates of the checkbox to hear the change immediately
+        if not self.active:
+            return
+        try:
+            x, y = getObjectPos(caret=self.caret)
+            playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
+        except:
+            pass
+
+    def ToggleCaret (self, e=None):
+        """
+        Used primarily to enable immediate activation/deactivation of positional tones for caret location from settings panel.
+        """
+        if e:
+            self.caret = e.IsChecked() # Just in case of possible mismatch
+            e.Skip()
+        if self.caret:
+            self.DeactivateCaret()
+            self.caret = False
+            return
+        self.ActivateCaret()
+        self.caret = True
+
+    def ToggleMouseMonitorAutostart (self, e):
+        self.autoMouse = e.IsChecked()
+        self.DeactivateMouseMonitor()
+        e.Skip()
 
     def terminate (self):
         """
@@ -158,16 +238,13 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             obj = getFocusObject()
             rect = BBox(obj)
             after = playPoints(200, rect.corners, self.duration+20, self.lVolume, self.rVolume, self.stereoSwap)
-            #wx.CallAfter(self.playCoordinates, rect.X1, rect.Y1, self.duration+20)
-            #wx.CallLater(self.duration+220, self.playCoordinates, rect.X2, rect.Y2, self.duration+20)
-            #wx.CallLater(self.duration+620, self.playCoordinates, rect.X3, rect.Y3, self.duration+20)
-            #wx.CallLater(self.duration+820, self.playCoordinates, rect.X4, rect.Y4, self.duration+20)
             ui.message(getObjectDescription(obj))
-            try:
-                oX, oY = getCaretPos(obj)
-                wx.CallLater(after+40, playCoordinates, oX, oY, self.duration+150, self.lVolume, self.rVolume, self.stereoSwap)
-            except:
-                pass
+            if self.caret:
+                try:
+                    oX, oY = getCaretPos(obj)
+                    wx.CallLater(after+40, playCoordinates, oX, oY, self.durationCaret+150, self.lVolume, self.rVolume, self.stereoSwap)
+                except:
+                    pass
         except:
             ui.message(MSG_LOCATION_UNAVAILABLE)
 
@@ -213,10 +290,6 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
                 return
             rect = BBox(obj)
             after = playPoints(200, rect.corners, self.duration+20, self.lVolume, self.rVolume, self.stereoSwap)
-            #wx.CallAfter(self.playCoordinates, rect.X1, rect.Y1, self.duration+20)
-            #wx.CallLater(self.duration+220, self.playCoordinates, rect.X2, rect.Y2, self.duration+20)
-            #wx.CallLater(self.duration+620, self.playCoordinates, rect.X3, rect.Y3, self.duration+20)
-            #wx.CallLater(self.duration+820, self.playCoordinates, rect.X4, rect.Y4, self.duration+20)
             wx.CallLater(after+self.duration+20, setattr, self, "processing", False)
             ui.message(MSG_ANCESTOR % (getObjectDescription(obj), level))
         except:
@@ -234,7 +307,8 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         """
         if not self.timer.IsRunning():
             try:
-                oX, oY = getObjectPos(caret=self.caret)
+                fobj = getFocusObject()
+                oX, oY = getObjectPos(fobj, caret=self.caret)
                 mX, mY = getCursorPos()
             except:
                 ui.message(MSG_LOCATION_UNAVAILABLE)
@@ -244,13 +318,10 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
                 playCoordinates(oX, oY, self.duration+150, self.lVolume, self.rVolume, self.stereoSwap)
                 ui.message(MSG_MOUSE_ALREADY_THERE)
                 return
-            self.event_mouseMove = self._on_mouseMove
-            self.timer.Start(200)
+            self.entered = (mX, mY) in BBox(fobj)
+            self.ActivateMouseMonitor()
             return
-        self.timer.Stop()
-        self.lastMousePos = (-1, -1)
-        self.lastTime = 0.0
-        self.event_mouseMove = self._on_passThrough
+        self.DeactivateMouseMonitor()
         speech.cancelSpeech()
         ui.message(MSG_MOUSE_MONITOR_CANCELLED)
 
@@ -261,10 +332,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         """
         Plays positional tone for a mouse cursor location on demand.
         """
-        self.timer.Stop()
-        self.event_mouseMove = self._on_passThrough
-        self.lastMousePos = (-1, -1)
-        self.lastTime = 0.0
+        self.DeactivateMouseMonitor()
         try:
             x, y = getCursorPos()
             playCoordinates(x, y, self.duration+50, self.lVolume, self.rVolume, self.stereoSwap)
@@ -278,10 +346,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         """
         Plays positional tone for currently focused object location on demand
         """
-        self.timer.Stop()
-        self.event_mouseMove = self._on_passThrough
-        self.lastMousePos = (-1, -1)
-        self.lastTime = 0.0
+        self.DeactivateMouseMonitor()
         try:
             x, y = getObjectPos(caret=self.caret)
             playCoordinates(x, y, self.duration+30, self.lVolume, self.rVolume, self.stereoSwap)
@@ -296,18 +361,48 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         Toggles positional tones on or off by swapping
         relevant event handlers accordingly.
         """
-        if not self.active:
-            self.Activate()
-            ui.message(MSG_POSITIONAL_TONES_ON)
-            self.active = True
-            return
-        self.Deactivate()
-        self.timer.Stop()
-        self.event_mouseMove = self._on_passThrough
-        self.lastMousePos = (-1, -1)
-        self.lastTime = 0.0
-        ui.message(MSG_POSITIONAL_TONES_OFF)
-        self.active = False
+        self.DeactivateMouseMonitor()
+        self.Toggle()
+        self.settings.refresh_panel(self, "active")
+        ui.message(MSG_POSITIONAL_TONES_ON if self.active else MSG_POSITIONAL_TONES_OFF)
+
+    @script(
+        gesture="kb:control+windows+NumpadDelete",
+        description=IG_TOGGLE_CARET_LOCATION_REPORTING, category=IG_CATEGORY)
+    def script_toggleCaret (self, gesture):
+        """
+        Toggles positional tones for caret location on or off by swapping
+        relevant event handlers accordingly.
+        """
+        self.DeactivateMouseMonitor()
+        if self.caret and not self.active:
+            if self.event_caret==self._on_passThrough:
+                # Deactivated by global toggle with script_toggle():
+                self.ActivateCaret()
+                msg = MSG_CARET_TONES_ON
+            else:
+                self.DeactivateCaret()
+                self.caret = False
+                msg = MSG_CARET_TONES_OFF
+        else:
+            self.ToggleCaret()
+            msg = MSG_CARET_TONES_ON if self.caret else MSG_CARET_TONES_OFF
+        self.settings.refresh_panel(self, "caret")
+        ui.message(msg)
+
+    @script(
+        gesture="kb:control+alt+windows+NumpadDelete",
+        description=IG_CYCLE_CARET_MODE, category=IG_CATEGORY)
+    def script_cycleCaretMode (self, gesture):
+        """
+        Cycles through available caret reporting modes.
+        """
+        self.DeactivateMouseMonitor()
+        mode = self.caretMode+1
+        mode = 0 if mode==len(SET_CARET_CHOICES) else mode
+        self.caretMode = mode
+        self.settings.refresh_panel(self, "caretMode")
+        ui.message(SET_CARET_REPORT+" "+SET_CARET_CHOICES[mode])
 
     def _on_passThrough (self, obj, nextHandler, *args, **kwargs):
         """
@@ -334,20 +429,40 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         """
         Event handler that plays a positional tone upon caret movements.
         """
-        if self.focusing or self.typing:
+        if self.focusing:
             # Skip a caret beep right after text area gained focus because becomeNavigator fires first
-            # or if user is typing in the text
             self.focusing = False
-            nextHandler()
-            return
-        try:
-            x, y = getCaretPos(obj)
-            playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
-        except:
+            return nextHandler()
+        if self.typing:
+            # Caret moved because user is typing or editing the text:
+            if not self.caretTyping:
+                return nextHandler()
+            try:
+                x, y = getCaretPos(obj)
+                playCoordinates(x, y, self.durationCaret, self.lVolume, self.rVolume, self.stereoSwap)
+            except:
+                pass
+            return nextHandler()
+        if self.caretMode==3:
+            # Do not report movements is selected
+            return nextHandler()
+        # Caret navigation:
+        name = getKeyName(self.lastKey)
+        if self.caretMode==0 and name not in ("upArrow", "downArrow", "pageUp", "pageDown", "enter", "control+home", "control+end"):
+            # Vertical navigation
             pass
+        elif self.caretMode==1 and name not in ("leftArrow", "rightArrow", "home", "end"):
+            # Horizontal navigation
+            pass
+        else:
+            try:
+                x, y = getCaretPos(obj)
+                playCoordinates(x, y, self.durationCaret, self.lVolume, self.rVolume, self.stereoSwap)
+            except:
+                pass
         nextHandler()
 
-    event_caret = _on_caret
+    event_caret = _on_passThrough
 
     def _on_mouseMonitor (self, e):
         """
@@ -358,20 +473,14 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             mp     = getCursorPos()
             oX, oY = getObjectPos(caret=self.caret)
         except:
-            self.timer.Stop()
-            self.lastMousePos = (-1, -1)
-            self.lastTime     = 0.0
-            self.event_mouseMove = self._on_passThrough
+            self.DeactivateMouseMonitor()
             ui.message(MSG_LOCATION_UNAVAILABLE)
             return
         # If mouse is stationary for too long, automatically stop monitoring:
         t   = time()
         lmp = self.lastMousePos
         if lmp==mp and t-self.lastTime>=self.timeout:
-            self.lastMousePos = (-1, -1)
-            self.lastTime     = 0.0
-            self.timer.Stop()
-            self.event_mouseMove = self._on_passThrough
+            self.DeactivateMouseMonitor()
             ui.message(MSG_MOUSE_MONITOR_STOPPED)
             return
         if lmp!=mp:
@@ -391,10 +500,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             fobj = getFocusObject()
             oX, oY = getObjectPos(fobj, caret=self.caret)
         except:
-            self.timer.Stop()
-            self.lastMousePos = (-1, -1)
-            self.lastTime     = 0.0
-            self.event_mouseMove = self._on_passThrough
+            self.DeactivateMouseMonitor()
             ui.message(MSG_LOCATION_UNAVAILABLE)
             nextHandler()
             return
@@ -411,12 +517,20 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         dist = abs(oX-x) + abs(oY-y)
         if dist<=self.tolerance:
             playCoordinates(oX, oY, self.duration+150, self.lVolume, self.rVolume, self.stereoSwap)
-            self.timer.Stop()
-            self.event_mouseMove = self._on_passThrough
-            self.lastMousePos = (-1, -1)
-            self.lastTime     = 0.0
+            self.DeactivateMouseMonitor()
             speech.cancelSpeech()
             ui.message(MSG_LOCATION_REACHED)
+        nextHandler()
+
+    def _on_autoMouseMove (self, obj, nextHandler, x, y):
+        """
+        NVDA event used to auto-start mouse monitoring after a mouse moves.
+        """
+        try:
+            self.entered = (x, y) in BBox(getFocusObj())
+        except:
+            pass
+        self.ActivateMouseMonitor()
         nextHandler()
 
     event_mouseMove = _on_passThrough
@@ -425,13 +539,12 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         """
         Notifies other relevant methods that typing has taken  place.
         """
-        try:
-            name = gesture.mainKeyName
-        except AttributeError:
-            return True
-        self.lastKey = name
-        if len(name)==1 or name=="space" or name=="tab" or name=="delete" or name=="backspace" or name=="plus":
-            self.typing = True
-            return True
-        self.typing = False
+        if isinstance(gesture, KeyboardInputGesture):
+            self.lastKey = gesture
+            # typing is true only when a pressed key is capable of changing a text editable
+            # typing will wrongly indicate True in read only fields
+            # also, in edit fields that do not process enter and/or tab keys,
+            # but since we use it only in event_caret() handler it will not cause problems
+            # Automatic caret event upon gaining focus should not report, thus last key from previous field shouldn't cause an erroneous report
+            self.typing = willEnterText(gesture=gesture)
         return True

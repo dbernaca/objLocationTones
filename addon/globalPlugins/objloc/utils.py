@@ -2,7 +2,7 @@ from api                    import getDesktopObject, getNavigatorObject, getFocu
 from winUser                import getCursorPos
 from textInfos              import POSITION_CARET, POSITION_FIRST, UNIT_CHARACTER, UNIT_LINE
 from speech                 import getObjectSpeech
-from controlTypes           import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_PASSWORDEDIT, ROLE_DOCUMENT, OutputReason
+from controlTypes           import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_RICHEDIT, ROLE_PASSWORDEDIT, ROLE_DOCUMENT, STATE_MULTILINE, OutputReason
 from treeInterceptorHandler import DocumentTreeInterceptor
 
 class LocationError (LookupError):
@@ -14,14 +14,22 @@ def isEditable (obj):
     """
     Returns True if the *obj* is an editable field, False otherwise.
     """
-    r = obj.role
-    return r==ROLE_EDITABLETEXT or r==ROLE_PASSWORDEDIT or r==ROLE_TERMINAL or r==ROLE_DOCUMENT
+    if obj:
+        r = obj.role
+        return r==ROLE_EDITABLETEXT or r==ROLE_RICHEDIT or r==ROLE_PASSWORDEDIT or r==ROLE_TERMINAL or r==ROLE_DOCUMENT
+    return False
+
+def isMultiline (obj):
+    """
+    Returns True if the *obj* is a multiline editable field, False otherwise.
+    """
+    return STATE_MULTILINE in obj.states
 
 def getCaretPos (obj=None):
     try:
         obj = obj or getFocusObject()
         r = obj.role
-        if r!=ROLE_EDITABLETEXT and r!=ROLE_PASSWORDEDIT and r!=ROLE_TERMINAL and r!=ROLE_DOCUMENT:
+        if r!=ROLE_EDITABLETEXT and r!=ROLE_RICHEDIT and r!=ROLE_PASSWORDEDIT and r!=ROLE_TERMINAL and r!=ROLE_DOCUMENT:
             raise LocationError("Not an editable")
         ti = obj.treeInterceptor
         if isinstance(ti, DocumentTreeInterceptor) and not ti.passThrough:
@@ -86,3 +94,36 @@ def getObjectPos (obj=None, location=True, caret=False):
 
 def getObjectDescription (obj):
     return " ".join(x for x in getObjectSpeech(obj, OutputReason.FOCUSENTERED) if isinstance(x, str))
+
+def getKeyName (gesture):
+    """
+    Retrieves a full display key name from a gesture without involving locales.
+    """
+    if gesture:
+        try:
+            name = gesture.mainKeyName
+            mods = "+".join(gesture.modifierNames)
+            return (name if mods=="shift" and (len(name)==1 or name=="plus") else mods+"+"+name) if mods else name
+        except AttributeError:
+            # Not a keyboard gesture
+            pass
+
+def willEnterText (obj=None, gesture=None, name=None):
+    """
+    Returns True if the gesture will affect the text editables passed by obj.
+    False is returned if obj is not a text editable.
+    If obj is not given at all, getFocusObject() will be used to get it.
+
+    gesture._get_isCharacter() has a bug around "+" key so gesture.isCharacter cannot be used and we need this function.
+    Pass in either gesture or a name from getKeyName().
+    One or another must not be None.
+    """
+    if not isEditable(obj or getFocusObject()):
+        return False
+    if name is None:
+        try:
+            name = gesture.mainKeyName
+        except AttributeError:
+            # Not a keyboard gesture
+            return False
+    return len(name)==1 or name=="space" or name=="tab" or name=="delete" or name=="backspace" or name=="plus"

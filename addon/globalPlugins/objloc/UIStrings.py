@@ -39,6 +39,12 @@ IG_OBJECT_LOCATION = _("Play a positional tone for currently focused object")
 # The Object Location Tones toggle gesture description in the input gesture dialog
 IG_TOGGLE_LOCATION_REPORTING = _("Toggle automatic auditory description of object locations via positional tones")
 
+# The Object Location Tones toggle of caret reporting gesture description in the input gesture dialog
+IG_TOGGLE_CARET_LOCATION_REPORTING = _("Toggle caret location reporting via positional tones")
+
+# Description for cycling through caret reporting modes in the input gesture dialog
+IG_CYCLE_CARET_MODE = _("Cycle through caret reporting modes")
+
 # ui.message() when fetching parent object for positional audio and there is no parent to fetch
 MSG_PARENT_NOT_AVAILABLE = _("Parent object not available")
 
@@ -80,13 +86,19 @@ MSG_POSITIONAL_TONES_ON = _("Positional tones on")
 # ui.message() when positional tones are switched off via gesture
 MSG_POSITIONAL_TONES_OFF = _("Positional tones off")
 
+# ui.message() when positional tones for a caret are switched on via gesture
+MSG_CARET_TONES_ON = _("Caret location reporting on")
+
+# ui.message() when positional tones for a caret are switched off via gesture
+MSG_CARET_TONES_OFF = _("Caret location reporting off")
+
 # UI strings defined in objLocTones 24.06.1
 # =========================================
 
 # A category name in the NVDA settings dialog
 SET_CATEGORY = _("Object Location Tones")
 
-SET_POSITIONAL_AUDIO = _("Play positional tones during navigation")
+SET_POSITIONAL_AUDIO = _("Play positional tones during object navigation")
 
 SET_TONE_DURATION = _("Positional tone duration (msec):")
 
@@ -94,8 +106,43 @@ SET_MOUSE_TOLERANCE = _("Mouse point matching tolerance (px):")
 
 SET_MOUSE_MONITOR_TIMEOUT = _("Turn off mouse monitoring automatically after (sec):")
 
+SET_MOUSE_MONITOR_AUTO_START = _("Start mouse location monitoring automatically")
+
 SET_LEFT_VOLUME = _("Left speaker volume:")
 
 SET_RIGHT_VOLUME = _("Right speaker volume:")
 
 SET_SWAP_STEREO_CHANNELS = _("Swap stereo channels")
+
+# UI strings defined in objLocTones 24.07.0
+# =========================================
+
+SET_CARET = _("Play positional tones for caret location")
+
+SET_TONE_DURATION_CARET = _("Tone duration for caret location reporting (msec):")
+
+SET_CARET_TYPING = _("Report caret location while typing")
+
+SET_CARET_REPORT = _("Caret position is reported for:")
+
+SET_CARET_VERTICAL = _("Lines")
+
+SET_CARET_HORIZONTAL = _("Columns")
+
+SET_CARET_BOTH = _("Lines And Columns")
+
+SET_CARET_NONE = _("None")
+
+# DO NOT CHANGE THE ORDER OF CHOICES
+# Choice detection is index based and hard-coded because of settings and translations
+# The index is saved to settings so that it can be unrelated to any locale
+SET_CARET_CHOICES = [SET_CARET_VERTICAL, SET_CARET_HORIZONTAL, SET_CARET_BOTH, SET_CARET_NONE]
+
+# The grouping labels in settings panel
+SET_GROUP_NAVIGATION = _("Navigation")
+
+SET_GROUP_CARET = _("Caret")
+
+SET_GROUP_MOUSE = _("Mouse")
+
+SET_GROUP_TONES = _("Tones")

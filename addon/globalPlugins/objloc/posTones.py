@@ -58,7 +58,11 @@ def playPoints (delay, points, d=40, lVolume=1.0, rVolume=1.0, stereoSwap=False)
     Plays a sequence of coordinates with delay between them.
     It does it by using wx.CallAfter() and wx.CallLater() to schedule playCoordinates() calls.
     points need to be a sequence of points that can be unpacked to x and y.
+    delay is in milliseconds.
     All other arguments are passed to each playCoordinates() call in turn.
+    Returns a number of milliseconds necessary to play the next point
+    after the playPoints is done, using the same delay.
+    Substracting the delay value from returned value will tell you exactly how long will take to play all the points.
     """
     i = iter(points)
     x, y = next(i)

@@ -4,33 +4,46 @@ from logHandler import log
 import os
 import sys
 import addonHandler
-import globalVars
 
 def findOld ():
-    for addon in addonHandler.getAvailableAddons():
-        if addon.name=="objLocTones":
-            return addon
-
-def getSettings (addon):
-    path = os.path.join(addon.path, "globalPlugins", "objloc")
-    if not os.path.isdir(os.path.join(path, "settings")):
-        return
-    cwd = os.getcwd()
-    os.chdir(path)
-    sys.path.append(path)
     try:
-        import settings as S
+        return next(addonHandler.getAvailableAddons(filterFunc=lambda a:a.name=="objLocTones"))
     except:
         pass
-    os.chdir(cwd)
-    sys.path.remove(path)
+
+def getSettings (addon):
+    setpath = os.path.join(addon.path, "globalPlugins", "objloc", "settings", "settings.json")
+    if not os.path.isfile(setpath):
+        # No old settings file found, so no point continuing
+        return
+    # We import settings package from the new version of the add-on
+    # since it may contain changes needed to pull this off
+    if not os.path.isdir(addon.pendingInstallPath):
+        log.warning("Object Location Tones bundle for some reason not extracted to '%s, settings cannot be preserved!" % addon.pendingInstallPath)
+        return
+    packpath = os.path.join(addon.pendingInstallPath,
+                            "globalPlugins", "objloc")
+    cwd = os.getcwd()
     try:
-        obj = S.Settings()
+        # Windows is an odd beast
+        os.chdir(packpath)
+    except Exception as e:
+        log.warning("Unable to change directory to '%s' because of %s, settings will not be preserved!" % (packpath, str(e)))
+        return
+    sys.path.append(packpath)
+    try:
+        import settings as S
     except Exception as e:
         log.warning(str(e))
+    os.chdir(cwd) # This one should never fail
+    sys.path.remove(packpath)
+    try:
+        obj = S.Settings(setpath)
+    except NameError:
+        log.warning("Unable to import settings package, settings will not be preserved!")
         return
-    # There is a very low possibility that there is no old settings file, so, no point continuing:
-    if not os.path.isfile(obj.path):
+    except Exception as e:
+        log.warning(str(e))
         return
     return obj
 
@@ -43,7 +56,7 @@ def onInstall ():
     log.info("There is Object Location Tones already installed, updating...")
     S = getSettings(addon)
     if S is None:
-        log.info("Object Location Tones settings file is not found in the previous install, proceeding...")
+        log.info("Object Location Tones settings file is not found in the previous install or the settings package is unavailable, proceeding...")
         return
     log.info("Object Location Tones settings file found, preserving data...")
     # We load the settings so that we can modify them in future
@@ -56,19 +69,12 @@ def onInstall ():
         # First, get a holder object from the existing file
         inst = S.generate_instance()
         # Save it into pending install version, so that it gets activated after old add-on removal and renaming of new one:
-        if not os.path.isdir(addon.pendingInstallPath):
-            log.warning("Object Location Tones bundle for some reason not extracted to '%s, settings cannot be preserved!" % addon.pendingInstallPath)
-            return
-        path = os.path.join(addon.pendingInstallPath,
-                            "globalPlugins", "objloc", "settings", os.path.basename(S.path))
-        # Switch settings path to new file:
-        S.path = path
-        # In the future, the settings module from pending install needs to be imported,
-        # so that the new settings is synchronized with any possible changes in settings protocol,
-        # and used to save the instance.
-        # For now though, reuse the already instanced object to save it into new file:
+        setpath = os.path.join(addon.pendingInstallPath, "globalPlugins", "objloc", "settings", "settings.json")
+        # Switch settings path to a new file:
+        S.path = setpath
+        # Save it
         S.save(inst, force=True)
-        log.info("Object Location Tones installation ready!")
+        log.info("Settings preserved. Object Location Tones installation ready!")
     except Exception as e:
         log.warning(str(e))
 

@@ -1,6 +1,6 @@
 V24.07.0 (3/13 realized):
 =========================
-+ Implement installTask() to preserve settings after update from 24.05 and later
++ Implement installTasks.py to preserve settings after update from 24.05 and later
 - Change settings panel by using more API methods to notify users about wrong input instead of just ignoring it
 + Flip settings panel sliders to lower with downarrow
 - Either translate the addon to other languages by myself or introduce it to translation system

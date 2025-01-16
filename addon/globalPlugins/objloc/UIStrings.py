@@ -123,7 +123,7 @@ SET_TONE_DURATION_CARET = _("Tone duration for caret location reporting (msec):"
 
 SET_CARET_TYPING = _("Report caret location while typing")
 
-SET_CARET_REPORT = _("Caret position is reported for:")
+SET_CARET_REPORT = _("Caret reporting mode:")
 
 SET_CARET_VERTICAL = _("Lines")
 

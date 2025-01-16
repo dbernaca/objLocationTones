@@ -546,5 +546,5 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             # also, in edit fields that do not process enter and/or tab keys,
             # but since we use it only in event_caret() handler it will not cause problems
             # Automatic caret event upon gaining focus should not report, thus last key from previous field shouldn't cause an erroneous report
-            self.typing = willEnterText(gesture=gesture)
+            self.typing = willEnterText(gesture)
         return True

@@ -98,32 +98,25 @@ def getObjectDescription (obj):
 def getKeyName (gesture):
     """
     Retrieves a full display key name from a gesture without involving locales.
+    Note: The gesture needs to be KeyboardInputGesture() compatible or AttributeError will be raised.
     """
     if gesture:
-        try:
-            name = gesture.mainKeyName
-            mods = "+".join(gesture.modifierNames)
-            return (name if mods=="shift" and (len(name)==1 or name=="plus") else mods+"+"+name) if mods else name
-        except AttributeError:
-            # Not a keyboard gesture
-            pass
+        name = gesture.mainKeyName
+        mods = "+".join(gesture.modifierNames)
+        return (name if mods=="shift" and (len(name)==1 or name=="plus") else mods+"+"+name) if mods else name
 
-def willEnterText (obj=None, gesture=None, name=None):
+def willEnterText (gesture, obj=None):
     """
     Returns True if the gesture will affect the text editables passed by obj.
     False is returned if obj is not a text editable.
     If obj is not given at all, getFocusObject() will be used to get it.
 
     gesture._get_isCharacter() has a bug around "+" key so gesture.isCharacter cannot be used and we need this function.
-    Pass in either gesture or a name from getKeyName().
-    One or another must not be None.
+    Note: The gesture needs to be KeyboardInputGesture() compatible or AttributeError will be raised.
     """
-    if not isEditable(obj or getFocusObject()):
+    obj = obj or getFocusObject()
+    r = obj.role if obj else None
+    if not (r==ROLE_EDITABLETEXT or r==ROLE_RICHEDIT or r==ROLE_PASSWORDEDIT or r==ROLE_TERMINAL or r==ROLE_DOCUMENT):
         return False
-    if name is None:
-        try:
-            name = gesture.mainKeyName
-        except AttributeError:
-            # Not a keyboard gesture
-            return False
+    name = gesture.mainKeyName
     return len(name)==1 or name=="space" or name=="tab" or name=="delete" or name=="backspace" or name=="plus"

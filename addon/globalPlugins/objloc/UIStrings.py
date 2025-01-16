@@ -146,3 +146,5 @@ SET_GROUP_CARET = _("Caret")
 SET_GROUP_MOUSE = _("Mouse")
 
 SET_GROUP_TONES = _("Tones")
+
+SET_RESTORE_DEFAULTS = _("Restore defaults...")

@@ -76,7 +76,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
                              label=SET_SWAP_STEREO_CHANNELS, group=SET_GROUP_TONES,
                              reactor=self.SwapChannels)
 
-        #self.restore = Activator("Restore defaults", lambda e: (self.settings.restore_defaults(), self.settings.refresh_panel(self), e.Skip()))
+        self.restore = Activator(SET_RESTORE_DEFAULTS, lambda e: (self.settings.restore_defaults(), self.settings.refresh_panel(self)))
         # Load the configurables from settings if possible
         self.settings = S = Settings()
         try:

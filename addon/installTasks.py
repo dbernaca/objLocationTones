@@ -6,9 +6,14 @@ import sys
 import addonHandler
 
 def findOld ():
+    """
+    Returns a previously installed addon of the currently installing add-on.
+    None if it wasn't installed before.
+    """
+    this = addonHandler.getCodeAddon()
     try:
-        return next(addonHandler.getAvailableAddons(filterFunc=lambda a:a.name=="objLocTones"))
-    except:
+        return next(addonHandler.getAvailableAddons(filterFunc=lambda a:id(a)!=id(this) and a.name==this.name))
+    except StopIteration:
         pass
 
 def getSettings (addon):
@@ -39,6 +44,7 @@ def getSettings (addon):
     sys.path.remove(packpath)
     try:
         obj = S.Settings(setpath)
+        globals()["Attribute"] = S.Attribute
     except NameError:
         log.warning("Unable to import settings package, settings will not be preserved!")
         return
@@ -53,7 +59,7 @@ def onInstall ():
     if addon is None:
         log.info("Fresh installation of Object Location Tones detected, proceeding...")
         return
-    log.info("There is Object Location Tones already installed, updating...")
+    log.info("There is Object Location Tones already installed version %s, updating..." % addon.version)
     S = getSettings(addon)
     if S is None:
         log.info("Object Location Tones settings file is not found in the previous install or the settings package is unavailable, proceeding...")
@@ -68,6 +74,13 @@ def onInstall ():
     try:
         # First, get a holder object from the existing file
         inst = S.generate_instance()
+        # Add new config to avoid errors at startup and manage backward compatibility with old settings
+        inst.autoMouse = Attribute(inst, "autoMouse", bool, False, "autoMouse", {})
+        inst.caretTyping = Attribute(inst, "caretTyping", bool, False, "caretTyping", {})
+        inst.caret = Attribute(inst, "caret", bool, True, "caret", {})
+        cm = (2 if inst.active.value else 3) if hasattr(inst, "active") else 2
+        inst.caretMode = Attribute(inst, "caretMode", int, cm, "caretMode", {})
+        inst.durationCaret = Attribute(inst, "durationCaret", int, (inst.duration.value if hasattr(inst, "duration") else 40), "durationCaret", {})
         # Save it into pending install version, so that it gets activated after old add-on removal and renaming of new one:
         setpath = os.path.join(addon.pendingInstallPath, "globalPlugins", "objloc", "settings", "settings.json")
         # Switch settings path to a new file:

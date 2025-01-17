@@ -1,13 +1,33 @@
+V25.01.0 (0/12 realized):
+=========================
+- Fix treating single line editables as multiline when trying to detect end of a document
+- Consider changing int fields like for tone durations in settings panel to sliders or combos so that immediate effect can be implemented safely for these fields
+- Add immediate effect to volume changes in settings panel so users can hear it right away
+- Consider fixing checkboxes and other selections in settings panel staying in effect even after Cancel is chosen
+- Change settings panel by using more API methods to notify users about wrong input instead of just ignoring it or make it completely impossible to enter
+- Try to improve caret reporting at the end of documents some more
+- See about getting the font size and using it to improve caret tone positioning
+: Delete and backspace consider as typing unless selection was removed
+  (selection bit not implemented yet)
+- Change the ancestor reporting request algorithm
+- Implement requestable location report stretching for a caret position in text editables
+  that is, enable users to hear the caret position in full pitch range regardless the actual caret position on the screen
+  so that the relation of the caret position to the size of the editable is felt
+  this may help those with less sensitive hearing to use the caret position reporting effectively
+  (consider implementing this for all objects instead, i.e. allow per client reporting)
+- Add laptop gestures per issue request
+- Either translate the addon to other languages by myself or introduce it to translation system
+
 V24.07.0 (3/13 realized):
 =========================
 + Implement installTasks.py to preserve settings after update from 24.05 and later
-- Change settings panel by using more API methods to notify users about wrong input instead of just ignoring it
 + Flip settings panel sliders to lower with downarrow
-- Either translate the addon to other languages by myself or introduce it to translation system
-- Consider fixing checkboxes in settings panel staying in effect even after Cancel is chosen
 + Implement possibility of changing caret position reporting behaviour (no reporting, reporting only lines, reporting only rows, reporting lines and rows)
+- Consider fixing checkboxes in settings panel staying in effect even after Cancel is chosen
 - Add laptop gestures per issue request
+- Change settings panel by using more API methods to notify users about wrong input instead of just ignoring it
 - Fix treating single line editables as multiline when trying to detect end of a document
+- Either translate the addon to other languages by myself or introduce it to translation system
 - See about getting the font size and using it to improve caret tone positioning
 - Try to improve caret reporting at the end of documents some more
 : Delete and backspace consider as typing unless selection was removed

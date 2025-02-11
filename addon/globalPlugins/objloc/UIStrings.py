@@ -123,6 +123,7 @@ SET_TONE_DURATION_CARET = _("Tone duration for caret location reporting (msec):"
 
 SET_CARET_TYPING = _("Report caret location while typing")
 
+# Label for the caret reporting mode in settings and in message when using script
 SET_CARET_REPORT = _("Caret reporting mode:")
 
 SET_CARET_VERTICAL = _("Lines")
@@ -138,6 +139,32 @@ SET_CARET_NONE = _("None")
 # The index is saved to settings so that it can be unrelated to any locale
 SET_CARET_CHOICES = [SET_CARET_VERTICAL, SET_CARET_HORIZONTAL, SET_CARET_BOTH, SET_CARET_NONE]
 
+# Label in settings for the mouse monitoring second beep
+SET_MOUSE_REF_POINT = _("Mouse monitoring reference point:")
+
+# Mouse reference point will be the focused object's location (default behaviour)
+SET_MOUSE_REF_FOCUS = _("Focused object's location")
+
+# Mouse reference point: Top Left of the Window
+SET_MOUSE_REF_TLW = _("Top left corner of the application's root window")
+
+# Mouse reference point: Centre of the window
+SET_MOUSE_REF_CW = _("Centre of the application's root window")
+
+# Mouse reference point: Top left of the screen
+SET_MOUSE_REF_TLS = _("Top left corner of the screen")
+
+# Mouse reference point: Centre of the screen
+SET_MOUSE_REF_CS = _("Centre of the screen")
+
+# Mouse reference point: none will be used
+SET_MOUSE_REF_NONE = _("NONE")
+
+# DO NOT CHANGE THE ORDER OF CHOICES
+# Choice detection is index based and hard-coded because of settings and translations
+# The index is saved to settings so that it can be unrelated to any locale
+SET_MOUSE_REF_CHOICES = [SET_MOUSE_REF_FOCUS, SET_MOUSE_REF_TLW, SET_MOUSE_REF_CW, SET_MOUSE_REF_TLS, SET_MOUSE_REF_CS, SET_MOUSE_REF_NONE]
+
 # The grouping labels in settings panel
 SET_GROUP_NAVIGATION = _("Navigation")
 
@@ -146,5 +173,7 @@ SET_GROUP_CARET = _("Caret")
 SET_GROUP_MOUSE = _("Mouse")
 
 SET_GROUP_TONES = _("Tones")
+
+SET_GROUP_AUDIO = _("Audio")
 
 SET_RESTORE_DEFAULTS = _("Restore defaults...")

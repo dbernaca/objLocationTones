@@ -114,8 +114,15 @@ def willEnterText (gesture, obj=None):
     gesture._get_isCharacter() has a bug around "+" key so gesture.isCharacter cannot be used and we need this function.
     Note: The gesture needs to be KeyboardInputGesture() compatible or AttributeError will be raised.
     """
-    obj = obj or getFocusObject()
-    r = obj.role if obj else None
+    try:
+        obj = obj or getFocusObject()
+        r = obj.role if obj else None
+    except Exception as e:
+        # This should never occur any longer. It caused problems if called not from main thread, but just in case...
+        print("Error in critical moment. This might be effecting normal navigation. Please contact the Object Location Tones add-on maintainer immediately.")
+        print("If you are experiencing problems during navigation, disable positional tones while working in this area.")
+        print("Exception is: "+str(e))
+        return False
     if not (r==ROLE_EDITABLETEXT or r==ROLE_RICHEDIT or r==ROLE_PASSWORDEDIT or r==ROLE_TERMINAL or r==ROLE_DOCUMENT):
         return False
     name = gesture.mainKeyName

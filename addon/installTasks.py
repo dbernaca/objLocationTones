@@ -75,12 +75,20 @@ def onInstall ():
         # First, get a holder object from the existing file
         inst = S.generate_instance()
         # Add new config to avoid errors at startup and manage backward compatibility with old settings
-        inst.autoMouse = Attribute(inst, "autoMouse", bool, False, "autoMouse", {})
-        inst.caretTyping = Attribute(inst, "caretTyping", bool, False, "caretTyping", {})
-        inst.caret = Attribute(inst, "caret", bool, True, "caret", {})
-        cm = (2 if inst.active.value else 3) if hasattr(inst, "active") else 2
-        inst.caretMode = Attribute(inst, "caretMode", int, cm, "caretMode", {})
-        inst.durationCaret = Attribute(inst, "durationCaret", int, (inst.duration.value if hasattr(inst, "duration") else 40), "durationCaret", {})
+        if not hasattr(inst, "autoMouse"):
+            inst.autoMouse = Attribute(inst, "autoMouse", bool, False, "autoMouse", {})
+        if not hasattr(inst, "caretTyping"):
+            inst.caretTyping = Attribute(inst, "caretTyping", bool, False, "caretTyping", {})
+        if not hasattr(inst, "caret"):
+            inst.caret = Attribute(inst, "caret", bool, True, "caret", {})
+        if not hasattr(inst, "caretMode"):
+            cm = (2 if inst.active.value else 3) if hasattr(inst, "active") else 2
+            inst.caretMode = Attribute(inst, "caretMode", int, cm, "caretMode", {})
+            inst.caret.value = True
+        if not hasattr(inst, "durationCaret"):
+            inst.durationCaret = Attribute(inst, "durationCaret", int, (inst.duration.value if hasattr(inst, "duration") else 40), "durationCaret", {})
+        if not hasattr(inst, "refPoint"):
+            inst.refPoint = Attribute(inst, "refPoint", int, 0, "refPoint", {})
         # Save it into pending install version, so that it gets activated after old add-on removal and renaming of new one:
         setpath = os.path.join(addon.pendingInstallPath, "globalPlugins", "objloc", "settings", "settings.json")
         # Switch settings path to a new file:

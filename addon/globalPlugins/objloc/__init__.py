@@ -65,6 +65,10 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.autoMouse     = Settable(False,
                              label=SET_MOUSE_MONITOR_AUTO_START, group=SET_GROUP_MOUSE,
                              reactor=self.ToggleMouseMonitorAutostart)
+        self.refPoint      = Settable(SET_MOUSE_REF_CHOICES.index(SET_MOUSE_REF_FOCUS), # Whether to report vertical, horizontal, both or none of caret movements
+                             choices=tuple(SET_MOUSE_REF_CHOICES), # tuple() means wx.Choice(), instead of wx.ListBox() in settings panel
+                             label=SET_MOUSE_REF_POINT, group=SET_GROUP_MOUSE,
+                             reactor=lambda e: ( setattr(self, "refPoint", e.GetSelection()), e.Skip() ) )
         # Tones:
         self.lVolume       = Settable(maxVolume, # Volume of positional tones on the left stereo channel, float in range 0.0 to 1.0
                              label=SET_LEFT_VOLUME, group=SET_GROUP_TONES,
@@ -466,7 +470,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
 
     def _on_mouseMonitor (self, e):
         """
-        Timer callback to play positional tones of a mouse cursor location and the current navigator object.
+        Timer callback to play positional tones of a mouse cursor location and the current reference point.
         Helps to monitor their relation, i.e. difference of their distance on the screen.
         """
         try:
@@ -487,7 +491,10 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.lastMousePos = mp
             self.lastTime = t
         wx.CallAfter(playCoordinates, mp[0], mp[1], self.duration+40, self.lVolume, self.rVolume, self.stereoSwap)
-        wx.CallLater(self.duration+100, playCoordinates, oX, oY, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
+        if self.refPoint==0:
+            wx.CallLater(self.duration+100, playCoordinates, oX, oY, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
+        elif self.refPoint==3:
+            wx.CallLater(self.duration+100, playCoordinates, 0, 0, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
 
     def _on_mouseMove (self, obj, nextHandler, x, y):
         """
@@ -541,10 +548,13 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         """
         if isinstance(gesture, KeyboardInputGesture):
             self.lastKey = gesture
-            # typing is true only when a pressed key is capable of changing a text editable
-            # typing will wrongly indicate True in read only fields
-            # also, in edit fields that do not process enter and/or tab keys,
-            # but since we use it only in event_caret() handler it will not cause problems
-            # Automatic caret event upon gaining focus should not report, thus last key from previous field shouldn't cause an erroneous report
-            self.typing = willEnterText(gesture)
+            wx.CallAfter(self.typing_handler, gesture)
         return True
+
+    def typing_handler (self, gesture):
+        # self.typing is true only when a pressed key is capable of changing a text editable
+        # typing will wrongly indicate True in read only fields
+        # also, in edit fields that do not process enter and/or tab keys,
+        # but since we use it only in event_caret() handler it will not cause problems
+        # Automatic caret event upon gaining focus should not report, thus last key from previous field shouldn't cause an erroneous report
+        self.typing = willEnterText(gesture)

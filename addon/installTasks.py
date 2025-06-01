@@ -7,7 +7,7 @@ import addonHandler
 
 def findOld ():
     """
-    Returns a previously installed addon of the currently installing add-on.
+    Returns a previously installed addon object of the currently installing add-on.
     None if it wasn't installed before.
     """
     this = addonHandler.getCodeAddon()
@@ -17,6 +17,16 @@ def findOld ():
         pass
 
 def getSettings (addon):
+    """
+    Imports the settings module from the add-on bundle given by the addon object,
+    inserts the Attribute() class from settings package into the global namespace
+    and returns the active Settings() object with the settings file path
+    set to the path of the add-on bundle given by the addon object.
+    If the settings file does not exist at the specified location, returns None.
+    None is also returned if any other kind of error is encountered, and the error is
+    reported in the log. Missing settings file is not reported as this is
+    a normal state for old versions of the add-on.
+    """
     setpath = os.path.join(addon.path, "globalPlugins", "objloc", "settings", "settings.json")
     if not os.path.isfile(setpath):
         # No old settings file found, so no point continuing
@@ -65,10 +75,12 @@ def onInstall ():
         log.info("Object Location Tones settings file is not found in the previous install or the settings package is unavailable, proceeding...")
         return
     log.info("Object Location Tones settings file found, preserving data...")
-    # We load the settings so that we can modify them in future
-    # if ever needed. Faster, perhaps even neater, would be to move the file itself, and put it back later.
+    # We load the settings file so that we can modify them to match settings changes in the new addon version.
+    # Faster, perhaps even neater, would be just to copy the file itself, so that it gets installed along with new bundle.
     # This way though, we can even define in advance which attributes we would
     # transfer and which not, transform their types if needed, add new ones and delete old, etc. etc.
+    # If we just copy the old file, the add-on will have to lose time on each startup to check for differences
+    # and make this kind of changes to the settings, adding extra code and overhead.
     # Note: This part of code relies on the old settings file completely, and assumes nobody messed up types by editing it manually
     # Addon will check later though, upon real load and ignore errors
     try:
@@ -76,19 +88,18 @@ def onInstall ():
         inst = S.generate_instance()
         # Add new config to avoid errors at startup and manage backward compatibility with old settings
         if not hasattr(inst, "autoMouse"):
-            inst.autoMouse = Attribute(inst, "autoMouse", bool, False, "autoMouse", {})
+            inst.autoMouse = False
         if not hasattr(inst, "caretTyping"):
-            inst.caretTyping = Attribute(inst, "caretTyping", bool, False, "caretTyping", {})
+            inst.caretTyping = False
         if not hasattr(inst, "caret"):
-            inst.caret = Attribute(inst, "caret", bool, True, "caret", {})
+            inst.caret = Ttrue
         if not hasattr(inst, "caretMode"):
-            cm = (2 if inst.active.value else 3) if hasattr(inst, "active") else 2
-            inst.caretMode = Attribute(inst, "caretMode", int, cm, "caretMode", {})
+            inst.caretMode = (2 if inst.active.value else 3) if hasattr(inst, "active") else 2
             inst.caret.value = True
         if not hasattr(inst, "durationCaret"):
-            inst.durationCaret = Attribute(inst, "durationCaret", int, (inst.duration.value if hasattr(inst, "duration") else 40), "durationCaret", {})
+            inst.durationCaret = inst.duration.value if hasattr(inst, "duration") else 40
         if not hasattr(inst, "refPoint"):
-            inst.refPoint = Attribute(inst, "refPoint", int, 0, "refPoint", {})
+            inst.refPoint = 0
         # Save it into pending install version, so that it gets activated after old add-on removal and renaming of new one:
         setpath = os.path.join(addon.pendingInstallPath, "globalPlugins", "objloc", "settings", "settings.json")
         # Switch settings path to a new file:

@@ -95,6 +95,12 @@ def getObjectPos (obj=None, location=True, caret=False):
 def getObjectDescription (obj):
     return " ".join(x for x in getObjectSpeech(obj, OutputReason.FOCUSENTERED) if isinstance(x, str))
 
+def getObjectRoleName (obj):
+    try:
+        return obj.role.displayString
+    except:
+        return ""
+
 def getKeyName (gesture):
     """
     Retrieves a full display key name from a gesture without involving locales.

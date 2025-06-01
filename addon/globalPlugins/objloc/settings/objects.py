@@ -114,7 +114,7 @@ class Attribute (object):
     def to_instance (self, instance):
         """
         Set this Attribute()'s value to the given instance.
-        If the instance does not have the attribute declared, it will be created but only if the name is specified, if it is not an error will occur.
+        If the instance does not have the attribute declared, it will be created but only if the name is specified by self.name, if it is not an error will occur.
         The method sets the real value from self.value to the instance, not the Attribute() object itself.
         """
         setattr(instance, self.name, self.value)
@@ -313,3 +313,34 @@ class Attribute (object):
 
     def has_gui_control (self):
         return self.ctrlId!=None
+
+class Holder (object):
+    def __init__ (self, sdict=None):
+        if sdict is None:
+            return
+        for key, value in sdict.items():
+            attr = Attribute(self, key, type(value), value, key, {})
+            try:
+                object.__setattr__(self, key, attr)
+            except:
+                log.warning("Invalid name: %s, skipping...." % repr(key))
+
+    def __setattr__ (self, name, value):
+        if isinstance(value, Attribute):
+            attr = value.copy()
+            attr.name = name
+            attr.flip_allegiance(self)
+            object.__setattr__(self, name, attr)
+            return
+        attr = getattr(self, name, None)
+        if isinstance(attr, Attribute):
+            attr.value = value
+            return
+        attr = Attribute(self, name, type(value), value, name, {})
+        object.__setattr__(self, name, attr)
+
+    def NewAttr (self, name, value, nickname=None, args={}):
+        nickname = nickname if nickname else name
+        args = args if args else {}
+        attr = Attribute(self, name, type(value), value, nickname, args)
+        object.__setattr__(self, name, attr)

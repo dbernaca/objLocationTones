@@ -10,7 +10,7 @@ from .exceptions import *
 from .factory    import *
 from .panel      import SetPanel, RemovePanel, Panel, setValue
 
-__all__ = ["SettingsError", "Attribute", "Settable", "Activator", "Settings", "SetPanel", "RemovePanel"]
+__all__ = ["SettingsError", "Attribute", "Holder", "Settable", "Activator", "Settings", "SetPanel", "RemovePanel"]
 
 class Settings:
     path     = None # A settings file
@@ -183,17 +183,8 @@ class Settings:
             d = json.load(f)
         except Exception as e:
             raise SettingsError("Loading of the settings from file failed because of "+str(e))
-        class holder:
-            pass
-        obj = holder()
         d.pop("version", 1)
-        for key, value in d.items():
-            attr = Attribute(obj, key, type(value), value, key, {})
-            try:
-                setattr(obj, key, attr)
-            except:
-                log.warning("Invalid name: %s, skipping...." % repr(key))
-        return obj
+        return Holder(d)
 
     def update (self, instance):
         """

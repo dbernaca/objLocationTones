@@ -495,6 +495,12 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             wx.CallLater(self.duration+100, playCoordinates, oX, oY, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
         elif self.refPoint==3:
             wx.CallLater(self.duration+100, playCoordinates, 0, 0, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
+        elif self.refPoint==4:
+            try:
+                dcpx, dcpy = getDesktopObject().location.center
+            except:
+                return
+            wx.CallLater(self.duration+100, playCoordinates, dcpx, dcpy, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
 
     def _on_mouseMove (self, obj, nextHandler, x, y):
         """
@@ -515,11 +521,11 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             if not self.entered:
                 self.entered = True
                 speech.cancelSpeech()
-                ui.message(MSG_ENTERING)
+                ui.message(MSG_ENTERING+" "+getObjectDescription(fobj))
         else:
             if self.entered:
                 speech.cancelSpeech()
-                ui.message(MSG_EXITING)
+                ui.message(MSG_EXITING+" "+getObjectRoleName(fobj))
             self.entered = False
         dist = abs(oX-x) + abs(oY-y)
         if dist<=self.tolerance:
@@ -534,7 +540,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         NVDA event used to auto-start mouse monitoring after a mouse moves.
         """
         try:
-            self.entered = (x, y) in BBox(getFocusObj())
+            self.entered = (x, y) in BBox(getFocusObject())
         except:
             pass
         self.ActivateMouseMonitor()

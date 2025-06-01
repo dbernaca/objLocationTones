@@ -72,10 +72,12 @@ MSG_MOUSE_MONITOR_CANCELLED = _("Mouse location monitoring cancelled")
 MSG_MOUSE_MONITOR_STOPPED = _("Mouse location monitoring stopped")
 
 # ui.message() during the mouse monitoring when the mouse enters the focused object area
-MSG_ENTERING = _("Entering focused object")
+# The object's description will be added at the end of the string
+MSG_ENTERING = _("Entering")
 
 # ui.message() during the mouse monitoring when the mouse exits the focused object area
-MSG_EXITING = _("Exiting focused object")
+# The object's description will be added at the end of the string
+MSG_EXITING = _("Leaving")
 
 # ui.message() when during the mouse monitoring the mouse cursor is brought to the denoted location of the focused object
 MSG_LOCATION_REACHED = _("Location reached")

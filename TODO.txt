@@ -1,9 +1,9 @@
-V25.01.0 (0/12 realized):
+V25.1.0 (2/12 realized):
 =========================
 - Fix treating single line editables as multiline when trying to detect end of a document
 - Consider changing int fields like for tone durations in settings panel to sliders or combos so that immediate effect can be implemented safely for these fields
-- Add immediate effect to volume changes in settings panel so users can hear it right away
-- Consider fixing checkboxes and other selections in settings panel staying in effect even after Cancel is chosen
++ Add immediate effect to volume changes in settings panel so users can hear it right away
++ Consider fixing checkboxes and other selections in settings panel staying in effect even after Cancel is chosen
 - Change settings panel by using more API methods to notify users about wrong input instead of just ignoring it or make it completely impossible to enter
 - Try to improve caret reporting at the end of documents some more
 - See about getting the font size and using it to improve caret tone positioning

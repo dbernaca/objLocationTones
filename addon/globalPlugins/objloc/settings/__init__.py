@@ -3,12 +3,12 @@
 # From saving them to disk, to providing GUI
 
 import os
-import json
-from logHandler  import log
-from .objects    import *
-from .exceptions import *
-from .factory    import *
-from .panel      import SetPanel, RemovePanel, Panel, setValue
+from logHandler     import log
+from .objects       import *
+from .exceptions    import *
+from .serialization import *
+from .factory       import *
+from .panel         import SetPanel, RemovePanel, Panel, setValue, getValue
 
 __all__ = ["SettingsError", "Attribute", "Holder", "Settable", "Activator", "Settings", "SetPanel", "RemovePanel"]
 
@@ -38,6 +38,21 @@ class Settings:
                 self.attributes.add(obj)
                 obj.set()
 
+    def set_all (self, instance):
+        for attr in self.attributes:
+            if attr.belongs_to(instance):
+                attr.set()
+
+    def set_defaults (self, instance):
+        for attr in self.attributes:
+            if attr.belongs_to(instance):
+                setattr(instance, attr.name, attr.default)
+
+    def set_originals (self, instance):
+        for attr in self.attributes:
+            if attr.belongs_to(instance):
+                setattr(instance, attr.name, attr.original)
+
     def load (self, instance):
         """
         Loads the settings from the json file to the instance's attributes.
@@ -59,7 +74,7 @@ class Settings:
         except Exception as e:
             raise SettingsError("Opening settings file failed because of "+str(e))
         try:
-            d = json.load(f)
+            d = SDict().load(f)
         except Exception as e:
             raise SettingsError("Loading of the settings from file failed because of "+str(e))
         # Update the set() attributes
@@ -97,7 +112,7 @@ class Settings:
         # Update the attributes set() in case new attributes were registered for saving
         self.map_attrs(instance)
         # Build the JSON dict
-        d = {"version": self.version} # Save the protocol version, so we may adapt to older settings if it changes in the future
+        d = SDict({"version": self.version}) # Save the protocol version, so we may adapt to older settings if it changes in the future
         changed = []
         for attr in self.attributes:
             if not attr.save:
@@ -120,24 +135,26 @@ class Settings:
                 return
         try:
             f = open(self.path, "w")
-            json.dump(d, f, indent=4)
+            d.dump(f)
             f.close()
             # If writing to file is successful, make sure new original values
-            # now are the ones saved, just like the file is just loaded
+            # now are the ones saved, just like when the file is just loaded
             for attr in changed:
                 attr.seal()
         except Exception as e:
             raise SettingsError("Unable to save settings because of %s"+str(e))
 
-    def restore_defaults (self):
+    def restore_defaults (self, set=True):
         for attr in self.attributes:
             attr.value = attr.default
-            attr.set()
+            if set:
+                attr.set()
 
-    def restore_original (self):
+    def restore_original (self, set=True):
         for attr in self.attributes:
             attr.value = attr.original
-            attr.set()
+            if set:
+                attr.set()
 
     def __getitem__ (self, i):
         for attr in self.attributes:
@@ -148,22 +165,42 @@ class Settings:
     def __contains__ (self, i):
         return (i in (attr.name for attr in self.attributes))
 
-    def refresh_panel (self, instance, specific=None):
+    def __iter__ (self):
+        return iter(sorted(self.attributes, key=(lambda x: x.args.get("ordinal", x.id))))
+
+    def refresh_panel (self, instance, *specific):
         if not Panel.opened:
             return
         if specific:
             for attr in self.attributes:
                 if not attr.belongs_to(instance):
                     continue
-                if (attr.name==specific or attr.nickname==specific or attr==specific) and (attr.value!=Ellipsis and attr.has_gui_control()):
-                    setValue(attr, attr.get_gui_control())
+                if (attr.value!=Ellipsis and attr.has_gui_control()) and (attr.name in specific or attr in specific or attr.ctrlId in specific or attr.nickname in specific):
+                    setValue(attr, attr.get_gui_control(), getattr(instance, attr.name))
                     break
             return
         for attr in self.attributes:
             if not attr.belongs_to(instance):
                 continue
             if attr.value!=Ellipsis and attr.has_gui_control():
-                setValue(attr, attr.get_gui_control())
+                setValue(attr, attr.get_gui_control(), getattr(instance, attr.name))
+
+    def refresh_instance (self, instance, *specific):
+        if not Panel.opened:
+            return
+        if specific:
+            for attr in self.attributes:
+                if not attr.belongs_to(instance):
+                    continue
+                if (attr.value!=Ellipsis and attr.has_gui_control()) and (attr.name in specific or attr in specific or attr.ctrlId in specific or attr.nickname in specific):
+                    setattr(instance, attr.name, getValue(attr, attr.get_gui_control()))
+                    break
+            return
+        for attr in self.attributes:
+            if not attr.belongs_to(instance):
+                continue
+            if attr.value!=Ellipsis and attr.has_gui_control():
+                setattr(instance, attr.name, getValue(attr, attr.get_gui_control()))
 
     def generate_instance (self):
         """
@@ -180,11 +217,11 @@ class Settings:
         except Exception as e:
             raise SettingsError("Opening settings file failed because of "+str(e))
         try:
-            d = json.load(f)
+            d = SDict().load(f)
         except Exception as e:
             raise SettingsError("Loading of the settings from file failed because of "+str(e))
         d.pop("version", 1)
-        return Holder(d)
+        return d.to_instance()
 
     def update (self, instance):
         """
@@ -192,7 +229,7 @@ class Settings:
         All registered Attributes() will be tried,
         first by name, then by nickname, and if found in 'instance',
         their value will be updated to the one from the 'instance'.
-        Can be used to update current settings from raw settings load by generate_instance() method.
+        Can be used to update current settings from raw settings loaded by generate_instance() method.
         Do not forget to call load(), save() or map_attrs() on the instance(s) you wish to update
         before the update() method, so that the set() attributes is populated.
         Type mismatches and similar problems with value will be logged and the attribute skipped.

@@ -4,7 +4,7 @@ from inspect  import currentframe as getframe
 
 def Settable (value, nickname=None, *args, **kwargs):
     """
-    This function is meant to be called within your instance's method or class
+    This function is meant to be called within your instance's method or a class
     when defining an attribute that will later be managed by the Settings() object.
     E.g.:
     >>> class a:

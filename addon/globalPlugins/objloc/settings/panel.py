@@ -136,6 +136,18 @@ class Panel (SettingsPanel):
         except Exception as e:
             log.warning(str(e))
 
+    def onDiscard (self):
+        try:
+            for attr in self.controls:
+                if not attr.is_stale():
+                    continue
+                if "retractor" in attr.args:
+                    attr.args["retractor"](attr)
+                else:
+                    attr.set()
+        except Exception as e:
+            log.warning(str(e))
+
     def __del__ (self):
         self.controls.clear()
         del self.controls

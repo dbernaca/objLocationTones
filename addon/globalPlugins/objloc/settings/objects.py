@@ -222,6 +222,14 @@ class Attribute (object):
     def has_changed (self):
         return self._value!=self.original
 
+    def is_stale (self):
+        try:
+            value = getattr(self.instance, self.name)
+            value = value.value if isinstance(value, Attribute) else value
+        except:
+            return False
+        return self._value!=value
+
     def seal (self):
         object.__setattr__(self, "original", self._value)
 
@@ -280,6 +288,8 @@ class Attribute (object):
             minval = self.args.get("min", 0)
             maxval = self.args.get("max", minval+100)
             slider = SliderCtrl(parent, wx.ID_ANY, minValue=minval, maxValue=maxval, value=self.get())
+            if "reactor" in self.args:
+                parent.Bind(wx.EVT_SLIDER, self.args["reactor"], slider)
             object.__setattr__(self, "ctrlId", slider.GetId())
             parent.Bind(wx.EVT_WINDOW_DESTROY, (lambda e: object.__setattr__(self, "ctrlId", None)), slider)
             return associateElements(label, slider)
@@ -293,6 +303,8 @@ class Attribute (object):
             minval = self.args.get("min", 0)
             maxval = self.args.get("max", minval+100)
             slider = SliderCtrl(parent, wx.ID_ANY, minValue=minval, maxValue=maxval, value=int(round(self.get()*self.args.get("ratio", 1))))
+            if "reactor" in self.args:
+                parent.Bind(wx.EVT_SLIDER, self.args["reactor"], slider)
             object.__setattr__(self, "ctrlId", slider.GetId())
             parent.Bind(wx.EVT_WINDOW_DESTROY, (lambda e: object.__setattr__(self, "ctrlId", None)), slider)
             return associateElements(label, slider)
@@ -314,12 +326,20 @@ class Attribute (object):
     def has_gui_control (self):
         return self.ctrlId!=None
 
+    def __repr__ (self):
+        return "<Attribute(%s = %s) object at 0x%x>" % (self.name, repr(self.value), id(self))
+
 class Holder (object):
     def __init__ (self, sdict=None):
         if sdict is None:
             return
         for key, value in sdict.items():
-            attr = Attribute(self, key, type(value), value, key, {})
+            if isinstance(value, Attribute):
+                attr = value.copy()
+                attr.name = key
+                attr.flip_allegiance(self)
+            else: 
+                attr = Attribute(self, key, type(value), value, key, {})
             try:
                 object.__setattr__(self, key, attr)
             except:
@@ -344,3 +364,13 @@ class Holder (object):
         args = args if args else {}
         attr = Attribute(self, name, type(value), value, nickname, args)
         object.__setattr__(self, name, attr)
+
+    @property
+    def attributes (self):
+        return set(x for x in self.__dict__.values() if isinstance(x, Attribute))
+
+    def __len__ (self):
+        return sum(isinstance(x, Attribute) for x in self.__dict__.values())
+
+    def __repr__ (self):
+        return "<Holder() object containing %i attribute(s) at 0x%x>" % (len(self), id(self))

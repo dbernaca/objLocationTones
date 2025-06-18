@@ -18,10 +18,9 @@ def findOld ():
 
 def getSettings (addon):
     """
-    Imports the settings module from the add-on bundle given by the addon object,
-    inserts the Attribute() class from settings package into the global namespace
-    and returns the active Settings() object with the settings file path
-    set to the path of the add-on bundle given by the addon object.
+    Imports the settings module from the installing version of the add-on bundle given by the addon object,
+    and returns the active settings.Settings() object with the settings file path
+    set to the path of the already installed version of the add-on bundle given by the addon object.
     If the settings file does not exist at the specified location, returns None.
     None is also returned if any other kind of error is encountered, and the error is
     reported in the log. Missing settings file is not reported as this is
@@ -54,7 +53,6 @@ def getSettings (addon):
     sys.path.remove(packpath)
     try:
         obj = S.Settings(setpath)
-        globals()["Attribute"] = S.Attribute
     except NameError:
         log.warning("Unable to import settings package, settings will not be preserved!")
         return
@@ -100,6 +98,9 @@ def onInstall ():
             inst.durationCaret = inst.duration.value if hasattr(inst, "duration") else 40
         if not hasattr(inst, "refPoint"):
             inst.refPoint = 0
+        if not hasattr(inst, "midi"):
+            inst.midi = False
+            inst.instrument = 115
         # Save it into pending install version, so that it gets activated after old add-on removal and renaming of new one:
         setpath = os.path.join(addon.pendingInstallPath, "globalPlugins", "objloc", "settings", "settings.json")
         # Switch settings path to a new file:

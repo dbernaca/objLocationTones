@@ -1,4 +1,4 @@
-from api                    import getDesktopObject, getNavigatorObject, getFocusObject
+from api                    import getDesktopObject, getNavigatorObject, getFocusObject, getForegroundObject
 from winUser                import getCursorPos
 from textInfos              import POSITION_CARET, POSITION_FIRST, UNIT_CHARACTER, UNIT_LINE
 from speech                 import getObjectSpeech

@@ -16,12 +16,12 @@ import wx
 from scriptHandler   import script, getLastScriptRepeatCount
 from keyboardHandler import KeyboardInputGesture
 from logHandler      import log
-
 from .posTones     import *
 from .utils        import *
 from .geometry     import *
 from .UIStrings    import *
 from .settings     import *
+from .             import posTones
 from time import monotonic as time
 
 class GlobalPlugin (globalPluginHandler.GlobalPlugin):
@@ -37,13 +37,13 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         # Navigation:
         self.active        = Settable(True, # Is real time reporting on or off
                              label=SET_POSITIONAL_AUDIO, group=SET_GROUP_NAVIGATION,
-                             reactor=self.Toggle)
+                             reactor=self.Toggle, retractor=self.Toggle)
         self.duration      = Settable(40, # Duration of a positional tone in Msec
                              label=SET_TONE_DURATION, group=SET_GROUP_NAVIGATION,
                              filter=valset)
         # Caret:
         self.caret         = Settable(True, label=SET_CARET, group=SET_GROUP_CARET, # Whether to report caret location in editable fields or not
-                             reactor=self.ToggleCaret)
+                             reactor=self.ToggleCaret, retractor=self.ToggleCaret)
         self.caretMode     = Settable(SET_CARET_CHOICES.index(SET_CARET_BOTH), # Whether to report vertical, horizontal, both or none of caret movements
                              choices=tuple(SET_CARET_CHOICES), # tuple() means wx.Choice(), instead of wx.ListBox() in settings panel
                              label=SET_CARET_REPORT, group=SET_GROUP_CARET,
@@ -64,23 +64,32 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
                              filter=valset)
         self.autoMouse     = Settable(False,
                              label=SET_MOUSE_MONITOR_AUTO_START, group=SET_GROUP_MOUSE,
-                             reactor=self.ToggleMouseMonitorAutostart)
+                             reactor=self.ToggleMouseMonitorAutostart, retractor=self.ToggleMouseMonitorAutostart)
         self.refPoint      = Settable(SET_MOUSE_REF_CHOICES.index(SET_MOUSE_REF_FOCUS), # Whether to report vertical, horizontal, both or none of caret movements
                              choices=tuple(SET_MOUSE_REF_CHOICES), # tuple() means wx.Choice(), instead of wx.ListBox() in settings panel
                              label=SET_MOUSE_REF_POINT, group=SET_GROUP_MOUSE,
                              reactor=lambda e: ( setattr(self, "refPoint", e.GetSelection()), e.Skip() ) )
         # Tones:
+        # * Temporary controls for MIDI until out of experimental phase
+        self.midi          = Settable(False,
+                             label=SET_MIDI, group=SET_GROUP_TONES,
+                             reactor=self.ToggleMIDI, retractor=self.ToggleMIDI)
+        self.instrument    = Settable(115,
+                             choices=tuple(posTones.general_midi_instruments),
+                             label=SET_MIDI_INSTRUMENT, group=SET_GROUP_TONES,
+                             reactor=self.ChangeInstrument, retractor=self.ChangeInstrument)
         self.lVolume       = Settable(maxVolume, # Volume of positional tones on the left stereo channel, float in range 0.0 to 1.0
                              label=SET_LEFT_VOLUME, group=SET_GROUP_TONES,
-                             min=1, max=100, ratio=100)
+                             min=1, max=100, ratio=100,
+                             reactor=self.ChangeVolume)
         self.rVolume       = Settable(maxVolume, # Volume of positional tones on the right stereo channel, float in range 0.0 to 1.0
                              label=SET_RIGHT_VOLUME, group=SET_GROUP_TONES,
-                             min=1, max=100, ratio=100)
+                             min=1, max=100, ratio=100,
+                             reactor=self.ChangeVolume)
         self.stereoSwap    = Settable(False, # Swap stereo sides
                              label=SET_SWAP_STEREO_CHANNELS, group=SET_GROUP_TONES,
                              reactor=self.SwapChannels)
 
-        self.restore = Activator(SET_RESTORE_DEFAULTS, lambda e: (self.settings.restore_defaults(), self.settings.refresh_panel(self)))
         # Load the configurables from settings if possible
         self.settings = S = Settings()
         try:
@@ -120,6 +129,13 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.event_mouseMove = self._on_autoMouseMove
         else:
             self.event_mouseMove = self._on_passThrough
+        if self.midi:
+            try:
+                posTones.setGenerator("MIDI")
+                posTones.player.set_instrument(self.instrument)
+            except:
+                posTones.setGenerator("NVDA")
+                self.midi = False
 
     def Activate (self):
         self.event_becomeNavigatorObject = self._on_becomeNavigatorObject
@@ -163,12 +179,12 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         if self.active:
             self.Deactivate()
             self.active = False
-            if e:
+            if isinstance(e, wx.Event):
                 e.Skip()
             return
         self.Activate()
         self.active = True
-        if e is None:
+        if not isinstance(e, wx.Event):
             return
         # Play coordinates of the checkbox to indicate activation
         try:
@@ -177,6 +193,21 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         except:
             pass
         e.Skip()
+
+    def ChangeVolume (self, e):
+        """
+        Used primarily to change volume immediately from settings panel.
+        """
+        self.settings.refresh_instance(self, "lVolume", "rVolume")
+        e.Skip()
+        # Play coordinates of the slider to hear the volume change immediately
+        if not self.active:
+            return
+        try:
+            x, y = getObjectPos(caret=self.caret)
+            playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
+        except:
+            pass
 
     def SwapChannels (self, e):
         """
@@ -193,12 +224,67 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         except:
             pass
 
+    def ToggleMIDI (self, e):
+        if not isinstance(e, wx.Event):
+            if self.midi:
+                posTones.setGenerator("NVDA")
+                self.midi = False
+                return
+            try:
+                posTones.setGenerator("MIDI")
+                self.settings["instrument"].set()
+                posTones.player.set_instrument(self.instrument)
+                self.midi = True
+            except:
+                posTones.setGenerator("NVDA")
+                self.midi = False
+            return
+        if not e.IsChecked():
+            if not self.midi:
+                return e.Skip()
+            posTones.setGenerator("NVDA")
+            self.midi = False
+            try:
+                x, y = getObjectPos(caret=self.caret)
+                playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
+            except:
+                pass
+            return e.Skip()
+        resp = gui.messageBox(DLG_WARN_EXPERIMENTAL, DLG_WARN, wx.ICON_WARNING | wx.YES_NO)
+        if resp!=wx.YES:
+            e.GetEventObject().SetValue(False)
+            return
+        try:
+            posTones.setGenerator("MIDI")
+            posTones.player.set_instrument(self.instrument)
+            self.midi = True
+            try:
+                x, y = getObjectPos(caret=self.caret)
+                playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
+            except:
+                pass
+        except Exception as e:
+            posTones.setGenerator("NVDA")
+            self.midi = False
+            e.GetEventObject().SetValue(False)
+            log.error("Toggling MIDI colossally failed because of "+str(e))
+        e.Skip()
+
+    def ChangeInstrument (self, e):
+        if isinstance(e, wx.Event):
+            self.instrument = e.GetSelection()
+            e.Skip()
+        else:
+            e.set()
+        if self.midi:
+            posTones.player.set_instrument(self.instrument)
+
     def ToggleCaret (self, e=None):
         """
         Used primarily to enable immediate activation/deactivation of positional tones for caret location from settings panel.
         """
-        if e:
-            self.caret = e.IsChecked() # Just in case of possible mismatch
+        if isinstance(e, wx.Event):
+            self.caret = not e.IsChecked() # Just in case of possible mismatch
             e.Skip()
         if self.caret:
             self.DeactivateCaret()
@@ -208,9 +294,12 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.caret = True
 
     def ToggleMouseMonitorAutostart (self, e):
-        self.autoMouse = e.IsChecked()
+        if isinstance(e, wx.Event):
+            self.autoMouse = e.IsChecked()
+            e.Skip()
+        else:
+            e.set()
         self.DeactivateMouseMonitor()
-        e.Skip()
 
     def terminate (self):
         """
@@ -221,6 +310,10 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.timer.Stop()
         gui.mainFrame.Unbind(wx.EVT_TIMER, handler=self._on_mouseMonitor, source=self.timer)
         inputCore.decide_executeGesture.unregister(self._on_keyDown)
+        try:
+            posTones.setGenerator("NVDA")
+        except:
+            pass
         try:
             self.settings.save(self)
         except SettingsError as e:
@@ -492,15 +585,35 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.lastTime = t
         wx.CallAfter(playCoordinates, mp[0], mp[1], self.duration+40, self.lVolume, self.rVolume, self.stereoSwap)
         if self.refPoint==0:
+            # Play focused objects pos as a ref point
             wx.CallLater(self.duration+100, playCoordinates, oX, oY, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
+        elif self.refPoint==1:
+            # Top left of the foreground window
+            try:
+                wlpx, wlpy, _, _ = getForegroundObject().location
+            except:
+                return
+            wx.CallLater(self.duration+100, playCoordinates, wlpx, wlpy, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
+        elif self.refPoint==2:
+            # Center of the foreground window
+            try:
+                wcpx, wcpy = getForegroundObject().location.center
+            except:
+                return
+            wx.CallLater(self.duration+100, playCoordinates, wcpx, wcpy, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
         elif self.refPoint==3:
+            # Top left corner of the screen, that is (0, 0)
             wx.CallLater(self.duration+100, playCoordinates, 0, 0, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
         elif self.refPoint==4:
+            # Center of the virtual screen as given by the desktop object
             try:
                 dcpx, dcpy = getDesktopObject().location.center
             except:
                 return
             wx.CallLater(self.duration+100, playCoordinates, dcpx, dcpy, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
+        #else:
+        #    # None --> Play the same coordinates twice in a row
+        #    wx.CallLater(self.duration+100, playCoordinates, mp[0], mp[1], self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
 
     def _on_mouseMove (self, obj, nextHandler, x, y):
         """

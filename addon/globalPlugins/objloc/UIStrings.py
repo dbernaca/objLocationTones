@@ -179,3 +179,11 @@ SET_GROUP_TONES = _("Tones")
 SET_GROUP_AUDIO = _("Audio")
 
 SET_RESTORE_DEFAULTS = _("Restore defaults...")
+
+# Added in objLocTones 25.1 (the option is experimental and labels and interface will change drastically)
+SET_MIDI = _("Use Musical Instrument Digital Interface (MIDI) for tone generation")
+
+SET_MIDI_INSTRUMENT = _("MIDI instrument:")
+
+DLG_WARN = _("Warning...")
+DLG_WARN_EXPERIMENTAL = _("This option is still in experimental stage.\nPlease consult the add-on's documentation regarding it before its activation.\n\nDo you want to activate it now?")

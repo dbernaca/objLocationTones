@@ -1,13 +1,11 @@
 # Part of Object Location Tones
 # This module contains routines to produce positional tones
 
-try:
-    from time import monotonic as time
-except:
-    from time import time
-
+from time   import monotonic as time
 from tones  import beep
 from .utils import getDesktopObject
+from .      import midi
+from .midi  import general_midi_instruments
 
 import config
 import wx
@@ -49,7 +47,7 @@ def playCoordinates (x, y, d=40, lVolume=1.0, rVolume=1.0, stereoSwap=False):
         else:
             left  = int((85 * ((screenWidth - float(x)) / screenWidth)) * lVolume)
             right = int((85 * (float(x) / screenWidth)) * rVolume)
-        beep(curPitch, d, left=left, right=right)
+        generator(curPitch, d, left=left, right=right)
         lastPlayed = t
         lastCoords = (x, y, d/1000.0)
 
@@ -72,3 +70,35 @@ def playPoints (delay, points, d=40, lVolume=1.0, rVolume=1.0, stereoSwap=False)
         wx.CallLater(after, playCoordinates, x, y, d, lVolume, rVolume, stereoSwap)
         after += d+delay
     return after
+
+player = None
+
+def note (pitch, duration, left=100, right=100):
+    n = int(round(((pitch-minPitch)/maxPitch)*127))
+    player.pan(left, right)
+    v = ((left/85) +(right/85))*0.8
+    player.set_expression(v)
+    player.play(n, duration)
+    wx.CallLater(duration, player.tick)
+
+def none (pitch, duration, left, right):
+    pass
+
+generator = beep
+
+def setGenerator (name="NVDA"):
+    global generator, player
+    if player:
+        player.quit()
+        if isinstance(player, midi.Player):
+            midi.quit()
+        player = None
+    if name=="NVDA":
+        generator = beep
+    elif name=="MIDI":
+        midi.init()
+        output = midi.Output(midi.get_default_output_id())
+        player = midi.Player(output)
+        generator = note
+    elif name=="None":
+        generator = none

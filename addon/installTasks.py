@@ -44,7 +44,7 @@ def getSettings (addon):
     except Exception as e:
         log.warning("Unable to change directory to '%s' because of %s, settings will not be preserved!" % (packpath, str(e)))
         return
-    sys.path.append(packpath)
+    sys.path.insert(0, packpath)
     try:
         import settings as S
     except Exception as e:
@@ -90,7 +90,7 @@ def onInstall ():
         if not hasattr(inst, "caretTyping"):
             inst.caretTyping = False
         if not hasattr(inst, "caret"):
-            inst.caret = Ttrue
+            inst.caret = True
         if not hasattr(inst, "caretMode"):
             inst.caretMode = (2 if inst.active.value else 3) if hasattr(inst, "active") else 2
             inst.caret.value = True

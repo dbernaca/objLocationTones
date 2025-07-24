@@ -1,3 +1,37 @@
+### Changelog for Version 25.1.0 in relation to 24.07.0
+
+#### **Major Updates**
+- **MIDI Tone Generation**:
+  - Added support for producing positional tones via **Musical Instrument Digital Interface (MIDI)**.
+  - Works with Windows’ built‑in synthesizer (Microsoft GS Wavetable Synth) or any other installed software or hardware synthesizer and any General MIDI Level 1 instrument.
+  - Implemented using a modified `pygame.midi` with bundled `portmidi` and `pyportmidi`
+  - Configurable via the settings panel; includes instrument selection.
+  - **pypm added for Python 3.7 as well**, enabling MIDI functionality on NVDA 2023.x too.
+
+- **Settings panel changes**:
+  - **Mouse Monitoring Reference Points in mouse group**: Now selectable (focused object/system caret, screen/window center, or none).
+  - **Cancellation Support**: Pressing **Cancel** discards all changes made while the panel was open.
+  - Temporary removal of the **Restore Defaults** option due to conflicts with cancellation.
+
+#### **New Features**
+- **MIDI Tone Generation**:
+  - Added support for producing positional tones via **Musical Instrument Digital Interface (MIDI)**.
+  - Now you can hear positional tones produced by musical instruments if you prefer them over classical NVDA beeps
+- **Enhanced Continuous Mouse Monitoring**:
+  - Expanded with customizable reference points and improved auto‑start behavior.
+
+#### **Fixes**
+- Fixed a NameError in `installTasks.py` and improved module import handling (`sys.path.insert` used instead of `append`).
+- Corrected issues with caret checkbox state in settings.
+- Fixed bugs related to auto‑start mouse monitoring when the mouse enters a new object.
+
+#### **Important Notes**
+- **MIDI Tips**: Use mono instruments without note onset delays to ensure accurate positional feedback.  
+- **Restore Defaults** temporarily unavailable; use Cancel to discard changes.  
+- Known issues with caret reporting in some non‑native input fields remain; progress bar tones may overlap with positional tones if MIDI is disabled.
+
+This changelog was generated using ChatGPT.
+
 ### Changelog for Version 24.07.0 in relation to 24.06.3
 
 #### **Major Updates**

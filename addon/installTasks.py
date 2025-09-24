@@ -101,6 +101,8 @@ def onInstall ():
         if not hasattr(inst, "midi"):
             inst.midi = False
             inst.instrument = 115
+        if not hasattr(inst, "easyTableNav"):
+            inst.easyTableNav = True
         # Save it into pending install version, so that it gets activated after old add-on removal and renaming of new one:
         setpath = os.path.join(addon.pendingInstallPath, "globalPlugins", "objloc", "settings", "settings.json")
         # Switch settings path to a new file:

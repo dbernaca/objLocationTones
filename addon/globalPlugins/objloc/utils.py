@@ -2,7 +2,7 @@ from api                    import getDesktopObject, getNavigatorObject, getFocu
 from winUser                import getCursorPos
 from textInfos              import POSITION_CARET, POSITION_FIRST, UNIT_CHARACTER, UNIT_LINE
 from speech                 import getObjectSpeech
-from controlTypes           import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_RICHEDIT, ROLE_PASSWORDEDIT, ROLE_DOCUMENT, STATE_MULTILINE, OutputReason
+from controlTypes           import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_RICHEDIT, ROLE_PASSWORDEDIT, ROLE_DOCUMENT, ROLE_TABLE, ROLE_TABLECELL, ROLE_TABLEROW, ROLE_TABLECOLUMN, STATE_MULTILINE, OutputReason
 from treeInterceptorHandler import DocumentTreeInterceptor
 
 class LocationError (LookupError):

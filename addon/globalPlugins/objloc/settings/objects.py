@@ -163,6 +163,8 @@ class Attribute (object):
             if self._firstset:
                 object.__setattr__(self, "original", v)
                 object.__setattr__(self, "_firstset", False)
+        elif a in ("show", "save", "skip"):
+            object.__setattr__(self, a, v)
         else:
             raise AttributeError("The Attribute() object only allows certain attributes to be set")
 

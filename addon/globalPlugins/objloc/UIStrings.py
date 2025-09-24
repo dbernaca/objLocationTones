@@ -160,12 +160,15 @@ SET_MOUSE_REF_TLS = _("Top left corner of the screen")
 SET_MOUSE_REF_CS = _("Centre of the screen")
 
 # Mouse reference point: none will be used
-SET_MOUSE_REF_NONE = _("NONE")
+SET_MOUSE_REF_NONE = _("None")
+
+# Mouse reference point: mouse start position will be used
+SET_MOUSE_REF_START = _("Pointer's position at start of navigation")
 
 # DO NOT CHANGE THE ORDER OF CHOICES
 # Choice detection is index based and hard-coded because of settings and translations
 # The index is saved to settings so that it can be unrelated to any locale
-SET_MOUSE_REF_CHOICES = [SET_MOUSE_REF_FOCUS, SET_MOUSE_REF_TLW, SET_MOUSE_REF_CW, SET_MOUSE_REF_TLS, SET_MOUSE_REF_CS, SET_MOUSE_REF_NONE]
+SET_MOUSE_REF_CHOICES = [SET_MOUSE_REF_FOCUS, SET_MOUSE_REF_TLW, SET_MOUSE_REF_CW, SET_MOUSE_REF_TLS, SET_MOUSE_REF_CS, SET_MOUSE_REF_NONE, SET_MOUSE_REF_START]
 
 # The grouping labels in settings panel
 SET_GROUP_NAVIGATION = _("Navigation")
@@ -187,3 +190,6 @@ SET_MIDI_INSTRUMENT = _("MIDI instrument:")
 
 DLG_WARN = _("Warning...")
 DLG_WARN_EXPERIMENTAL = _("This option is still in experimental stage.\nPlease consult the add-on's documentation regarding it before its activation.\n\nDo you want to activate it now?")
+
+# Added in 25.2
+SET_EASY_TABLE_NAV = _("Play positional tones for cell locations when Easy Table Navigator layer is on")

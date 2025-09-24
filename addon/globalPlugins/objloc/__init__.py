@@ -22,7 +22,8 @@ from .geometry     import *
 from .UIStrings    import *
 from .settings     import *
 from .             import posTones
-from time import monotonic as time
+from .             import dependencies as deps
+from time          import monotonic as time
 
 class GlobalPlugin (globalPluginHandler.GlobalPlugin):
     def __init__ (self):
@@ -38,6 +39,9 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.active        = Settable(True, # Is real time reporting on or off
                              label=SET_POSITIONAL_AUDIO, group=SET_GROUP_NAVIGATION,
                              reactor=self.Toggle, retractor=self.Toggle)
+        self.easyTableNav  = ETN = Settable(True, # Is cell reporting in ETN layered mode enabled or not
+                             label=SET_EASY_TABLE_NAV, group=SET_GROUP_NAVIGATION,
+                             reactor=self.ToggleETN, retractor=self.ToggleETN)
         self.duration      = Settable(40, # Duration of a positional tone in Msec
                              label=SET_TONE_DURATION, group=SET_GROUP_NAVIGATION,
                              filter=valset)
@@ -89,13 +93,19 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.stereoSwap    = Settable(False, # Swap stereo sides
                              label=SET_SWAP_STEREO_CHANNELS, group=SET_GROUP_TONES,
                              reactor=self.SwapChannels)
-
+        # Make particular dependency related options not show in settings dialog if that add-on is not available
+        ETN.show = deps.checkAddonUsability("easyTableNavigator", logging=False)
         # Load the configurables from settings if possible
         self.settings = S = Settings()
         try:
             S.load(self)
         except SettingsError as e:
             log.warning(str(e))
+        if ETN.value and not ETN.show:
+            # If settings says to use, but ETN became unavailable, just disable it internally for this session
+            self.easyTableNav = False
+            ETN.value = False
+            ETN.save = False # Do not save the value change in this case, so if ETN returns the setting is valid once more
         # Setup a settings panel
         SetPanel(S, self)
 
@@ -108,9 +118,10 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.processing   = False # A flag to avoid collisions of positional audio upon fast subsequent keypresses
 
         # Temporary variables for action checks
-        self.lastMousePos = (-1, -1) # Used to detect that the mouse stopped moving so that we can stop the timer
-        self.lastTime     = 0.0 # Used to detect how much time passed after mouse stopped moving
-        self.lastKey      = None # What was the last key pressed (InputKeyboardGesture() object)
+        self.startMousePos = (-1, -1) # Used to mark a point from which mouse started
+        self.lastMousePos  = (-1, -1) # Used to detect that the mouse stopped moving so that we can stop the timer
+        self.lastTime      = 0.0 # Used to detect how much time passed after mouse stopped moving
+        self.lastKey       = None # What was the last key pressed (InputKeyboardGesture() object)
 
         # Mouse monitoring position playing timer
         self.timer = wx.Timer(gui.mainFrame)
@@ -141,12 +152,16 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.event_becomeNavigatorObject = self._on_becomeNavigatorObject
         if self.caret:
             self.ActivateCaret()
+        if self.easyTableNav:
+            deps.enableAddonSupport("easyTableNavigator", onNavigation=self._on_easyTableNav)
         self.focusing = True
         self.typing = False
 
     def Deactivate (self):
         self.event_becomeNavigatorObject = self._on_passThrough
         self.DeactivateCaret()
+        if self.easyTableNav:
+            deps.disableAddonSupport("easyTableNavigator")
 
     def ActivateCaret (self):
         if self.event_caret==self._on_passThrough:
@@ -169,8 +184,9 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.event_mouseMove = self._on_autoMouseMove
         else:
             self.event_mouseMove = self._on_passThrough
-        self.lastMousePos = (-1, -1)
-        self.lastTime = 0.0
+        self.startMousePos = (-1, -1)
+        self.lastMousePos  = (-1, -1)
+        self.lastTime      = 0.0
 
     def Toggle (self, e=None):
         """
@@ -301,6 +317,21 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             e.set()
         self.DeactivateMouseMonitor()
 
+    def ToggleETN (self, e=None):
+        if isinstance(e, wx.Event):
+            switch = e.IsChecked()
+            e.Skip()
+        else:
+            switch = not self.easyTableNav
+        if not self.active:
+            # ETN will then be activated or not when user activates objloc, according to the easyTableNav attribute
+            self.easyTableNav = switch
+            return
+        if switch:
+            self.easyTableNav = deps.enableAddonSupport("easyTableNavigator", onNavigation=self._on_easyTableNav)            
+        else:
+            self.easyTableNav = not deps.disableAddonSupport("easyTableNavigator")
+
     def terminate (self):
         """
         Removes any unnecessary, and potentially dangerous when objloc is not running, events from NVDA.
@@ -318,6 +349,8 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.settings.save(self)
         except SettingsError as e:
             log.warning(str(e))
+        if self.easyTableNav:
+            deps.disableAddonSupport("easyTableNavigator")
         del self.settings
         RemovePanel()
 
@@ -333,6 +366,17 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             return
         try:
             obj = getFocusObject()
+            if self.easyTableNav and deps.easyTableNavigator.tableNav:
+                obj = o
+                r = o.role
+                # obj can be an interactive element within the table cell and not the cell itself
+                # If so, walk down to the parent object that actually is the cell
+                while o and r!=ROLE_TABLECELL and r!=ROLE_DOCUMENT and r!=ROLE_TABLE and r!=ROLE_TABLEROW and r!=ROLE_TABLECOLUMN:
+                    o = o.parent
+                    r = o.role if o else None
+                if r==ROLE_TABLECELL:
+                    # Only if we found the cell
+                    obj = o
             rect = BBox(obj)
             after = playPoints(200, rect.corners, self.duration+20, self.lVolume, self.rVolume, self.stereoSwap)
             ui.message(getObjectDescription(obj))
@@ -416,6 +460,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
                 ui.message(MSG_MOUSE_ALREADY_THERE)
                 return
             self.entered = (mX, mY) in BBox(fobj)
+            self.startMousePos = (mX, mY)
             self.ActivateMouseMonitor()
             return
         self.DeactivateMouseMonitor()
@@ -611,6 +656,9 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             except:
                 return
             wx.CallLater(self.duration+100, playCoordinates, dcpx, dcpy, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
+        elif self.refPoint==6:
+            pspx, pspy = self.startMousePos
+            wx.CallLater(self.duration+100, playCoordinates, pspx, pspy, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
         #else:
         #    # None --> Play the same coordinates twice in a row
         #    wx.CallLater(self.duration+100, playCoordinates, mp[0], mp[1], self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
@@ -656,6 +704,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.entered = (x, y) in BBox(getFocusObject())
         except:
             pass
+        self.startMousePos = (x, y)
         self.ActivateMouseMonitor()
         nextHandler()
 
@@ -677,3 +726,20 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         # but since we use it only in event_caret() handler it will not cause problems
         # Automatic caret event upon gaining focus should not report, thus last key from previous field shouldn't cause an erroneous report
         self.typing = willEnterText(gesture)
+
+    def _on_easyTableNav (self, obj, event=None):
+        try:
+            o = getNavigatorObject() # getFocusObject() or using obj argument, does not work as well as it should
+            r = o.role
+            # Navigator can be an interactive element within the table cell and not the cell itself
+            # If so, walk down to the parent object that actually is the cell
+            while o and r!=ROLE_TABLECELL and r!=ROLE_DOCUMENT and r!=ROLE_TABLE and r!=ROLE_TABLEROW and r!=ROLE_TABLECOLUMN:
+                o = o.parent
+                r = o.role if o else None
+            if r!=ROLE_TABLECELL:
+                # If we ended somewhere in the middle of nowhere, just do not play the coordinates
+                return
+            x, y = getObjectPos(o, caret=False)
+            playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
+        except:
+            pass

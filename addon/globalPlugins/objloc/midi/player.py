@@ -44,10 +44,12 @@ class Player (Thread):
         self.channel = channel
         self.last_note = None
         self.instruments = {}
-        self.volumes = {}
+        self.volumes     = {}
         self.expressions = {}
+        self.bends       = {}
         self.set_volume(1.0)
         self.set_expression(1.0)
+        self.set_pitch_bend(0.0)
         self.queue = deque()
         self.waiter = Lock()
         self.running = False
@@ -146,3 +148,17 @@ class Player (Thread):
         self.instruments[channel] = instrument
 
     instrument = property(get_instrument, set_instrument)
+
+    def get_pitch_bend (self, channel=None):
+        channel = self.channel if channel is None else channel
+        value = self.bends.setdefault(channel, 0)
+        return int(value/8192) if value < 0 else int(value/8191)
+
+    def set_pitch_bend (self, bend=0, channel=None):
+        channel = self.channel if channel is None else channel
+        value = int(bend*8192 if bend<0 else bend*8191)
+        self.output.pitch_bend(value, channel)
+        self.bends[channel] = value
+
+    pitch_bend = property(get_pitch_bend, set_pitch_bend)
+

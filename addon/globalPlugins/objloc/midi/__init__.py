@@ -78,7 +78,11 @@ def init():
     global _pypm
     if _module_init():
         return
-    from . import pypm
+    from struct import calcsize
+    if calcsize("P")==8:
+        from .pypm64 import pypm
+    else:
+        from .pypm32 import pypm
     _pypm = pypm
     _pypm.Initialize()
     _module_init(True)

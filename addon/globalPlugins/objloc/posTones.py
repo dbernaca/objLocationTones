@@ -74,11 +74,14 @@ def playPoints (delay, points, d=40, lVolume=1.0, rVolume=1.0, stereoSwap=False)
 player = None
 
 def note (pitch, duration, left=100, right=100):
-    n = int(round(((pitch-minPitch)/maxPitch)*127))
+    note = int(round(((pitch-minPitch)/maxPitch)*127))
+    #note  = int(scale)
+    #bend  = scale-note
     player.pan(left, right)
+    #player.set_pitch_bend(bend)
     v = ((left/85) +(right/85))*0.8
     player.set_expression(v)
-    player.play(n, duration)
+    player.play(note, duration)
     wx.CallLater(duration, player.tick)
 
 def none (pitch, duration, left, right):

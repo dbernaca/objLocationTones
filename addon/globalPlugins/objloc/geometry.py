@@ -16,15 +16,15 @@ class BBox (object):
         self.TL = (x1, y1)
         # Right top corner
         self.X2 = x2 = loc[0]+loc[2]
-        self.Y2 = y2 = loc[1]
+        self.Y2 = y2 = y1 # loc[1]
         self.TR = (x2, y2)
         # Right bottom corner
-        self.X3 = x3 = loc[0]+loc[2]
+        self.X3 = x3 = x2 # loc[0]+loc[2]
         self.Y3 = y3 = loc[1]+loc[3]
         self.BR = (x3, y3)
         # Left Bottom corner
-        self.X4 = x4 = loc[0]
-        self.Y4 = y4 = loc[1]+loc[3]
+        self.X4 = x4 = x1 # loc[0]
+        self.Y4 = y4 = y3 # loc[1]+loc[3]
         self.BL = (x4, y4)
         self.corners = ((x1, y1), (x2, y2), (x3, y3), (x4, y4))
 

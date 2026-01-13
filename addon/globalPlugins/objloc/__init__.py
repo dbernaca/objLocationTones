@@ -69,7 +69,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.autoMouse     = Settable(False,
                              label=SET_MOUSE_MONITOR_AUTO_START, group=SET_GROUP_MOUSE,
                              reactor=self.ToggleMouseMonitorAutostart, retractor=self.ToggleMouseMonitorAutostart)
-        self.refPoint      = Settable(SET_MOUSE_REF_CHOICES.index(SET_MOUSE_REF_FOCUS), # Whether to report vertical, horizontal, both or none of caret movements
+        self.refPoint      = Settable(SET_MOUSE_REF_CHOICES.index(SET_MOUSE_REF_FOCUS), # Which point location to announce along with the current mouse position
                              choices=tuple(SET_MOUSE_REF_CHOICES), # tuple() means wx.Choice(), instead of wx.ListBox() in settings panel
                              label=SET_MOUSE_REF_POINT, group=SET_GROUP_MOUSE,
                              reactor=lambda e: ( setattr(self, "refPoint", e.GetSelection()), e.Skip() ) )
@@ -370,14 +370,13 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
                 obj = o
                 r = o.role
                 # obj can be an interactive element within the table cell and not the cell itself
-                # If so, walk down to the parent object that actually is the cell
+                # If so, walk back to the parent object that actually is the cell
                 while o and r!=ROLE_TABLECELL and r!=ROLE_DOCUMENT and r!=ROLE_TABLE and r!=ROLE_TABLEROW and r!=ROLE_TABLECOLUMN:
                     o = o.parent
                     r = o.role if o else None
-                if r==ROLE_TABLECELL:
-                    # Only if we found the cell
-                    obj = o
-            rect = BBox(obj)
+                # Only if we found the cell:
+                obj = o if r==ROLE_TABLECELL else obj
+            rect  = BBox(obj)
             after = playPoints(200, rect.corners, self.duration+20, self.lVolume, self.rVolume, self.stereoSwap)
             ui.message(getObjectDescription(obj))
             if self.caret:
@@ -429,7 +428,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             if level==0:
                 ui.message(MSG_PARENT_NOT_AVAILABLE)
                 return
-            rect = BBox(obj)
+            rect  = BBox(obj)
             after = playPoints(200, rect.corners, self.duration+20, self.lVolume, self.rVolume, self.stereoSwap)
             wx.CallLater(after+self.duration+20, setattr, self, "processing", False)
             ui.message(MSG_ANCESTOR % (getObjectDescription(obj), level))

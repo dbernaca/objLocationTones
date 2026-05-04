@@ -80,7 +80,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
                              reactor=self.ToggleMIDI, retractor=self.ToggleMIDI)
         self.instrument    = Settable(115,
                              choices=tuple(posTones.general_midi_instruments),
-                             label=SET_MIDI_INSTRUMENT, group=SET_GROUP_TONES,
+                             label=SET_MIDI_INSTRUMENT, group=SET_GROUP_TONES, enabled=False,
                              reactor=self.ChangeInstrument, retractor=self.ChangeInstrument)
         self.lVolume       = Settable(maxVolume, # Volume of positional tones on the left stereo channel, float in range 0.0 to 1.0
                              label=SET_LEFT_VOLUME, group=SET_GROUP_TONES,
@@ -144,6 +144,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             try:
                 posTones.setGenerator("MIDI")
                 posTones.player.set_instrument(self.instrument)
+                self.settings["instrument"].enable = True
             except:
                 posTones.setGenerator("NVDA")
                 self.midi = False
@@ -245,12 +246,14 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             if self.midi:
                 posTones.setGenerator("NVDA")
                 self.midi = False
+                self.settings["instrument"].enable = False
                 return
             try:
                 posTones.setGenerator("MIDI")
                 self.settings["instrument"].set()
                 posTones.player.set_instrument(self.instrument)
                 self.midi = True
+                self.settings["instrument"].enable = True
             except:
                 posTones.setGenerator("NVDA")
                 self.midi = False
@@ -260,6 +263,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
                 return e.Skip()
             posTones.setGenerator("NVDA")
             self.midi = False
+            self.settings["instrument"].enable = False
             try:
                 x, y = getObjectPos(caret=self.caret)
                 playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
@@ -274,6 +278,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             posTones.setGenerator("MIDI")
             posTones.player.set_instrument(self.instrument)
             self.midi = True
+            self.settings["instrument"].enable = True
             try:
                 x, y = getObjectPos(caret=self.caret)
                 playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)

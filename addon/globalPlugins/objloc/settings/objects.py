@@ -145,6 +145,8 @@ class Attribute (object):
             if not isinstance(value, self.type):
                 raise SettingsError("Wrong type for attribute %s. '%s' given, '%s' expected." % (self.name, value.__class__.__name__, self.type.__name__))
             return value
+        elif a=="enable":
+            return self.args.get("enabled", True)
         raise AttributeError("No attribute named "+repr(a))
 
     def __setattr__ (self, a, v):
@@ -165,6 +167,11 @@ class Attribute (object):
                 object.__setattr__(self, "_firstset", False)
         elif a in ("show", "save", "skip"):
             object.__setattr__(self, a, v)
+        elif a=="enable":
+            if v:
+                self.enable_gui_ctrl()
+            else:
+                self.disable_gui_ctrl()
         else:
             raise AttributeError("The Attribute() object only allows certain attributes to be set")
 
@@ -248,6 +255,8 @@ class Attribute (object):
         if self.type==bool:
             ctrl = wx.CheckBox(parent, label=self.args["label"])
             ctrl.SetValue(self.get())
+            if "enabled" in self.args:
+                ctrl.Enable(self.args["enabled"])
             if "reactor" in self.args:
                 parent.Bind(wx.EVT_CHECKBOX, self.args["reactor"], ctrl)
             object.__setattr__(self, "ctrlId", ctrl.GetId())
@@ -267,6 +276,8 @@ class Attribute (object):
                     ctrl.SetStringSelection(value)
                 else:
                     ctrl.SetSelection(0)
+            if "enabled" in self.args:
+                ctrl.Enable(self.args["enabled"])
             if "reactor" in self.args:
                 parent.Bind((wx.EVT_CHOICE if self.type==tuple else wx.EVT_LISTBOX), self.args["reactor"], ctrl)
             object.__setattr__(self, "ctrlId", ctrl.GetId())
@@ -274,6 +285,10 @@ class Attribute (object):
             return associateElements(label, ctrl)
         if self.type==str:
             ctrl = wx.TextCtrl(parent, value=self.get())
+            if "enabled" in self.args:
+                ctrl.Enable(self.args["enabled"])
+            if "editable" in self.args:
+                ctrl.SetEditable(self.args["editable"])
             object.__setattr__(self, "ctrlId", ctrl.GetId())
             parent.Bind(wx.EVT_WINDOW_DESTROY, (lambda e: object.__setattr__(self, "ctrlId", None)), ctrl)
             if "label" in self.args:
@@ -286,6 +301,8 @@ class Attribute (object):
                 ctrl = IntCtrl(parent, value=str(self.get()))
                 object.__setattr__(self, "ctrlId", ctrl.GetId())
                 parent.Bind(wx.EVT_WINDOW_DESTROY, (lambda e: object.__setattr__(self, "ctrlId", None)), ctrl)
+                if "enabled" in self.args:
+                    ctrl.Enable(self.args["enabled"])
                 return associateElements(label, ctrl)
             minval = self.args.get("min", 0)
             maxval = self.args.get("max", minval+100)
@@ -293,12 +310,16 @@ class Attribute (object):
             if "reactor" in self.args:
                 parent.Bind(wx.EVT_SLIDER, self.args["reactor"], slider)
             object.__setattr__(self, "ctrlId", slider.GetId())
+            if "enabled" in self.args:
+                slider.Enable(self.args["enabled"])
             parent.Bind(wx.EVT_WINDOW_DESTROY, (lambda e: object.__setattr__(self, "ctrlId", None)), slider)
             return associateElements(label, slider)
         if self.type==float:
             label = wx.StaticText(parent, wx.ID_ANY, label=self.args["label"])
             if "min" not in self.args and "max" not in self.args:
                 ctrl = FloatCtrl(parent, value=str(self.get()))
+                if "enabled" in self.args:
+                    ctrl.Enable(self.args["enabled"])
                 object.__setattr__(self, "ctrlId", ctrl.GetId())
                 parent.Bind(wx.EVT_WINDOW_DESTROY, (lambda e: object.__setattr__(self, "ctrlId", None)), ctrl)
                 return associateElements(label, ctrl)
@@ -307,6 +328,8 @@ class Attribute (object):
             slider = SliderCtrl(parent, wx.ID_ANY, minValue=minval, maxValue=maxval, value=int(round(self.get()*self.args.get("ratio", 1))))
             if "reactor" in self.args:
                 parent.Bind(wx.EVT_SLIDER, self.args["reactor"], slider)
+            if "enabled" in self.args:
+                slider.Enable(self.args["enabled"])
             object.__setattr__(self, "ctrlId", slider.GetId())
             parent.Bind(wx.EVT_WINDOW_DESTROY, (lambda e: object.__setattr__(self, "ctrlId", None)), slider)
             return associateElements(label, slider)
@@ -314,6 +337,8 @@ class Attribute (object):
             ctrl = wx.Button(parent, label=self.args["label"])
             parent.Bind(wx.EVT_BUTTON, self.args["reactor"], ctrl)
             object.__setattr__(self, "ctrlId", ctrl.GetId())
+            if "enabled" in self.args:
+                ctrl.Enable(self.args["enabled"])
             parent.Bind(wx.EVT_WINDOW_DESTROY, (lambda e: object.__setattr__(self, "ctrlId", None)), ctrl)
             return ctrl
 
@@ -327,6 +352,20 @@ class Attribute (object):
 
     def has_gui_control (self):
         return self.ctrlId!=None
+
+    def enable_gui_ctrl (self, parent=None):
+        self.args["enabled"] = True
+        ctrlId = self.ctrlId
+        if ctrlId==None:
+            return
+        wx.FindWindowById(ctrlId, parent).Enable(True)
+
+    def disable_gui_ctrl (self, parent=None):
+        self.args["enabled"] = False
+        ctrlId = self.ctrlId
+        if ctrlId==None:
+            return
+        wx.FindWindowById(ctrlId, parent).Enable(False)
 
     def __repr__ (self):
         return "<Attribute(%s = %s) object at 0x%x>" % (self.name, repr(self.value), id(self))

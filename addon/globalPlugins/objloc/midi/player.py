@@ -1,5 +1,5 @@
-from threading import Thread, Lock
-from time import monotonic as time, sleep
+from threading import Thread, Condition
+from time import monotonic as time
 from collections import deque
 
 class Note (object):
@@ -29,10 +29,13 @@ class Note (object):
         return self
 
     def shouldStop (self):
-        return False if self.playing==False or self.duration<0 else (time()-self.started>=self.duration)
+        return False if self.playing==False or self.duration<0 else ((time()-self.started)>=self.duration)
 
     def __hash__ (self):
         return hash(f"{self.note}:{self.duration}:{self.velocity}:{self.channel}")
+
+    def __eq__ (self, other):
+        return isinstance(other, Note) and self.note==other.note and self.channel==other.channel
 
 class Player (Thread):
     def __init__ (self, output, duration=-1, velocity=127, channel=0):
@@ -42,7 +45,6 @@ class Player (Thread):
         self.duration = duration
         self.velocity = velocity
         self.channel = channel
-        self.last_note = None
         self.instruments = {}
         self.volumes     = {}
         self.expressions = {}
@@ -50,63 +52,84 @@ class Player (Thread):
         self.set_volume(1.0)
         self.set_expression(1.0)
         self.set_pitch_bend(0.0)
-        self.queue = deque()
-        self.waiter = Lock()
+        self.queue   = deque()
+        self.waiter  = Condition()
         self.running = False
         self.start()
 
     def tick (self):
-        try:
-            self.waiter.release()
-        except:
-            pass
+        with self.waiter:
+            self.waiter.notify()
 
     def run (self):
+        waiter = self.waiter
         self.running = True
+        with waiter:
+            waiter.wait()
         while self.running:
-            self.waiter.acquire(False)
-            with self.waiter:
+            with waiter:
+                timeouts = deque()
                 keep = deque()
-                while self.running:
-                    try:
-                        note = self.queue.popleft()
-                    except:
-                        break
-                    if note.shouldStop():
+                while self.queue and self.running:
+                    note = self.queue.popleft()
+                    if note.playing and note.duration>=0:
+                        remains = note.duration -(time()-note.started)
+                        if remains>0:
+                            timeouts.append(remains)
+                        else:
+                            note.stop()
+                            continue
+                    elif note.shouldStop():
                         note.stop()
+                        continue
                     if note.playing:
                         keep.append(note)
                 self.queue.extend(keep)
+                if timeouts:
+                    waiter.wait(min(timeouts))
+                else:
+                    waiter.wait()
 
     def quit (self):
         self.running = False
         self.stop()
-        self.tick()
+        with self.waiter:
+            self.waiter.notify_all()
         self.join()
 
     def stop (self):
-        while True:
-            try:
-                note = self.queue.popleft()
-            except:
-                break
-            note.stop()
+        waiter = self.waiter
+        with waiter:
+            while True:
+                try:
+                    note = self.queue.popleft()
+                except:
+                    break
+                note.stop()
+            waiter.notify()
 
     def play (self, note, duration=None, velocity=None, channel=None):
         duration = self.duration if duration is None else duration
         velocity = self.velocity if velocity is None else velocity
         channel = self.channel if channel is None else channel
+        waiter = self.waiter
         n = Note(self.output, note, duration, velocity, channel)
-        ln = self.last_note
-        if ln and ln.playing and ln.note==note and ln.channel==channel:
-            ln.started = time()
-            ln.duration = duration if duration<0 else duration/1000.0
-            if ln.velocity!=velocity:
-                ln.output.note_off(note, ln.velocity, channel)
-                ln.velocity = velocity
-                ln.output.note_on(note, velocity, channel)
-        self.queue.append(n.play())
-        self.last_note = n
+        with waiter:
+            try:
+                ln = self.queue[-1]
+            except:
+                ln = None
+            if ln==n and ln.playing:
+                ln.started = time()
+                ln.duration = duration if duration<=0 else duration/1000.0
+                if ln.velocity!=velocity:
+                    ln.output.note_off(note, ln.velocity, channel)
+                    ln.velocity = velocity
+                    ln.output.note_on(note, velocity, channel)
+                waiter.notify()
+                return
+            self.queue.append(n.play())
+            waiter.notify()
 
     def pan (self, left=1.0, right=1.0, channel=None):
         channel = self.channel if channel is None else channel

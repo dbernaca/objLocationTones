@@ -82,7 +82,8 @@ def note (pitch, duration, left=100, right=100):
     v = ((left/85) +(right/85))*0.8
     player.set_expression(v)
     player.play(note, duration)
-    wx.CallLater(duration, player.tick)
+    #wx.CallLater(duration, player.tick)
+    #player.tick(duration)
 
 def none (pitch, duration, left, right):
     pass

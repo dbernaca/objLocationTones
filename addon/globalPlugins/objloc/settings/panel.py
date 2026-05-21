@@ -120,6 +120,13 @@ class Panel (SettingsPanel):
             if attr.value!=Ellipsis:
                 # If not a button
                 ctrls[attr] = item
+        try:
+            for attr, ctrl in ctrls.items():
+                finisher = attr.args.get("finisher", None)
+                if finisher:
+                    finisher(attr)
+        except Exception as e:
+            log.warning(str(e))
 
     def onSave (self):
         try:

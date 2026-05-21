@@ -39,6 +39,7 @@ __all__ = [
     "get_default_input_id",
     "get_default_output_id",
     "get_device_info",
+    "list_output_devices",
     "init",
     "quit",
     "get_init",
@@ -244,6 +245,8 @@ def get_device_info(an_id):
     _check_init()
     return _pypm.GetDeviceInfo(an_id)
 
+def list_output_devices ():
+    return list(filter(lambda c: (c[3] if c else 0), (get_device_info(x) for x in range(get_count()))))
 
 class Input:
     """Input is used to get midi input from midi devices.

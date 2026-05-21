@@ -1,7 +1,7 @@
 # Object Location Tones
 # A global plugin for NVDA
 # Copyright 2017-2024 Joseph Lee, released under GPL
-# Copyright 2024-2025 Dalen Bernaca, released under GPL
+# Copyright 2024-2026 Dalen Bernaca, released under GPL
 
 # Brings NVDA Core issue 2559 to life and more besides
 
@@ -39,6 +39,9 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.active        = Settable(True, # Is real time reporting on or off
                              label=SET_POSITIONAL_AUDIO, group=SET_GROUP_NAVIGATION,
                              reactor=self.Toggle, retractor=self.Toggle)
+        self.reportOutline = Settable(False, # Automatically report outline of each activated foreground object
+                             label=SET_FOREGROUND_OUTLINE, group=SET_GROUP_NAVIGATION,
+                             reactor=self.ToggleForegroundOutline, retractor=self.ToggleForegroundOutline)
         self.easyTableNav  = ETN = Settable(True, # Is cell reporting in ETN layered mode enabled or not
                              label=SET_EASY_TABLE_NAV, group=SET_GROUP_NAVIGATION,
                              reactor=self.ToggleETN, retractor=self.ToggleETN)
@@ -82,6 +85,10 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
                              choices=tuple(posTones.general_midi_instruments),
                              label=SET_MIDI_INSTRUMENT, group=SET_GROUP_TONES, enabled=False,
                              reactor=self.ChangeInstrument, retractor=self.ChangeInstrument)
+        #self.midiSynth     = Settable(0,
+        #                     choices=tuple(),
+        #                     label=SET_MIDI_SYNTHESIZER, group=SET_GROUP_TONES,
+        #                     finisher=lambda attr: attr.get_gui_control().Set([x[1] for x in posTones.midi.list_output_devices()]))
         self.lVolume       = Settable(maxVolume, # Volume of positional tones on the left stereo channel, float in range 0.0 to 1.0
                              label=SET_LEFT_VOLUME, group=SET_GROUP_TONES,
                              min=1, max=100, ratio=100,
@@ -118,10 +125,11 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.processing   = False # A flag to avoid collisions of positional audio upon fast subsequent keypresses
 
         # Temporary variables for action checks
-        self.startMousePos = (-1, -1) # Used to mark a point from which mouse started
-        self.lastMousePos  = (-1, -1) # Used to detect that the mouse stopped moving so that we can stop the timer
-        self.lastTime      = 0.0 # Used to detect how much time passed after mouse stopped moving
-        self.lastKey       = None # What was the last key pressed (InputKeyboardGesture() object)
+        self.startMousePos  = (-1, -1) # Used to mark a point from which mouse started
+        self.lastMousePos   = (-1, -1) # Used to detect that the mouse stopped moving so that we can stop the timer
+        self.lastTime       = 0.0 # Used to detect how much time passed after mouse stopped moving
+        self.lastKey        = None # What was the last key pressed (InputKeyboardGesture() object)
+        self.lastForeground = None # What was the last foreground object
 
         # Mouse monitoring position playing timer
         self.timer = wx.Timer(gui.mainFrame)
@@ -132,6 +140,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.Activate()
         else:
             self.event_becomeNavigatorObject = self._on_passThrough
+            self.event_foreground = self._on_passThrough
             if self.caret:
                 self.ActivateCaret()
             else:
@@ -155,11 +164,16 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.ActivateCaret()
         if self.easyTableNav:
             deps.enableAddonSupport("easyTableNavigator", onNavigation=self._on_easyTableNav)
+        if self.reportOutline:
+            self.event_foreground = self._on_foreground
+        else:
+            self.event_foreground = self._on_passThrough
         self.focusing = True
         self.typing = False
 
     def Deactivate (self):
         self.event_becomeNavigatorObject = self._on_passThrough
+        self.event_foreground = self._on_passThrough
         self.DeactivateCaret()
         if self.easyTableNav:
             deps.disableAddonSupport("easyTableNavigator")
@@ -204,6 +218,10 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         if not isinstance(e, wx.Event):
             return
         # Play coordinates of the checkbox to indicate activation
+        # And an outline, if outline is selected to be played
+        if self.reportOutline:
+            self.lastForeground = getForegroundObject()
+            wx.CallLater(self.duration+250, self.processForeground)
         try:
             x, y = getObjectPos(caret=self.caret)
             playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
@@ -259,37 +277,42 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
                 self.midi = False
             return
         if not e.IsChecked():
+            e.Skip()
             if not self.midi:
-                return e.Skip()
+                return
             posTones.setGenerator("NVDA")
             self.midi = False
             self.settings["instrument"].enable = False
+            if not self.active:
+                return
             try:
                 x, y = getObjectPos(caret=self.caret)
                 playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
             except:
                 pass
-            return e.Skip()
+            return
         resp = gui.messageBox(DLG_WARN_EXPERIMENTAL, DLG_WARN, wx.ICON_WARNING | wx.YES_NO)
         if resp!=wx.YES:
             e.GetEventObject().SetValue(False)
             return
+        e.Skip()
         try:
             posTones.setGenerator("MIDI")
             posTones.player.set_instrument(self.instrument)
             self.midi = True
             self.settings["instrument"].enable = True
+            if not self.active:
+                return
             try:
                 x, y = getObjectPos(caret=self.caret)
                 playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
             except:
                 pass
-        except Exception as e:
+        except Exception as err:
             posTones.setGenerator("NVDA")
             self.midi = False
             e.GetEventObject().SetValue(False)
-            log.error("Toggling MIDI colossally failed because of "+str(e))
-        e.Skip()
+            log.error("Toggling MIDI colossally failed because of "+str(err))
 
     def ChangeInstrument (self, e):
         if isinstance(e, wx.Event):
@@ -336,6 +359,23 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
             self.easyTableNav = deps.enableAddonSupport("easyTableNavigator", onNavigation=self._on_easyTableNav)            
         else:
             self.easyTableNav = not deps.disableAddonSupport("easyTableNavigator")
+
+    def ToggleForegroundOutline (self, e=None):
+        if isinstance(e, wx.Event):
+            switch = e.IsChecked()
+            if switch and self.active:
+                self.lastForeground = None
+                wx.CallAfter(self.processForeground)
+            e.Skip()
+        else:
+            switch = not self.reportOutline
+        self.reportOutline = switch
+        if not self.active:
+            return
+        if switch:
+            self.event_foreground = self._on_foreground
+        else:
+            self.event_foreground = self._on_passThrough
 
     def terminate (self):
         """
@@ -557,11 +597,44 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         """
         nextHandler()
 
+    def processForeground (self):
+        try:
+            obj = self.lastForeground or getForegroundObject()
+            rect  = BBox(obj)
+            after = playPoints(200, rect.corners, self.duration+20, self.lVolume, self.rVolume, self.stereoSwap)
+            if self.caret:
+                try:
+                    oX, oY = getCaretPos(obj)
+                    wx.CallLater(after+40, playCoordinates, oX, oY, self.durationCaret+150, self.lVolume, self.rVolume, self.stereoSwap)
+                    wx.CallLater(after+50, setattr, self, "processing", False)
+                except:
+                    wx.CallLater(after+10, setattr, self, "processing", False)
+            else:
+                wx.CallLater(after+10, setattr, self, "processing", False)
+            self.focusing = True # Prevent tone in caret event if foreground played successfully
+        except:
+            self.processing = False
+
+    def _on_foreground (self, obj, nextHandler):
+        try:
+            nextHandler()
+        finally:
+            if self.processing:
+                return
+            self.processing = True
+            self.lastForeground = obj
+            wx.CallLater(150, self.processForeground)
+
+    event_foreground = _on_foreground
+
     def _on_becomeNavigatorObject (self, obj, nextHandler, *args, **kwargs):
         """
         Event handler that plays a positional tone upon navigation.
         """
-        self.focusing = True # Prevent beep of the caret event right after text area gains focus
+        self.focusing = True # Prevent tone in the caret event right after text area gains focus
+        if self.processing:
+            nextHandler()
+            return
         try:
             x, y = getObjectPos(obj, caret=self.caret)
             playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
@@ -578,20 +651,24 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         if self.focusing:
             # Skip a caret beep right after text area gained focus because becomeNavigator fires first
             self.focusing = False
-            return nextHandler()
+            nextHandler()
+            return
         if self.typing:
             # Caret moved because user is typing or editing the text:
             if not self.caretTyping:
-                return nextHandler()
+                nextHandler()
+                return
             try:
                 x, y = getCaretPos(obj)
                 playCoordinates(x, y, self.durationCaret, self.lVolume, self.rVolume, self.stereoSwap)
             except:
                 pass
-            return nextHandler()
+            nextHandler()
+            return
         if self.caretMode==3:
             # Do not report movements is selected
-            return nextHandler()
+            nextHandler()
+            return
         # Caret navigation:
         name = getKeyName(self.lastKey)
         if self.caretMode==0 and name not in ("upArrow", "downArrow", "pageUp", "pageDown", "enter", "control+home", "control+end"):

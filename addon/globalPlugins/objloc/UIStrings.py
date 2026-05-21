@@ -193,3 +193,8 @@ DLG_WARN_EXPERIMENTAL = _("This option is still in experimental stage.\nPlease c
 
 # Added in 25.2
 SET_EASY_TABLE_NAV = _("Play positional tones for cell locations when Easy Table Navigator layer is on")
+
+# Added in 26.1
+SET_MIDI_SYNTHESIZER = _("MIDI synthesizer:")
+
+SET_FOREGROUND_OUTLINE = _("Play an outline of each window when it is brought to foreground")

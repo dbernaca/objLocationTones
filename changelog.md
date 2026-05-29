@@ -2,7 +2,7 @@
 
 #### **Major Updates**
 - **Atomic Settings Storage**:
-  - Implemented `serialization.SafeFile()` using atomic techniques from Windows API to prevent `settings.json` corruption during power loss or filesystem mishaps.
+  - Finished `serialization.SafeFile()` class that uses atomic techniques from Windows API to prevent `settings.json` corruption during power loss or filesystem mishaps.
   - Settings are now saved with enhanced reliability and data integrity.
 
 - **MIDI Engine Improvements**:
@@ -16,7 +16,8 @@
   - New feature to automatically play an object's outline when it is brought to the foreground.
   - Provides immediate spatial awareness without manual gesture invocation (enable in settings panel).
 - **Pointer's position at start of navigation reference point**:
-  - Added new selectable reference point for mouse monitoring that plays location from which mouse pointer started moving as the static reference
+  - Added new selectable reference point for mouse monitoring that plays location from which mouse pointer started moving as the static reference.
+  - This allows mouse monitoring location tones to be reported relative to the mouse starting position rather than only to object or screen-based reference points.
 - **Dynamic Settings Panel Controls**:
   - Extended settings package to support enabling and disabling of drawn controls programmatically.
   - Added capability to control GUI elements via `enabled` argument and on-the-fly via `.enable` property.
@@ -35,7 +36,7 @@
 #### **Important Notes**
 - **Python 3.13 Support**: This version is fully compatible with NVDA 2026.x and Python 3.13.
 - **MIDI Thread Management**: Note scheduling is now completely managed by the Player thread, ensuring accurate note durations in all scenarios.
-- **Atomic save of settings files**: Settings files are first saved to a temporary file, then moved by the OS in one swoop to targeted path.
+- **Safer Config Writes**: Settings saving now uses an atomic replacement strategy to improve resilience against interrupted writes.
 
 This changelog was generated using Perplexity AI.
 

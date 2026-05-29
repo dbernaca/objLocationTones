@@ -16,9 +16,10 @@ class Settings:
     path     = None # A settings file
     version  = 1    # Version of the settings protocol
     lversion = None # Version from the loaded file
-    def __init__ (self, path=None):
+    def __init__ (self, path=None, safe=True):
         self.path       = path or os.path.join(os.path.abspath(os.path.dirname(__file__)), "settings.json")
         self.attributes = set()
+        self.safe       = safe
 
     def map_attrs (self, instance):
         """
@@ -70,13 +71,21 @@ class Settings:
             self.lversion = self.version
             return
         try:
-            f = open(self.path)
+            if self.safe:
+                f = SafeFile(self.path, fail_on_lock=True)
+            else:
+                f = open(self.path)
         except Exception as e:
-            raise SettingsError("Opening settings file failed because of "+str(e))
+            raise SettingsError("Opening settings file failed because of "+repr(e))
         try:
             d = SDict().load(f)
         except Exception as e:
-            raise SettingsError("Loading of the settings from file failed because of "+str(e))
+            raise SettingsError("Loading of the settings from file failed because of "+repr(e))
+        finally:
+            try:
+                f.close()
+            except OSError:
+                pass
         # Update the set() attributes
         self.map_attrs(instance)
         for attr in self.attributes:
@@ -99,7 +108,7 @@ class Settings:
             except SettingsError:
                 raise
             except Exception as e:
-                raise SettingsError("Unable to set the attribute '%s' to value %s because of %s" % (attr.name, repr(value), str(e)))
+                raise SettingsError("Unable to set the attribute '%s' to value %s because of %s" % (attr.name, repr(value), repr(e)))
         self.lversion = d.get("version", self.version)
 
     def save (self, instance, force=False):
@@ -134,7 +143,10 @@ class Settings:
             if not changed:
                 return
         try:
-            f = open(self.path, "w")
+            if self.safe:
+                f = SafeFile(self.path, "w", fail_on_lock=True)
+            else:
+                f = open(self.path, "w")
             d.dump(f)
             f.close()
             # If writing to file is successful, make sure new original values
@@ -142,7 +154,7 @@ class Settings:
             for attr in changed:
                 attr.seal()
         except Exception as e:
-            raise SettingsError("Unable to save settings because of %s"+str(e))
+            raise SettingsError("Unable to save settings because of "+repr(e))
 
     def restore_defaults (self, set=True):
         for attr in self.attributes:

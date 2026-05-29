@@ -1,3 +1,44 @@
+### Changelog for Version 26.1.0 in relation to 25.1.0
+
+#### **Major Updates**
+- **Atomic Settings Storage**:
+  - Implemented `serialization.SafeFile()` using atomic techniques from Windows API to prevent `settings.json` corruption during power loss or filesystem mishaps.
+  - Settings are now saved with enhanced reliability and data integrity.
+
+- **MIDI Engine Improvements**:
+  - Fixed MIDI compatibility with Python 3.13, ensuring support for NVDA 2026.x.
+  - MIDI player now handles all events in its own thread without relying on `MainLoop()` for scheduling.
+  - Resolves issues with overly long or non-stopping notes while improving overall efficiency.
+  - Instrument selection field is now automatically disabled in settings panel when MIDI is turned off.
+
+#### **New Features**
+- **Automatic Object Outline Playback**:
+  - New feature to automatically play an object's outline when it is brought to the foreground.
+  - Provides immediate spatial awareness without manual gesture invocation (enable in settings panel).
+- **Pointer's position at start of navigation reference point**:
+  - Added new selectable reference point for mouse monitoring that plays location from which mouse pointer started moving as the static reference
+- **Dynamic Settings Panel Controls**:
+  - Extended settings package to support enabling and disabling of drawn controls programmatically.
+  - Added capability to control GUI elements via `enabled` argument and on-the-fly via `.enable` property.
+  - Settings attributes now also support dynamic manipulation of `.show`, `.save`, and `.skip` attributes for better panel control.
+
+#### **Fixes and Optimizations**
+- **Performance Optimizations and minor bug fixes**:
+  - Microoptimizations to `geometry.BBox()` by removing double memory access and extra additions.
+  - Various micro-optimizations and corrected errors in code comments.
+  - Fixed formatting for logging in settings package when SettingsErrors are raised
+- **Enhanced Install and Update Process**:
+  - Updated `installTasks.py` to support expanding to new options and handle settings migration more robustly.
+- **Dependency Updates**:
+  - New `pypm` packaging implemented: portmidi.dll libraries and pypm *.pyd files for both 64 and 32 bit x86 NVDA added
+
+#### **Important Notes**
+- **Python 3.13 Support**: This version is fully compatible with NVDA 2026.x and Python 3.13.
+- **MIDI Thread Management**: Note scheduling is now completely managed by the Player thread, ensuring accurate note durations in all scenarios.
+- **Atomic save of settings files**: Settings files are first saved to a temporary file, then moved by the OS in one swoop to targeted path.
+
+This changelog was generated using Perplexity AI.
+
 ### Changelog for Version 25.1.0 in relation to 24.07.0
 
 #### **Major Updates**

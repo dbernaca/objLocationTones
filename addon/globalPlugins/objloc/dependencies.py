@@ -22,7 +22,7 @@ def findAddon (addonId):
     except StopIteration:
         pass
 
-def checkAddonUsability (addonId, logging=True, running=False):
+def checkAddonUsability (addonId, logging=True, running=False, versionCheck=(lambda addon: True)):
     if isinstance(addonId, str):
         if logging:
             log.info(addonId+" add-on requested for Object Location Tones. Checking...")
@@ -56,7 +56,12 @@ def checkAddonUsability (addonId, logging=True, running=False):
         if logging:
             log.warning(addonId+" is not running")
         return False
-    return True
+    vc = versionCheck(addon)
+    if vc:
+        return True
+    if logging:
+        log.warning("Version mismatch: Current version of %s does not offer complete external API, please update it." % addonId)
+    return False
 
 class AddonPublicInterface:
     def __init__ (self, id, *args, **kwargs):
@@ -66,8 +71,11 @@ class AddonPublicInterface:
         self.logging = True
         self.running = False
 
-    def check (self):
-        return checkAddonUsability(self.id, logging=self.logging, running=self.running)
+    def versionCheck (self):
+        return True
+
+    def check (self, addon=None):
+        return checkAddonUsability((addon or self.id), logging=self.logging, running=self.running, versionCheck=self.versionCheck)
 
     def enabled (self):
         try:
@@ -95,7 +103,7 @@ class ETN (AddonPublicInterface):
             if self.logging:
                 log.warning("easyTableNavigator not found")
             return False
-        if not self.check():
+        if not self.check(ETN):
             return False
         try:
             from globalPlugins.easyTableNavigator.extpoints import action_easyTableNavigator, action_toggleTableNav, action_tableNavigation, flag_tableNav

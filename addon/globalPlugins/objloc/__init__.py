@@ -48,6 +48,10 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
         self.duration      = Settable(40, # Duration of a positional tone in Msec
                              label=SET_TONE_DURATION, group=SET_GROUP_NAVIGATION,
                              filter=valset)
+        self.locationMODE  = Settable(SET_LOCATION_MODE_CHOICES.index(SET_LOCATION_NAVIGATOR_CENTROID), # Which point to use in location presentation of which object
+                             choices=tuple(SET_LOCATION_MODE_CHOICES), # tuple() means wx.Choice(), instead of wx.ListBox() in settings panel
+                             label=SET_LOCATION_MODE, group=SET_GROUP_NAVIGATION,
+                             reactor=lambda e: ( setattr(self, "locationMode", e.GetSelection()), e.Skip() ) )
         # Caret:
         self.caret         = Settable(True, label=SET_CARET, group=SET_GROUP_CARET, # Whether to report caret location in editable fields or not
                              reactor=self.ToggleCaret, retractor=self.ToggleCaret)
@@ -101,8 +105,7 @@ class GlobalPlugin (globalPluginHandler.GlobalPlugin):
                              label=SET_SWAP_STEREO_CHANNELS, group=SET_GROUP_TONES,
                              reactor=self.SwapChannels)
         # Make particular dependency related options not show in settings dialog if that add-on is not available
-        ETN.show = deps.checkAddonUsability("easyTableNavigator", logging=False,
-                        versionCheck=(lambda addon: addon.version>"2026.7.0"))
+        ETN.show = deps.checkAddonUsability("easyTableNavigator", logging=False)
         # Load the configurables from settings if possible
         self.settings = S = Settings()
         try:

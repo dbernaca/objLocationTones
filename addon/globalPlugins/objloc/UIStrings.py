@@ -198,3 +198,27 @@ SET_EASY_TABLE_NAV = _("Play positional tones for cell locations when Easy Table
 SET_MIDI_SYNTHESIZER = _("MIDI synthesizer:")
 
 SET_FOREGROUND_OUTLINE = _("Play an outline of each window when it is brought to foreground")
+
+# Added in 26.2
+
+# Label for presentation mode choice
+SET_LOCATION_MODE = _("Location presentation mode:")
+
+# Presentation mode choices
+# The following one is the default behaviour
+SET_LOCATION_NAVIGATOR_CENTROID = _("Centroid of a navigator object")
+
+SET_LOCATION_NAVIGATOR_LEFT = _("Left border of a navigator object")
+
+SET_LOCATION_NAVIGATOR_RIGHT = _("Right border of a navigator object")
+
+SET_LOCATION_FOCUS_CENTROID = _("Centroid of a focused object")
+
+SET_LOCATION_FOCUS_LEFT = _("Left border of a focused object")
+
+SET_LOCATION_FOCUS_RIGHT = _("Right border of a focused object")
+
+# DO NOT CHANGE THE ORDER OF CHOICES
+# Choice detection is index based and hard-coded because of settings and translations
+# The index is saved to settings so that it can be unrelated to any locale
+SET_LOCATION_MODE_CHOICES = [SET_LOCATION_NAVIGATOR_CENTROID, SET_LOCATION_NAVIGATOR_LEFT, SET_LOCATION_NAVIGATOR_RIGHT, SET_LOCATION_FOCUS_CENTROID, SET_LOCATION_FOCUS_LEFT, SET_LOCATION_FOCUS_RIGHT]

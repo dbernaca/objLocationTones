@@ -68,7 +68,7 @@ def getObjectPos (obj=None, location=True, caret=False):
     """
     Returns x and y coordinates of the obj.
     The obj argument is an object you wish to get the position for, or None (default).
-    If None, api.getFocusObject() is used to get the object to use.
+    If None, api.getNavigatorObject() is used to get the object to use.
     If caret argument is True (defaults to False), function will return position of the caret
     but only if the obj is considered editable. If location is False (defaults to True),
     and caret position is unavailable, then the centroid location of the editable
@@ -78,7 +78,7 @@ def getObjectPos (obj=None, location=True, caret=False):
     will be raised.
     """
     try:
-        obj = obj or getFocusObject()
+        obj = obj or getNavigatorObject()
         if caret:
             try:
                 return getCaretPos(obj)
@@ -87,6 +87,66 @@ def getObjectPos (obj=None, location=True, caret=False):
                     raise
         l = obj.location
         return (l[0]+(l[2]//2), l[1]+(l[3]//2))
+    except LocationError:
+        raise
+    except:
+        raise LocationError("Location unavailable")
+
+getObjectPosCenter = getObjectPos
+
+def getObjectPosLeft (obj=None, location=True, caret=False):
+    """
+    Returns x and y coordinates of the obj, for its left border.
+    The left border is considered a point where x coordinate represents the beginning of the object and y its middle.
+    The obj argument is an object you wish to get the position for, or None (default).
+    If None, api.getNavigatorObject() is used to get the object to use.
+    If caret argument is True (defaults to False), function will return position of the caret
+    but only if the obj is considered editable. If location is False (defaults to True),
+    and caret position is unavailable, then the left border location of the editable
+    will be returned instead. In all other circumstances
+    the coordinates x, y of the left border for the
+    obj will be returned, and, if not available, LocationError()
+    will be raised.
+    """
+    try:
+        obj = obj or getNavigatorObject()
+        if caret:
+            try:
+                return getCaretPos(obj)
+            except:
+                if not location:
+                    raise
+        l = obj.location
+        return (l[0], l[1]+(l[3]//2))
+    except LocationError:
+        raise
+    except:
+        raise LocationError("Location unavailable")
+
+def getObjectPosRight (obj=None, location=True, caret=False):
+    """
+    Returns x and y coordinates of the obj, for its right border.
+    The right border is considered a point where x coordinate represents the ending of the object and y its middle.
+    The obj argument is an object you wish to get the position for, or None (default).
+    If None, api.getNavigatorObject() is used to get the object to use.
+    If caret argument is True (defaults to False), function will return position of the caret
+    but only if the obj is considered editable. If location is False (defaults to True),
+    and caret position is unavailable, then the right border location of the editable
+    will be returned instead. In all other circumstances
+    the coordinates x, y of the right border for the
+    obj will be returned, and, if not available, LocationError()
+    will be raised.
+    """
+    try:
+        obj = obj or getNavigatorObject()
+        if caret:
+            try:
+                return getCaretPos(obj)
+            except:
+                if not location:
+                    raise
+        l = obj.location
+        return (l[0]+l[2], l[1]+(l[3]//2))
     except LocationError:
         raise
     except:

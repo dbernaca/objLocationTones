@@ -90,7 +90,7 @@ def none (pitch, duration, left, right):
 
 generator = beep
 
-def setGenerator (name="NVDA"):
+def setGenerator (name="NVDA", device=None):
     global generator, player
     if player:
         player.quit()
@@ -101,7 +101,8 @@ def setGenerator (name="NVDA"):
         generator = beep
     elif name=="MIDI":
         midi.init()
-        output = midi.Output(midi.get_default_output_id())
+        device = midi.get_default_output_id() if device is None else device
+        output = midi.Output(device)
         player = midi.Player(output)
         generator = note
     elif name=="None":

@@ -71,7 +71,7 @@ class AddonPublicInterface:
         self.logging = True
         self.running = False
 
-    def versionCheck (self):
+    def versionCheck (self, addon):
         return True
 
     def check (self, addon=None):

@@ -157,16 +157,22 @@ class Settings:
             raise SettingsError("Unable to save settings because of "+repr(e))
 
     def restore_defaults (self, set=True):
+        if set:
+            for attr in self.attributes:
+                attr.value = attr.default
+                attr.set()
+            return
         for attr in self.attributes:
             attr.value = attr.default
-            if set:
-                attr.set()
 
     def restore_original (self, set=True):
+        if set:
+            for attr in self.attributes:
+                attr.value = attr.original
+                attr.set()
+            return
         for attr in self.attributes:
             attr.value = attr.original
-            if set:
-                attr.set()
 
     def __getitem__ (self, i):
         for attr in self.attributes:
@@ -180,37 +186,40 @@ class Settings:
     def __iter__ (self):
         return iter(sorted(self.attributes, key=(lambda x: x.args.get("ordinal", x.id))))
 
-    def refresh_panel (self, instance, *specific):
-        if not Panel.opened:
-            return
-        if specific:
+    def get (self, key, default=None, instance=None):
+        for attr in self.attributes:
+            if instance and not attr.belongs_to(instance):
+                continue
+            if attr.name==key or attr.nickname==key or attr.ctrlId==key:
+                return attr
+        if isinstance(default, Attribute):
+            return default
+        raise KeyError("'%s' not found" % key)
+
+    def get_all (self, instance, attrs=None):
+        if attrs:
             for attr in self.attributes:
                 if not attr.belongs_to(instance):
                     continue
-                if (attr.value!=Ellipsis and attr.has_gui_control()) and (attr.name in specific or attr in specific or attr.ctrlId in specific or attr.nickname in specific):
-                    setValue(attr, attr.get_gui_control(), getattr(instance, attr.name))
-                    break
+                if attr.name in attrs or attr in attrs or (attr.ctrlId!=None and attr.ctrlId in attrs) or attr.nickname in attrs:
+                    yield attr
             return
         for attr in self.attributes:
             if not attr.belongs_to(instance):
                 continue
+            yield attr
+
+    def refresh_panel (self, instance, *specific):
+        if not Panel.opened:
+            return
+        for attr in self.get_all(instance, specific):
             if attr.value!=Ellipsis and attr.has_gui_control():
                 setValue(attr, attr.get_gui_control(), getattr(instance, attr.name))
 
     def refresh_instance (self, instance, *specific):
         if not Panel.opened:
             return
-        if specific:
-            for attr in self.attributes:
-                if not attr.belongs_to(instance):
-                    continue
-                if (attr.value!=Ellipsis and attr.has_gui_control()) and (attr.name in specific or attr in specific or attr.ctrlId in specific or attr.nickname in specific):
-                    setattr(instance, attr.name, getValue(attr, attr.get_gui_control()))
-                    break
-            return
-        for attr in self.attributes:
-            if not attr.belongs_to(instance):
-                continue
+        for attr in self.get_all(instance, specific):
             if attr.value!=Ellipsis and attr.has_gui_control():
                 setattr(instance, attr.name, getValue(attr, attr.get_gui_control()))
 
@@ -239,8 +248,8 @@ class Settings:
         """
         Updates values from another instance to their instances.
         All registered Attributes() will be tried,
-        first by name, then by nickname, and if found in 'instance',
-        their value will be updated to the one from the 'instance'.
+        first by name, then by nickname, and if found in object given by 'instance' argument,
+        their value will be updated to the value of equivalent attribute from the object from 'instance' argument.
         Can be used to update current settings from raw settings loaded by generate_instance() method.
         Do not forget to call load(), save() or map_attrs() on the instance(s) you wish to update
         before the update() method, so that the set() attributes is populated.

@@ -77,7 +77,7 @@ class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, globalPluginHandl
         self.autoMouse     = Settable(False,
                              label=SET_MOUSE_MONITOR_AUTO_START, group=SET_GROUP_MOUSE,
                              reactor=self.ToggleMouseMonitorAutostart, retractor=self.ToggleMouseMonitorAutostart)
-        self.refPoint      = Settable(SET_MOUSE_REF_CHOICES.index(SET_MOUSE_REF_NAVIGATOR), # Which point location to announce along with the current mouse position
+        self.refPoint      = Settable(SET_MOUSE_REF_CHOICES.index(SET_MOUSE_REF_FOCUS), # Which point location to announce along with the current mouse position
                              choices=tuple(SET_MOUSE_REF_CHOICES), # tuple() means wx.Choice(), instead of wx.ListBox() in settings panel
                              label=SET_MOUSE_REF_POINT, group=SET_GROUP_MOUSE,
                              reactor=lambda e: ( setattr(self, "refPoint", e.GetSelection()), e.Skip() ) )

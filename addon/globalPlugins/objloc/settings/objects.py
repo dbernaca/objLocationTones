@@ -9,15 +9,15 @@ from gui.guiHelper import associateElements
 import wx
 
 class Flag (object):
-    value = True
+    __slots__ = ("value", "_value")
     def __init__ (self, value):
-        self.value = value
-
-    def __bool__ (self):
-        return self.value
-    __nonzero__ = __bool__
+        assert (value==None or isinstance(value, (bool, int, float)) or (callable(value) and not isclass(value)))
+        self._value = value
 
     def toggle (self):
+        if self.is_dynamic():
+            self.value = self.value!=bool(self._value(self))
+            return
         self.value = not self.value
 
     def set (self):
@@ -25,6 +25,35 @@ class Flag (object):
 
     def clear (self):
         self.value = False
+
+    def reset (self):
+        if callable(self._value):
+            try:
+                del self.value
+            except:
+                pass
+            return
+        self.value = bool(self._value)
+
+    def is_dynamic (self):
+        return callable(self._value)
+
+    def __getattr__ (self, a):
+        v = self._value
+        if callable(v):
+            return bool(v(self))
+        self.value = v = bool(v)
+        return v
+
+    def __bool__ (self):
+        return self.value
+    __nonzero__ = __bool__
+
+    def __eq__ (self, other):
+        return self.value==bool(other)
+
+    def __lt__ (self, other):
+        return self.value<bool(other)
 
     def __repr__ (self):
         return repr(self.value)
@@ -95,9 +124,11 @@ class Attribute (object):
         object.__setattr__(self, "ctrlId", None)
         object.__setattr__(self, "feedback", args.get("feedback", None))
         object.__setattr__(self, "_firstset", True)
-        object.__setattr__(self, "skip", args.get("skip", False))
-        object.__setattr__(self, "save", args.get("save", True))
-        object.__setattr__(self, "show", args.get("show", True))
+        object.__setattr__(self, "skip", Flag(args.get("skip", False)))
+        object.__setattr__(self, "save", Flag(args.get("save", True)))
+        object.__setattr__(self, "show", Flag(args.get("show", True)))
+        if "enabled" in self.args and callable(self.args["enabled"]):
+            self.args["enabled"] = Flag(self.args["enabled"])
 
     @staticmethod
     def from_instance (instance, attr):
@@ -146,7 +177,7 @@ class Attribute (object):
                 raise SettingsError("Wrong type for attribute %s. '%s' given, '%s' expected." % (self.name, value.__class__.__name__, self.type.__name__))
             return value
         elif a=="enable":
-            return self.args.get("enabled", True)
+            return bool(self.args.get("enabled", True))
         raise AttributeError("No attribute named "+repr(a))
 
     def __setattr__ (self, a, v):
@@ -166,12 +197,16 @@ class Attribute (object):
                 object.__setattr__(self, "original", v)
                 object.__setattr__(self, "_firstset", False)
         elif a in ("show", "save", "skip"):
-            object.__setattr__(self, a, v)
+            object.__setattr__(self, a, Flag(v))
         elif a=="enable":
+            if callable(v):
+                v = Flag(v)
             if v:
                 self.enable_gui_ctrl()
             else:
                 self.disable_gui_ctrl()
+            if isinstance(v, Flag):
+                self.args["enabled"] = v
         else:
             raise AttributeError("The Attribute() object only allows certain attributes to be set")
 
@@ -183,7 +218,7 @@ class Attribute (object):
 
     def reset (self):
         """
-        Assigns the Attribute() object to the instance's attribute.
+        Assigns the Attribute() object back to the instance's attribute.
         """
         setattr(self.instance, self.name, self)
 

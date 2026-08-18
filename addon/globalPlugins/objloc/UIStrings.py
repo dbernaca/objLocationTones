@@ -144,11 +144,11 @@ SET_CARET_CHOICES = [SET_CARET_VERTICAL, SET_CARET_HORIZONTAL, SET_CARET_BOTH, S
 # Label in settings for the mouse monitoring second tone
 SET_MOUSE_REF_POINT = _("Mouse monitoring reference point:")
 
-# Mouse reference point will be the navigator object's location (default behaviour in version 2026.2 and later)
-SET_MOUSE_REF_NAVIGATOR = _("Navigator object's location")
-
-# Mouse reference point will be the focused object (default behaviour in versions prior to 2026.2)
+# Mouse reference point will be the focused object (default behaviour)
 SET_MOUSE_REF_FOCUS = _("Focused object's location")
+
+# Mouse reference point will be the navigator object's location (new in 2026.2)
+SET_MOUSE_REF_NAVIGATOR = _("Navigator object's location")
 
 # Mouse reference point: Top Left of the Window
 SET_MOUSE_REF_TLW = _("Top left corner of the application's root window")
@@ -171,7 +171,7 @@ SET_MOUSE_REF_START = _("Pointer's position at start of navigation")
 # DO NOT CHANGE THE ORDER OF CHOICES
 # Choice detection is index based and hard-coded because of settings and translations
 # The index is saved to settings so that it can be unrelated to any locale
-SET_MOUSE_REF_CHOICES = [SET_MOUSE_REF_NAVIGATOR, SET_MOUSE_REF_FOCUS, SET_MOUSE_REF_TLW, SET_MOUSE_REF_CW, SET_MOUSE_REF_TLS, SET_MOUSE_REF_CS, SET_MOUSE_REF_NONE, SET_MOUSE_REF_START]
+SET_MOUSE_REF_CHOICES = [SET_MOUSE_REF_FOCUS, SET_MOUSE_REF_NAVIGATOR, SET_MOUSE_REF_TLW, SET_MOUSE_REF_CW, SET_MOUSE_REF_TLS, SET_MOUSE_REF_CS, SET_MOUSE_REF_NONE, SET_MOUSE_REF_START]
 
 # The grouping labels in settings panel
 SET_GROUP_NAVIGATION = _("Navigation")

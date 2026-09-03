@@ -109,7 +109,9 @@ class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, globalPluginHandl
                              label=SET_SWAP_STEREO_CHANNELS, group=SET_GROUP_TONES,
                              reactor=self.SwapChannels)
         # Make particular dependency related options not show in settings dialog if that add-on is not available
-        ETN.show = deps.checkAddonUsability("easyTableNavigator", logging=False)
+        ETN.show = deps.checkAddonUsability("easyTableNavigator",
+                   logging=False,
+                   filter=(lambda addon: addon.version>="2.8"))
         # Load the configurables from settings if possible
         self.settings = S = Settings()
         try:

@@ -22,7 +22,7 @@ def findAddon (addonId):
     except StopIteration:
         pass
 
-def checkAddonUsability (addonId, logging=True, running=False, versionCheck=(lambda addon: True)):
+def checkAddonUsability (addonId, logging=True, running=False, filter=(lambda addon: True)):
     if isinstance(addonId, str):
         if logging:
             log.info(addonId+" add-on requested for Object Location Tones. Checking...")
@@ -56,8 +56,8 @@ def checkAddonUsability (addonId, logging=True, running=False, versionCheck=(lam
         if logging:
             log.warning(addonId+" is not running")
         return False
-    vc = versionCheck(addon)
-    if vc:
+    c = filter(addon)
+    if c:
         return True
     if logging:
         log.warning("Version mismatch: Current version of %s does not offer complete external API, please update it." % addonId)
@@ -75,7 +75,7 @@ class AddonPublicInterface:
         return True
 
     def check (self, addon=None):
-        return checkAddonUsability((addon or self.id), logging=self.logging, running=self.running, versionCheck=self.versionCheck)
+        return checkAddonUsability((addon or self.id), logging=self.logging, running=self.running, filter=self.versionCheck)
 
     def enabled (self):
         try:

@@ -1,0 +1,121 @@
+# Configuration for this NVDA add-on.
+#
+# Everything the add-on declares about itself lives here. `nvaddon build` turns
+# the [addon] table into `addon/manifest.ini`, and `nvaddon pot` collects the
+# translatable strings below into the translation template.
+#
+# The comment directly above a translatable string becomes that string's note to
+# translators, so keep the `# Translators:` lines and write them for someone who
+# cannot see where the text appears.
+
+[addon]
+# Add-on name/identifier, internal to NVDA. Not shown to users.
+name = "objLocTones"
+
+# Translators: Summary/title for this add-on, to be shown on installation
+# and in add-on information found in the add-on store.
+summary = "Object Location Tones"
+
+# Translators: Long description to be shown for this add-on
+# in add-on information from the add-on store.
+description = """Announce location of objects via tones.
+This add-on brings positional audio capabilities to NVDA screen reader."""
+
+# Version of this add-on. The add-on store requires major.minor.patch integers.
+# `nvaddon release patch` sets this for you.
+version = "26.2.0"
+
+# Translators: What's new in this version of the add-on, shown in the add-on store.
+changelog = """* NVDA 2026.2 compatibility
+* New feature: Choose location presentation mode (Lets you choose object detection during navigation and position within the object that is announced via tone)
+* New feature: Mouse monitoring reference point that uses navigator object
+* New feature: Enable/disable the mouse monitoring stop message
+---
+Please read more about each of new features in readme to understand better how they work.
+---
+* Some more microoptimization in effectiveness
+* Some bug fixes that didn't affect the previous versions of the add-on, but would have in future versions"""
+
+# Author(s), as "Name <name@domain.com>".
+author = "Joseph Lee <joseph.lee22590@gmail.com>, Dalen Bernaca <dbernaca@gmail.com>"
+
+# URL for the add-on's documentation or support page.
+url = "https://github.com/dbernaca/objLocationTones"
+
+# URL of the repository where this add-on's source code can be found.
+sourceURL = "https://github.com/dbernaca/objLocationTones"
+
+# Documentation file name, opened by the Help button in NVDA's Add-on Store.
+# Generated from readme.md at build time.
+docFileName = "readme.html"
+
+# Oldest NVDA version this add-on supports, e.g. "2024.1".
+# NVDA refuses to install the add-on on anything older.
+minimumNVDAVersion = "2023.1"
+
+# Most recent NVDA version this add-on has been tested against, e.g. "2025.3".
+# NVDA warns users running anything newer.
+lastTestedNVDAVersion = "2026.2"
+
+# Update channel: "stable", "beta", or "dev". `nvaddon release` sets this for
+# you, so change it by hand only if you know you need to.
+updateChannel = "stable"
+
+# Licence this add-on is distributed under, and where to read it.
+license = "GPL v2"
+licenseURL = "https://www.gnu.org/licenses/old-licenses/gpl-2.0.html"
+
+[release]
+# Prefix for the tags `nvaddon release` creates. Empty gives 1.2.0-stable;
+# "v" gives v1.2.0-stable. Match whatever your published releases already use.
+tagPrefix = ""
+
+[build]
+# The Python files that make up this add-on. These are scanned for translatable
+# strings, so every file containing a `_("...")` call must be matched here.
+# Patterns are globs relative to this file; `**` matches nested directories.
+pythonSources = ["addon/globalPlugins/**/*.py"]
+
+# Files inside the `addon` directory to leave out of the built add-on.
+# Paths are relative to `addon/`, not to this file.
+excludedFiles = []
+
+[l10n]
+# The language this add-on is written in. Its strings are the translation
+# sources, so it is never itself translated.
+baseLanguage = "en"
+
+# Extra files to scan for translatable strings, on top of build.pythonSources.
+extraSources = []
+
+[docs]
+# Python-Markdown extensions used when rendering documentation. Most add-ons
+# need none; add "tables" if your readme uses Markdown tables.
+markdownExtensions = []
+
+# Custom braille translation tables, speech symbol dictionaries and speech
+# (pronunciation) dictionaries. Most add-ons ship none of these; delete the
+# examples below or leave them commented out.
+#
+# Braille tables live in `addon/brailleTables/`:
+#
+# [brailleTables."my-table.ctb"]
+# # Translators: The name of a custom braille table.
+# displayName = "My braille table"
+# contracted = false
+# output = true
+# input = true
+#
+# Symbol dictionaries live in `addon/locale/<lang>/symbols-<name>.dic`:
+#
+# [symbolDictionaries."myDictionary"]
+# # Translators: The name of a custom speech symbol dictionary.
+# displayName = "My symbol dictionary"
+# mandatory = false
+#
+# Speech dictionaries live in `addon/speechDicts/<name>.dic`:
+#
+# [speechDictionaries."myDictionary"]
+# # Translators: The name of a custom speech dictionary.
+# displayName = "My speech dictionary"
+# mandatory = false

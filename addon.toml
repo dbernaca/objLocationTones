@@ -31,7 +31,7 @@ changelog = """* NVDA 2026.2 compatibility
 * New feature: Mouse monitoring reference point that uses navigator object
 * New feature: Enable/disable the mouse monitoring stop message
 ---
-Please read more about each of new features in readme to understand better how they work.
+Please read more about each of the new features in readme to understand better how they work.
 ---
 * Some more microoptimization in effectiveness
 * Some bug fixes that didn't affect the previous versions of the add-on, but would have in future versions"""
@@ -91,7 +91,7 @@ extraSources = []
 [docs]
 # Python-Markdown extensions used when rendering documentation. Most add-ons
 # need none; add "tables" if your readme uses Markdown tables.
-markdownExtensions = []
+markdownExtensions = ["nl2br"]
 
 # Custom braille translation tables, speech symbol dictionaries and speech
 # (pronunciation) dictionaries. Most add-ons ship none of these; delete the

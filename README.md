@@ -91,4 +91,41 @@ Accordingly, the add-on's midi package contains files such as `portmidi.dll` and
 * If another add-on uses emulated keypresses (especially with added beeps while you are not using MIDI), interference may occur until you identify how the tones from both add-ons interact. For example, Braille Extender may use emulated keypresses to improve routing experience.
 * If another add-on modifies certain parts of NVDA (especially if outdated or incompatible), some events might not be detected by Object Location Tones. For example, an old version of Braille Extender might prevent Object Location Tones from detecting typing, resulting in the location of the caret being reported while you type regardless of your settings, which may be annoying.
 
-[1]: https://github.com/dbernaca/objLocationTones/releases/26.1.0
+## Build and translations
+
+### Building the add-on
+
+Object Location Tones uses nvaddon tool from NVDAAddonKit by Beka Gozalishvili as its bundling system.
+To create *.nvda-addon file from source on your own following steps are recommended:
+
+* Install nvda-addon-kit from Python Package Index using pip:
+	$ python -m pip install nvda-addon-kit
+* Acquire the Object Location Tones source from the repository and enter its root directory:
+	$ git clone https://github.com/dbernaca/objLocationTones.git
+	$ cd objLocationTones
+* Use the nvaddon tool on it to build or to build and install the add-on
+	$ python -m nvaddon build
+	or
+	$ python -m nvaddon install
+
+That is all.
+If you have Python's 'scripts' directory added to your PATH environment variable, you can call both pip and nvaddon tool directly.
+
+### Translating the add-on
+
+Object Location Tones has all its translatable strings in one module - UIStrings.py.
+They are commented and sorted mostly as they appeared along with new features in new add-on versions.
+However, nvaddon tool supports creation of a pot file from add-on and managing new translations.
+Using command:
+	$ python -m nvaddon locale-add <language_code>
+while in the add-ons root directory, will create both *.pot template and *.po file for the language in its correct location.
+Using:
+	$ python -m nvaddon locale-compile
+will compile all *.po into *.mo for usage by gettext in NVDA.
+When you use:
+	$ python -m nvaddon build
+all your *.po files will be compiled automatically and appropriate manifest messages will be deposited into translated manifest.ini(s) in locales folder before building.
+
+If you are interested in contributing to Object Location Tones by translating it, please use nvaddon tool to create a *.po file for the language you want to add, translate it using your favourite editor or method, and send the result to be included in next Object Location Tones version, either via e-mail or using a pull request.
+
+[1]: https://github.com/dbernaca/objLocationTones/releases/26.2.0

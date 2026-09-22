@@ -9,6 +9,9 @@ addon/doc/style.css
 addon/doc/en/
 addon/doc/*/*.html
 
+# Addon creates settings.json
+settings.json
+
 # Python
 *.py[co]
 __pycache__/

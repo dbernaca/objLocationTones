@@ -11,7 +11,6 @@ import gui
 import wx
 
 from logHandler      import log
-from .posTones       import *
 from .utils          import *
 from .UIStrings      import *
 from .settings       import *
@@ -24,7 +23,7 @@ from .               import dependencies as deps
 
 class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, _objlocSwitchMethods, globalPluginHandler.GlobalPlugin):
     def __init__ (self):
-        super(globalPluginHandler.GlobalPlugin, self).__init__()
+        globalPluginHandler.GlobalPlugin.__init__(self)
 
         # Configurable attributes
         # Note: Settings() later manages auto save and additional args makes them show in settings panel and react to events there
@@ -94,17 +93,17 @@ class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, _objlocSwitchMeth
         #                     choices=tuple(),
         #                     label=SET_MIDI_SYNTHESIZER, group=SET_GROUP_TONES,
         #                     finisher=lambda attr: attr.get_gui_control().Set([x[1] for x in posTones.midi.list_output_devices()]))
-        self.lVolume       = Settable(maxVolume, # Volume of positional tones on the left stereo channel, float in range 0.0 to 1.0
+        self.lVolume       = Settable(posTones.maxVolume, # Volume of positional tones on the left stereo channel, float in range 0.0 to 1.0
                              label=SET_LEFT_VOLUME, group=SET_GROUP_TONES,
                              min=1, max=100, ratio=100,
-                             reactor=self.ChangeVolume)
-        self.rVolume       = Settable(maxVolume, # Volume of positional tones on the right stereo channel, float in range 0.0 to 1.0
+                             reactor=self.ChangeVolume, retractor=self.ChangeVolume)
+        self.rVolume       = Settable(posTones.maxVolume, # Volume of positional tones on the right stereo channel, float in range 0.0 to 1.0
                              label=SET_RIGHT_VOLUME, group=SET_GROUP_TONES,
                              min=1, max=100, ratio=100,
-                             reactor=self.ChangeVolume)
+                             reactor=self.ChangeVolume, retractor=self.ChangeVolume)
         self.stereoSwap    = Settable(False, # Swap stereo sides
                              label=SET_SWAP_STEREO_CHANNELS, group=SET_GROUP_TONES,
-                             reactor=self.SwapChannels)
+                             reactor=self.SwapChannels, retractor=self.SwapChannels)
         # Make particular dependency related options not show in settings dialog if that add-on is not available
         ETN.show = deps.checkAddonUsability("easyTableNavigator",
                    logging=False,
@@ -120,6 +119,10 @@ class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, _objlocSwitchMeth
             self.easyTableNav = False
             ETN.value = False
             ETN.save = False # Do not save the value change in this case, so if ETN returns the setting is valid once more
+        # Sync audio settings with playing instance
+        posTones.play.lVolume    = self.lVolume
+        posTones.play.rVolume    = self.rVolume
+        posTones.play.stereoSwap = self.stereoSwap
         # Setup a settings panel
         SetPanel(S, self)
 

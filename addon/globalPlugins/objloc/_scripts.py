@@ -9,7 +9,7 @@ from baseObject import ScriptableObject
 from scriptHandler   import script, getLastScriptRepeatCount
 from .posTones       import playCoordinates, playPoints
 from .utils          import *
-from .geometry       import *
+from .geometry       import BBox
 from .UIStrings      import *
 import speech
 import ui
@@ -41,12 +41,12 @@ class _objlocScriptMethods (ScriptableObject):
                 # Only if we found the cell:
                 obj = o if r==ROLE_TABLECELL else obj
             rect  = BBox(obj)
-            after = playPoints(200, rect.corners, self.duration+20, self.lVolume, self.rVolume, self.stereoSwap)
+            after = playPoints(200, rect.corners, self.duration+20)
             ui.message(getObjectDescription(obj))
             if self.caret:
                 try:
                     oX, oY = getCaretPos(obj)
-                    wx.CallLater(after+40, playCoordinates, oX, oY, self.durationCaret+150, self.lVolume, self.rVolume, self.stereoSwap)
+                    wx.CallLater(after+40, playCoordinates, oX, oY, self.durationCaret+150)
                 except:
                     pass
         except:
@@ -93,7 +93,7 @@ class _objlocScriptMethods (ScriptableObject):
                 ui.message(MSG_PARENT_NOT_AVAILABLE)
                 return
             rect  = BBox(obj)
-            after = playPoints(200, rect.corners, self.duration+20, self.lVolume, self.rVolume, self.stereoSwap)
+            after = playPoints(200, rect.corners, self.duration+20)
             wx.CallLater(after+self.duration+20, setattr, self, "processing", False)
             ui.message(MSG_ANCESTOR % (getObjectDescription(obj), level))
         except:
@@ -111,7 +111,7 @@ class _objlocScriptMethods (ScriptableObject):
         """
         if not self.timer.IsRunning():
             try:
-                obj = self._getObject()
+                obj = self._getRefObject()
                 oX, oY = getObjectPos(obj, caret=self.caret)
                 mX, mY = getCursorPos()
             except:
@@ -119,7 +119,7 @@ class _objlocScriptMethods (ScriptableObject):
                 return
             dist = abs(oX-mX) + abs(oY-mY)
             if dist<=self.tolerance:
-                playCoordinates(oX, oY, self.duration+150, self.lVolume, self.rVolume, self.stereoSwap)
+                playCoordinates(oX, oY, self.duration+150)
                 ui.message(MSG_MOUSE_ALREADY_THERE)
                 return
             self.entered = (mX, mY) in BBox(obj)
@@ -140,7 +140,7 @@ class _objlocScriptMethods (ScriptableObject):
         self.DeactivateMouseMonitor()
         try:
             x, y = getCursorPos()
-            playCoordinates(x, y, self.duration+50, self.lVolume, self.rVolume, self.stereoSwap)
+            playCoordinates(x, y, self.duration+50)
         except:
             pass
 
@@ -154,7 +154,7 @@ class _objlocScriptMethods (ScriptableObject):
         self.DeactivateMouseMonitor()
         try:
             x, y = self._getObjectPos(caret=self.caret)
-            playCoordinates(x, y, self.duration+30, self.lVolume, self.rVolume, self.stereoSwap)
+            playCoordinates(x, y, self.duration+30)
         except:
             pass
 

@@ -1,6 +1,6 @@
 # Part of Object Location Tones add-on
-# This module implementsa a kind of mixin class that is a part of the GlobalPlugin()
-# Its content should be viewed as a continuation of that class from __init__.py
+# This module implements a kind of mixin class that is a part of the GlobalPlugin()
+# Its content should be viewed as a continuation of GlobalPlugin() class from __init__.py
 # Methods that are event handlers for the add-on are hosted here
 # because the add-ons main class is getting too large for simple maintenance
 # and needs some clearing. So, event handler methods are being separated into a mixin style class in their own module.
@@ -19,6 +19,10 @@ import speech
 __all__ = ["_objlocEventMethods"]
 
 class _objlocEventMethods:
+    """
+    This class contains all Object Location Tones' event handlers.
+    They will be assigned to their respective events within the GlobalPlugin() constructor or upon some action.
+    """
     def _on_passThrough (self, obj, nextHandler, *args, **kwargs):
         """
         An event handler that just passes the event to the next handler and does nothing else.
@@ -41,11 +45,11 @@ class _objlocEventMethods:
         try:
             obj = self.lastForeground or getForegroundObject()
             rect  = BBox(obj)
-            after = playPoints(200, rect.corners, self.duration+20, self.lVolume, self.rVolume, self.stereoSwap)
+            after = playPoints(200, rect.corners, self.duration+20)
             if self.caret:
                 try:
                     oX, oY = getCaretPos(obj)
-                    wx.CallLater(after+40, playCoordinates, oX, oY, self.durationCaret+150, self.lVolume, self.rVolume, self.stereoSwap)
+                    wx.CallLater(after+40, playCoordinates, oX, oY, self.durationCaret+150)
                     wx.CallLater(after+50, setattr, self, "processing", False)
                 except:
                     wx.CallLater(after+10, setattr, self, "processing", False)
@@ -65,6 +69,10 @@ class _objlocEventMethods:
             self.lastForeground = obj
             wx.CallLater(150, self.processForeground)
 
+    # Event handler called on event_becomeNavigator or event_gainFocus
+    # to report location while user navigates through UI and
+    # handlers that report location for caret movements
+
     def _on_navigation (self, obj, nextHandler, *args, **kwargs):
         """
         Event handler that plays a positional tone upon navigation.
@@ -75,7 +83,7 @@ class _objlocEventMethods:
             return
         try:
             x, y = self._getObjectPos(obj, caret=self.caret)
-            playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
+            playCoordinates(x, y, self.duration)
         except:
             pass
         nextHandler()
@@ -96,7 +104,7 @@ class _objlocEventMethods:
                 return
             try:
                 x, y = getCaretPos(obj)
-                playCoordinates(x, y, self.durationCaret, self.lVolume, self.rVolume, self.stereoSwap)
+                playCoordinates(x, y, self.durationCaret)
             except:
                 pass
             nextHandler()
@@ -116,10 +124,12 @@ class _objlocEventMethods:
         else:
             try:
                 x, y = getCaretPos(obj)
-                playCoordinates(x, y, self.durationCaret, self.lVolume, self.rVolume, self.stereoSwap)
+                playCoordinates(x, y, self.durationCaret)
             except:
                 pass
         nextHandler()
+
+    # Event handlers for mouse monitoring
 
     def _on_mouseMonitor (self, e):
         """
@@ -128,7 +138,7 @@ class _objlocEventMethods:
         """
         try:
             mp     = getCursorPos()
-            obj = self._getObject()
+            obj = self._getRefObject()
             oX, oY = getObjectPos(obj, caret=self.caret)
         except:
             self.DeactivateMouseMonitor()
@@ -145,40 +155,37 @@ class _objlocEventMethods:
         if lmp!=mp:
             self.lastMousePos = mp
             self.lastTime = t
-        wx.CallAfter(playCoordinates, mp[0], mp[1], self.duration+40, self.lVolume, self.rVolume, self.stereoSwap)
+        wx.CallAfter(playCoordinates, mp[0], mp[1], self.duration+40)
         if self.refPoint==MOUSE_REF_FOCUS or self.refPoint==MOUSE_REF_NAVIGATOR:
             # Play focused or navigator objects pos as a ref point
-            wx.CallLater(self.duration+100, playCoordinates, oX, oY, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
+            wx.CallLater(self.duration+100, playCoordinates, oX, oY, self.duration+70)
         elif self.refPoint==MOUSE_REF_TLW:
             # Top left of the foreground window
             try:
                 wlpx, wlpy, _, _ = getForegroundObject().location
             except:
                 return
-            wx.CallLater(self.duration+100, playCoordinates, wlpx, wlpy, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
+            wx.CallLater(self.duration+100, playCoordinates, wlpx, wlpy, self.duration+70)
         elif self.refPoint==MOUSE_REF_CW:
             # Center of the foreground window
             try:
                 wcpx, wcpy = getForegroundObject().location.center
             except:
                 return
-            wx.CallLater(self.duration+100, playCoordinates, wcpx, wcpy, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
+            wx.CallLater(self.duration+100, playCoordinates, wcpx, wcpy, self.duration+70)
         elif self.refPoint==MOUSE_REF_TLS:
             # Top left corner of the screen, that is (0, 0)
-            wx.CallLater(self.duration+100, playCoordinates, 0, 0, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
+            wx.CallLater(self.duration+100, playCoordinates, 0, 0, self.duration+70)
         elif self.refPoint==MOUSE_REF_CS:
             # Center of the virtual screen as given by the desktop object
             try:
                 dcpx, dcpy = getDesktopObject().location.center
             except:
                 return
-            wx.CallLater(self.duration+100, playCoordinates, dcpx, dcpy, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
+            wx.CallLater(self.duration+100, playCoordinates, dcpx, dcpy, self.duration+70)
         elif self.refPoint==MOUSE_REF_START:
             pspx, pspy = self.startMousePos
-            wx.CallLater(self.duration+100, playCoordinates, pspx, pspy, self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
-        #else:
-        #    # None --> Play the same coordinates twice in a row
-        #    wx.CallLater(self.duration+100, playCoordinates, mp[0], mp[1], self.duration+70, self.lVolume, self.rVolume, self.stereoSwap)
+            wx.CallLater(self.duration+100, playCoordinates, pspx, pspy, self.duration+70)
 
     def _on_mouseMove (self, obj, nextHandler, x, y):
         """
@@ -188,7 +195,7 @@ class _objlocEventMethods:
         The event also reports entering and exiting the focused object.
         """
         try:
-            fobj = self._getObject()
+            fobj = self._getRefObject()
             oX, oY = getObjectPos(fobj, caret=self.caret)
         except:
             self.DeactivateMouseMonitor()
@@ -207,7 +214,7 @@ class _objlocEventMethods:
             self.entered = False
         dist = abs(oX-x) + abs(oY-y)
         if dist<=self.tolerance:
-            playCoordinates(oX, oY, self.duration+150, self.lVolume, self.rVolume, self.stereoSwap)
+            playCoordinates(oX, oY, self.duration+150)
             self.DeactivateMouseMonitor()
             speech.cancelSpeech()
             ui.message(MSG_LOCATION_REACHED)
@@ -218,12 +225,14 @@ class _objlocEventMethods:
         NVDA event used to auto-start mouse monitoring after a mouse moves.
         """
         try:
-            self.entered = (x, y) in BBox(self._getObject())
+            self.entered = (x, y) in BBox(self._getRefObject())
         except:
             pass
         self.startMousePos = (x, y)
         self.ActivateMouseMonitor()
         nextHandler()
+
+    # Keyboard monitoring event launched via inputCore decider extension point
 
     def _on_keyDown (self, gesture):
         """
@@ -242,6 +251,8 @@ class _objlocEventMethods:
         # Automatic caret event upon gaining focus should not report, thus last key from previous field shouldn't cause an erroneous report
         self.typing = willEnterText(gesture)
 
+    # Event handlers of external add-ons
+
     def _on_easyTableNav (self, obj, event=None):
         try:
             o = getNavigatorObject() # getFocusObject() or using obj argument, does not work as well as it should
@@ -255,9 +266,11 @@ class _objlocEventMethods:
                 # If we ended somewhere in the middle of nowhere, just do not play the coordinates
                 return
             x, y = self._getObjectPos(o, caret=False)
-            playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
+            playCoordinates(x, y, self.duration)
         except:
             pass
+
+    # Initial event bindings
 
     event_foreground = _on_foreground
 

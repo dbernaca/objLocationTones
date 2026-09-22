@@ -8,7 +8,7 @@
 from .constants import IS_LOCATION_MODE_NAVIGATOR
 from .          import dependencies as deps
 from .utils     import getForegroundObject
-from .posTones  import playCoordinates
+from .posTones  import play
 from .          import posTones
 from .UIStrings import DLG_WARN_EXPERIMENTAL, DLG_WARN
 from logHandler import log
@@ -97,7 +97,7 @@ class _objlocSwitchMethods:
             wx.CallLater(self.duration+250, self.processForeground)
         try:
             x, y = self._getObjectPos(caret=self.caret)
-            playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
+            play.coordinates(x, y, self.duration)
         except:
             pass
         e.Skip()
@@ -106,14 +106,21 @@ class _objlocSwitchMethods:
         """
         Used primarily to change volume immediately from settings panel.
         """
-        self.settings.refresh_instance(self, "lVolume", "rVolume")
-        e.Skip()
+        if isinstance(e, wx.Event):
+            self.settings.refresh_instance(self, "lVolume", "rVolume")
+            e.Skip()
+        else:
+            e.set()
+        play.lVolume = self.lVolume
+        play.rVolume = self.rVolume
         # Play coordinates of the slider to hear the volume change immediately
         if not self.active:
             return
+        if not isinstance(e, wx.Event):
+            return
         try:
             x, y = self._getObjectPos(caret=False)
-            playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
+            play.coordinates(x, y, self.duration)
         except:
             pass
 
@@ -121,14 +128,20 @@ class _objlocSwitchMethods:
         """
         Used primarily to swap channels immediately from settings panel.
         """
-        self.stereoSwap = e.IsChecked()
-        e.Skip()
+        if isinstance(e, wx.Event):
+            self.stereoSwap = e.IsChecked()
+            e.Skip()
+        else:
+            e.set()
+        play.stereoSwap = self.stereoSwap
         # Play coordinates of the checkbox to hear the change immediately
         if not self.active:
             return
+        if not isinstance(e, wx.Event):
+            return
         try:
             x, y = self._getObjectPos(caret=False)
-            playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
+            play.coordinates(x, y, self.duration)
         except:
             pass
 
@@ -160,7 +173,7 @@ class _objlocSwitchMethods:
                 return
             try:
                 x, y = self._getObjectPos(caret=False)
-                playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
+                play.coordinates(x, y, self.duration)
             except:
                 pass
             return
@@ -178,7 +191,7 @@ class _objlocSwitchMethods:
                 return
             try:
                 x, y = self._getObjectPos(caret=False)
-                playCoordinates(x, y, self.duration, self.lVolume, self.rVolume, self.stereoSwap)
+                play.coordinates(x, y, self.duration)
             except:
                 pass
         except Exception as err:

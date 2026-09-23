@@ -18,122 +18,139 @@ except addonHandler.AddonError:
 # UI strings defined in objLocTones 24.06.0
 # =========================================
 
-# Input gestures dialog category label for objLocTones.
+#. Input gestures dialog category label for objLocTones.
 IG_CATEGORY = _("Object Location Tones") 
 
-# Focused object outline report gesture description in the input gesture dialog
+#. Focused object outline report gesture description in the input gesture dialog
 IG_OUTLINE = _("Report outline of currently focused object via positional tones")
 
-# Parent object outline report gesture description in the input gesture dialog
+#. Parent object outline report gesture description in the input gesture dialog
 IG_PARENT_OUTLINE = _("Report outline of a parent of currently focused object via positional tones")
 
-# The toggle mouse location monitoring gesture description in the input gesture dialog
+#. The toggle mouse location monitoring gesture description in the input gesture dialog
 IG_TOGGLE_MOUSE_MONITOR = _("Toggle a mouse cursor position in relation to focused object location reporting via positional tones")
 
-# Input dialog gesture description for on request of mouse cursor location
+#. Input dialog gesture description for on request of mouse cursor location
 IG_MOUSE_POSITION = _("Play a positional tone for a mouse cursor")
 
-# The gesture description for on request object location in the input gesture dialog
+#. The gesture description for on request object location in the input gesture dialog
 IG_OBJECT_LOCATION = _("Play a positional tone for currently focused object")
 
-# The Object Location Tones toggle gesture description in the input gesture dialog
+#. The Object Location Tones toggle gesture description in the input gesture dialog
 IG_TOGGLE_LOCATION_REPORTING = _("Toggle automatic auditory description of object locations via positional tones")
 
-# The Object Location Tones toggle of caret reporting gesture description in the input gesture dialog
+#. The Object Location Tones toggle of caret reporting gesture description in the input gesture dialog
 IG_TOGGLE_CARET_LOCATION_REPORTING = _("Toggle caret location reporting via positional tones")
 
-# Description for cycling through caret reporting modes in the input gesture dialog
+#. Description for cycling through caret reporting modes in the input gesture dialog
 IG_CYCLE_CARET_MODE = _("Cycle through caret reporting modes")
 
-# ui.message() when fetching parent object for positional audio and there is no parent to fetch
+#. ui.message() when fetching parent object for positional audio and there is no parent to fetch
 MSG_PARENT_NOT_AVAILABLE = _("Parent object not available")
 
-# ui.message() in reporting parent outline script
-# The message is dynamic and thus only partially translatable
-# %s will be fetched using NVDA's API, so the content translation will be managed by NVDA
-# %i is a level of the ancestor in the ancestors tree
-# so, only a word/words regarding explaining that number for
-# the NVDA's object description
-# To understand completely, use the parent outline feature by
-# pressing Ctrl+Alt+Shift+Numpad Delete,
+#. ui.message() in reporting parent outline script
+#. The message is dynamic and thus only partially translatable
+#. %s will be fetched using NVDA's API, so the content translation will be managed by NVDA
+#. %i is a level of the ancestor in the ancestors tree
+#. so, only a word/words regarding explaining that number for
+#. the NVDA's object description
+#. To understand completely, use the parent outline feature by
+#. pressing Ctrl+Alt+Shift+Numpad Delete,
+#. Complete format is "%s, ancestor %i" where %s and %i are out of gettext for now
 MSG_ANCESTOR = "%s, "+_("ancestor")+" %i"
 
-# ui.message() in all cases when the location of an object, for any reason, cannot be detected
+#. ui.message() in all cases when the location of an object, for any reason, cannot be detected
 MSG_LOCATION_UNAVAILABLE = _("Location unavailable")
 
-# ui.message() in mouse monitoring, when triggered, and the mouse cursor
-# is already at the position of the focused object
+#. ui.message() in mouse monitoring, when triggered, and the mouse cursor
+#. is already at the position of the focused object
 MSG_MOUSE_ALREADY_THERE = _("Mouse already there")
 
-# ui.message() when user cancels the mouse monitoring by triggering the script via gesture
+#. ui.message() when user cancels the mouse monitoring by triggering the script via gesture
 MSG_MOUSE_MONITOR_CANCELLED = _("Mouse location monitoring cancelled")
 
-# ui.message() when the mouse monitoring stops automatically after the mouse is stationary for too long
+#. ui.message() when the mouse monitoring stops automatically after the mouse is stationary for too long
 MSG_MOUSE_MONITOR_STOPPED = _("Mouse location monitoring stopped")
 
-# ui.message() during the mouse monitoring when the mouse enters the focused object area
-# The object's description will be added at the end of the string
+#. ui.message() during the mouse monitoring when the mouse enters the focused object area
+#. The object's description will be added at the end of the string
 MSG_ENTERING = _("Entering")
 
-# ui.message() during the mouse monitoring when the mouse exits the focused object area
-# The object's description will be added at the end of the string
+#. ui.message() during the mouse monitoring when the mouse exits the focused object area
+#. The object's description will be added at the end of the string
 MSG_EXITING = _("Leaving")
 
-# ui.message() when during the mouse monitoring the mouse cursor is brought to the denoted location of the focused object
+#. ui.message() when during the mouse monitoring the mouse cursor is brought to the denoted location of the focused object
 MSG_LOCATION_REACHED = _("Location reached")
 
-# ui.message() when positional tones are switched on via gesture
+#. ui.message() when positional tones are switched on via gesture
 MSG_POSITIONAL_TONES_ON = _("Positional tones on")
 
-# ui.message() when positional tones are switched off via gesture
+#. ui.message() when positional tones are switched off via gesture
 MSG_POSITIONAL_TONES_OFF = _("Positional tones off")
 
-# ui.message() when positional tones for a caret are switched on via gesture
+#. ui.message() when positional tones for a caret are switched on via gesture
 MSG_CARET_TONES_ON = _("Caret location reporting on")
 
-# ui.message() when positional tones for a caret are switched off via gesture
+#. ui.message() when positional tones for a caret are switched off via gesture
 MSG_CARET_TONES_OFF = _("Caret location reporting off")
 
 # UI strings defined in objLocTones 24.06.1
 # =========================================
 
-# A category name in the NVDA settings dialog
+#. A category name in the NVDA settings dialog
 SET_CATEGORY = _("Object Location Tones")
 
+#. Checkbox in settings panel
 SET_POSITIONAL_AUDIO = _("Play positional tones during object navigation")
 
+#. Integer input via text editable in settings panel
 SET_TONE_DURATION = _("Positional tone duration (msec):")
 
+#. Integer input via text editable in settings panel
 SET_MOUSE_TOLERANCE = _("Mouse point matching tolerance (px):")
 
+#. Floating point input via text editable in settings panel
 SET_MOUSE_MONITOR_TIMEOUT = _("Turn off mouse monitoring automatically after (sec):")
 
+#. Checkbox in settings panel
 SET_MOUSE_MONITOR_AUTO_START = _("Start mouse location monitoring automatically")
 
+#. Slider in settings panel
 SET_LEFT_VOLUME = _("Left speaker volume:")
 
+#. Slider in settings panel
 SET_RIGHT_VOLUME = _("Right speaker volume:")
 
+#. Checkbox in settings panel
 SET_SWAP_STEREO_CHANNELS = _("Swap stereo channels")
 
 # UI strings defined in objLocTones 24.07.0
 # =========================================
 
+#. Checkbox in settings panel
 SET_CARET = _("Play positional tones for caret location")
 
+#. Integer input via text editable in settings panel
 SET_TONE_DURATION_CARET = _("Tone duration for caret location reporting (msec):")
 
+#. Checkbox in settings panel
 SET_CARET_TYPING = _("Report caret location while typing")
 
-# Label for the caret reporting mode in settings and in message when using script
+#. Label for the caret reporting mode in settings panel and in a ui.message() when using script to cycle through caret reporting modes
+#. Label for wx.Choice() element when in settings panel
 SET_CARET_REPORT = _("Caret reporting mode:")
 
+#. Choice item in settings panel and part of ui.message() when using script to cycle through caret reporting modes
 SET_CARET_VERTICAL = _("Lines")
 
+#. Choice item in settings panel and part of ui.message() when using script to cycle through caret reporting modes
 SET_CARET_HORIZONTAL = _("Columns")
 
+#. Choice item in settings panel and part of ui.message() when using script to cycle through caret reporting modes
 SET_CARET_BOTH = _("Lines And Columns")
 
+#. Choice item in settings panel and part of ui.message() when using script to cycle through caret reporting modes
 SET_CARET_NONE = _("None")
 
 # DO NOT CHANGE THE ORDER OF CHOICES
@@ -141,31 +158,40 @@ SET_CARET_NONE = _("None")
 # The index is saved to settings so that it can be unrelated to any locale
 SET_CARET_CHOICES = [SET_CARET_VERTICAL, SET_CARET_HORIZONTAL, SET_CARET_BOTH, SET_CARET_NONE]
 
-# Label in settings for the mouse monitoring second tone
+#. Label in settings panel for the mouse monitoring second tone
+#. Label for wx.Choice() element in settings panel
 SET_MOUSE_REF_POINT = _("Mouse monitoring reference point:")
 
-# Mouse reference point will be the focused object (default behaviour)
+#. Mouse reference point will be the focused object (default behaviour)
+#. A choice item in settings panel
 SET_MOUSE_REF_FOCUS = _("Focused object's location")
 
-# Mouse reference point will be the navigator object's location (new in 2026.2)
+#. Mouse reference point will be the navigator object's location (new in 2026.2)
+#. A choice item in settings panel
 SET_MOUSE_REF_NAVIGATOR = _("Navigator object's location")
 
-# Mouse reference point: Top Left of the Window
+#. Mouse reference point: Top Left of the Window
+#. A choice item in settings panel
 SET_MOUSE_REF_TLW = _("Top left corner of the application's root window")
 
-# Mouse reference point: Centre of the window
+#. Mouse reference point: Centre of the window
+#. A choice item in settings panel
 SET_MOUSE_REF_CW = _("Centre of the application's root window")
 
-# Mouse reference point: Top left of the screen
+#. Mouse reference point: Top left of the screen
+#. A choice item in settings panel
 SET_MOUSE_REF_TLS = _("Top left corner of the screen")
 
-# Mouse reference point: Centre of the screen
+#. Mouse reference point: Centre of the screen
+#. A choice item in settings panel
 SET_MOUSE_REF_CS = _("Centre of the screen")
 
-# Mouse reference point: none will be used
+#. Mouse reference point: none will be used
+#. A choice item in settings panel
 SET_MOUSE_REF_NONE = _("None")
 
-# Mouse reference point: mouse start position will be used
+#. Mouse reference point: mouse start position will be used
+#. A choice item in settings panel
 SET_MOUSE_REF_START = _("Pointer's position at start of navigation")
 
 # DO NOT CHANGE THE ORDER OF CHOICES
@@ -174,51 +200,76 @@ SET_MOUSE_REF_START = _("Pointer's position at start of navigation")
 SET_MOUSE_REF_CHOICES = [SET_MOUSE_REF_FOCUS, SET_MOUSE_REF_NAVIGATOR, SET_MOUSE_REF_TLW, SET_MOUSE_REF_CW, SET_MOUSE_REF_TLS, SET_MOUSE_REF_CS, SET_MOUSE_REF_NONE, SET_MOUSE_REF_START]
 
 # The grouping labels in settings panel
+
+#. Label of a group of settings over a box sizer in settings panel
 SET_GROUP_NAVIGATION = _("Navigation")
 
+#. Label of a group of settings over a box sizer in settings panel
 SET_GROUP_CARET = _("Caret")
 
+#. Label of a group of settings over a box sizer in settings panel
 SET_GROUP_MOUSE = _("Mouse")
 
+#. Label of a group of settings over a box sizer in settings panel
 SET_GROUP_TONES = _("Tones")
 
+#. Label of a group of settings over a box sizer in settings panel
 SET_GROUP_AUDIO = _("Audio")
 
+#. Label of a button in settings panel
 SET_RESTORE_DEFAULTS = _("Restore defaults...")
 
 # Added in objLocTones 25.1 (the option is experimental and labels and interface will change drastically)
+
+#. Checkbox in settings panel
 SET_MIDI = _("Use Musical Instrument Digital Interface (MIDI) for tone generation")
 
+#. Label of a wx.Choice() element in settings panel
 SET_MIDI_INSTRUMENT = _("MIDI instrument:")
 
+#. Title of a dialog
 DLG_WARN = _("Warning...")
+
+#. Dialog message
 DLG_WARN_EXPERIMENTAL = _("This option is still in experimental stage.\nPlease consult the add-on's documentation regarding it before its activation.\n\nDo you want to activate it now?")
 
 # Added in 25.2
+
+#. Checkbox in settings panel
 SET_EASY_TABLE_NAV = _("Play positional tones for cell locations when Easy Table Navigator layer is on")
 
 # Added in 26.1
+
+#. Label of wx.Choice() element in settings panel
 SET_MIDI_SYNTHESIZER = _("MIDI synthesizer:")
 
+#. Checkbox in settings panel
 SET_FOREGROUND_OUTLINE = _("Play an outline of each window when it is brought to foreground")
 
 # Added in 26.2
 
-# Label for presentation mode choice
+#. Label for presentation mode choice
+#. Label of wx.Choice() element in settings panel
 SET_LOCATION_MODE = _("Location presentation mode:")
 
 # Presentation mode choices
-# The following one is the default behaviour
+
+#. A choice item in settings panel (default behaviour)
 SET_LOCATION_NAVIGATOR_CENTROID = _("Centroid of a navigator object")
 
+#. A choice item in settings panel
 SET_LOCATION_NAVIGATOR_LEFT = _("Left border of a navigator object")
 
+#. A choice item in settings panel
 SET_LOCATION_NAVIGATOR_RIGHT = _("Right border of a navigator object")
 
+#. A choice item in settings panel
 SET_LOCATION_FOCUS_CENTROID = _("Centroid of a focused object")
 
+#. A choice item in settings panel
 SET_LOCATION_FOCUS_LEFT = _("Left border of a focused object")
 
+#. A choice item in settings panel
 SET_LOCATION_FOCUS_RIGHT = _("Right border of a focused object")
 
 # DO NOT CHANGE THE ORDER OF CHOICES
@@ -226,4 +277,5 @@ SET_LOCATION_FOCUS_RIGHT = _("Right border of a focused object")
 # The index is saved to settings so that it can be unrelated to any locale
 SET_LOCATION_MODE_CHOICES = [SET_LOCATION_NAVIGATOR_CENTROID, SET_LOCATION_NAVIGATOR_LEFT, SET_LOCATION_NAVIGATOR_RIGHT, SET_LOCATION_FOCUS_CENTROID, SET_LOCATION_FOCUS_LEFT, SET_LOCATION_FOCUS_RIGHT]
 
+#. Checkbox in settings panel
 SET_MOUSE_MONITOR_STOP_MESSAGE = _("Announce natural end of mouse monitoring")

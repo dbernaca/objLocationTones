@@ -109,7 +109,8 @@ To create *.nvda-addon file from source on your own following steps are recommen
 	$ python -m nvaddon install
 
 That is all.
-If you have Python's 'scripts' directory added to your PATH environment variable, you can call both pip and nvaddon tool directly.
+If you have Python's 'scripts' directory added to your PATH environment variable, you can call both pip and nvaddon tool directly from the shell.
+Note that master branch of the repo is being constantly used in development flow. So before you decide to build and use the add-on from source, it is recommended to check the git log first. If there are unresolved commits marked as work in progress (WIP) affecting the code present it is possible that you will end up with the add-on containing incomplete or buggy features. If you still want to build from the source, but want the stable version, use git switch command to roll back to the commit or tag you deem stable before building the add-on. Needless to say that that point has to be after the add-on switched from the add-on template to the NVDAAddonKit. If you choose one of points in history preceeding the NVDAAddonKit anyway, you can still use nvaddon tool to build it, but you first have to use its migration process via migrate command to transform the add-on's working tree to support the new system.
 
 ### Translating the add-on
 

@@ -91,7 +91,7 @@ extraSources = []
 [docs]
 # Python-Markdown extensions used when rendering documentation. Most add-ons
 # need none; add "tables" if your readme uses Markdown tables.
-markdownExtensions = ["nl2br"]
+markdownExtensions = ["nl2br", "fenced_code"]
 
 # Custom braille translation tables, speech symbol dictionaries and speech
 # (pronunciation) dictionaries. Most add-ons ship none of these; delete the

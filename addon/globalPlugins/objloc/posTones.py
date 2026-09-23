@@ -55,7 +55,7 @@ class _play:
             self.lastPlayed = t
             self.lastCoords = (x, y, d/1000.0)
 
-    def points (delay, points, d=40):
+    def points (self, delay, points, d=40):
         """
         Plays a sequence of coordinates with delay between them.
         It does it by using wx.CallAfter() and wx.CallLater() to schedule playCoordinates() calls.

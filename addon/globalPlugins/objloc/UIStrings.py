@@ -1,7 +1,7 @@
 # This module is part of Object Location Tones NVDA add-on
 # It contains all of the interface strings, so that translating the add-on may be as easy as possible
 #
-# Translators: You do not need to look anywhere else within the package for content to translate
+# For translators: You do not need to look anywhere else within the package for content to translate
 # All messages are commented and denoted clearly, with their context explained.
 # Groups of UI strings are separated by the add-on version, so if a new string
 # appears in a new version that needs translating, you will see it at once.
@@ -22,28 +22,28 @@ except addonHandler.AddonError:
 IG_CATEGORY = _("Object Location Tones") 
 
 #. Focused object outline report gesture description in the input gesture dialog
-IG_OUTLINE = _("Report outline of currently focused object via positional tones")
+IG_OUTLINE = _("Reports outline of a current object via positional tones")
 
 #. Parent object outline report gesture description in the input gesture dialog
-IG_PARENT_OUTLINE = _("Report outline of a parent of currently focused object via positional tones")
+IG_PARENT_OUTLINE = _("Reports outline of a parent of the current object via positional tones")
 
 #. The toggle mouse location monitoring gesture description in the input gesture dialog
-IG_TOGGLE_MOUSE_MONITOR = _("Toggle a mouse cursor position in relation to focused object location reporting via positional tones")
+IG_TOGGLE_MOUSE_MONITOR = _("Toggles a mouse cursor position in relation to reference point location reporting via positional tones")
 
 #. Input dialog gesture description for on request of mouse cursor location
-IG_MOUSE_POSITION = _("Play a positional tone for a mouse cursor")
+IG_MOUSE_POSITION = _("Plays a positional tone for a mouse cursor")
 
 #. The gesture description for on request object location in the input gesture dialog
-IG_OBJECT_LOCATION = _("Play a positional tone for currently focused object")
+IG_OBJECT_LOCATION = _("Plays a positional tone for a current object")
 
 #. The Object Location Tones toggle gesture description in the input gesture dialog
-IG_TOGGLE_LOCATION_REPORTING = _("Toggle automatic auditory description of object locations via positional tones")
+IG_TOGGLE_LOCATION_REPORTING = _("Toggles automatic auditory description of object locations via positional tones")
 
 #. The Object Location Tones toggle of caret reporting gesture description in the input gesture dialog
-IG_TOGGLE_CARET_LOCATION_REPORTING = _("Toggle caret location reporting via positional tones")
+IG_TOGGLE_CARET_LOCATION_REPORTING = _("Toggles caret location reporting via positional tones")
 
 #. Description for cycling through caret reporting modes in the input gesture dialog
-IG_CYCLE_CARET_MODE = _("Cycle through caret reporting modes")
+IG_CYCLE_CARET_MODE = _("Cycles through caret reporting modes")
 
 #. ui.message() when fetching parent object for positional audio and there is no parent to fetch
 MSG_PARENT_NOT_AVAILABLE = _("Parent object not available")
@@ -188,7 +188,7 @@ SET_MOUSE_REF_CS = _("Centre of the screen")
 
 #. Mouse reference point: none will be used
 #. A choice item in settings panel
-SET_MOUSE_REF_NONE = _("None")
+SET_MOUSE_REF_NONE = _("No reference point")
 
 #. Mouse reference point: mouse start position will be used
 #. A choice item in settings panel
@@ -247,6 +247,7 @@ SET_MIDI_SYNTHESIZER = _("MIDI synthesizer:")
 SET_FOREGROUND_OUTLINE = _("Play an outline of each window when it is brought to foreground")
 
 # Added in 26.2
+# =============
 
 #. Label for presentation mode choice
 #. Label of wx.Choice() element in settings panel
@@ -279,3 +280,6 @@ SET_LOCATION_MODE_CHOICES = [SET_LOCATION_NAVIGATOR_CENTROID, SET_LOCATION_NAVIG
 
 #. Checkbox in settings panel
 SET_MOUSE_MONITOR_STOP_MESSAGE = _("Announce natural end of mouse monitoring")
+
+#. Description for MIDI reset option in input gesture dialog
+IG_MIDI_RESET = _("Resets MIDI output")

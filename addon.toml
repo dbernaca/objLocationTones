@@ -30,6 +30,7 @@ changelog = """* NVDA 2026.2 compatibility
 * New feature: Choose location presentation mode (Lets you choose object detection during navigation and position within the object that is announced via tone)
 * New feature: Mouse monitoring reference point that uses navigator object
 * New feature: Enable/disable the mouse monitoring stop message
+* New feature: Use a gesture to reset MIDI output
 ---
 Please read more about each of the new features in readme to understand better how they work.
 ---
@@ -78,7 +79,7 @@ pythonSources = ["addon/globalPlugins/**/*.py"]
 
 # Files inside the `addon` directory to leave out of the built add-on.
 # Paths are relative to `addon/`, not to this file.
-excludedFiles = []
+excludedFiles = ["globalPlugins/objloc/settings/settings.json"]
 
 [l10n]
 # The language this add-on is written in. Its strings are the translation

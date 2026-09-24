@@ -5,12 +5,13 @@
 # because the add-ons main class is getting too large for simple maintenance
 # and needs some clearing. So, gesture handling script methods are being separated into a mixin style class in their own module.
 
-from baseObject import ScriptableObject
-from scriptHandler   import script, getLastScriptRepeatCount
-from .posTones       import playCoordinates, playPoints
-from .utils          import *
-from .geometry       import BBox
-from .UIStrings      import *
+from baseObject    import ScriptableObject
+from scriptHandler import script, getLastScriptRepeatCount
+from .posTones     import playCoordinates, playPoints
+from .utils        import *
+from .geometry     import BBox
+from .UIStrings    import *
+from .             import posTones
 import speech
 import ui
 import wx
@@ -209,3 +210,20 @@ class _objlocScriptMethods (ScriptableObject):
         self.settings.refresh_panel(self, "caretMode")
         ui.message(SET_CARET_REPORT+" "+SET_CARET_CHOICES[mode])
 
+    @script(
+        description=IG_MIDI_RESET, category=IG_CATEGORY)
+    def script_resetMIDI (self, gesture):
+        """
+        Resets MIDI output so that when MIDI stops working it can be reinitialized without going to settings.
+        The script has no assigned gesture.
+        """
+        if not self.midi:
+            # If MIDI wasn't active in the first place, do nothing.
+            return
+        posTones.setGenerator("MIDI")
+        posTones.player.set_instrument(self.instrument)
+        try:
+            x, y = self._getObjectPos(caret=self.caret)
+            playCoordinates(x, y, self.duration)
+        except:
+            pass

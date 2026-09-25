@@ -5,9 +5,9 @@
 # because the add-ons main class is getting too large for simple maintenance
 # and needs some clearing. So, gesture handling script methods are being separated into a mixin style class in their own module.
 
-from .constants import IS_LOCATION_MODE_NAVIGATOR
+from .constants import *
 from .          import dependencies as deps
-from .utils     import getForegroundObject
+from .utils     import getForegroundObject, getNavigatorObject, getFocusObject, getObjectPosCenter, getObjectPosLeft, getObjectPosRight
 from .posTones  import play
 from .          import posTones
 from .UIStrings import DLG_WARN_EXPERIMENTAL, DLG_WARN
@@ -30,8 +30,10 @@ class _objlocSwitchMethods:
     def Activate (self):
         if IS_LOCATION_MODE_NAVIGATOR(self.locationMode):
             self.event_becomeNavigatorObject = self._on_navigation
+            self.event_gainFocus = self._on_passThrough
         else:
             self.event_gainFocus = self._on_navigation
+            self.event_becomeNavigatorObject = self._on_passThrough
         if self.caret:
             self.ActivateCaret()
         if self.easyTableNav:
@@ -262,3 +264,39 @@ class _objlocSwitchMethods:
             self.event_foreground = self._on_foreground
         else:
             self.event_foreground = self._on_passThrough
+
+    def ChangeLocationMode (self, e):
+        if isinstance(e, wx.Event):
+            self.locationMode = e.GetSelection()
+            e.Skip()
+        else:
+            e.set()
+        if IS_LOCATION_MODE_CENTROID(self.locationMode):
+            self._getObjectPos = getObjectPosCenter
+        elif IS_LOCATION_MODE_LEFT(self.locationMode):
+            self._getObjectPos = getObjectPosLeft
+        else:
+            self._getObjectPos = getObjectPosRight
+        if IS_LOCATION_MODE_NAVIGATOR(self.locationMode):
+            self._getObject = getNavigatorObject
+        else:
+            self._getObject = getFocusObject
+        if not self.active:
+            return
+        if IS_LOCATION_MODE_NAVIGATOR(self.locationMode):
+            self.event_becomeNavigatorObject = self._on_navigation
+            self.event_gainFocus = self._on_passThrough
+        else:
+            self.event_gainFocus = self._on_navigation
+            self.event_becomeNavigatorObject = self._on_passThrough
+
+    def ChangeMouseRefPoint (self, e):
+        if isinstance(e, wx.Event):
+            self.refPoint = e.GetSelection()
+            e.Skip()
+        else:
+            e.set()
+        if self.refPoint==MOUSE_REF_NAVIGATOR:
+            self._getRefObject = getNavigatorObject
+        else:
+            self._getRefObject = getFocusObject

@@ -47,7 +47,7 @@ class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, _objlocSwitchMeth
         self.locationMode  = Settable(SET_LOCATION_MODE_CHOICES.index(SET_LOCATION_NAVIGATOR_CENTROID), # Which point to use in location presentation of which object
                              choices=tuple(SET_LOCATION_MODE_CHOICES), # tuple() means wx.Choice(), instead of wx.ListBox() in settings panel
                              label=SET_LOCATION_MODE, group=SET_GROUP_NAVIGATION,
-                             reactor=lambda e: ( setattr(self, "locationMode", e.GetSelection()), e.Skip() ) )
+                             reactor=self.ChangeLocationMode, retractor=self.ChangeLocationMode)
         # Caret:
         self.caret         = Settable(True,  # Whether to report caret location in editable fields or not
                              label=SET_CARET, group=SET_GROUP_CARET,
@@ -76,7 +76,7 @@ class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, _objlocSwitchMeth
         self.refPoint      = Settable(SET_MOUSE_REF_CHOICES.index(SET_MOUSE_REF_FOCUS), # Which point location to announce along with the current mouse position
                              choices=tuple(SET_MOUSE_REF_CHOICES), # tuple() means wx.Choice(), instead of wx.ListBox() in settings panel
                              label=SET_MOUSE_REF_POINT, group=SET_GROUP_MOUSE,
-                             reactor=lambda e: ( setattr(self, "refPoint", e.GetSelection()), e.Skip() ) )
+                             reactor=self.ChangeMouseRefPoint, retractor=self.ChangeMouseRefPoint)
         self.stopMessage   = Settable(True,
                              label=SET_MOUSE_MONITOR_STOP_MESSAGE, group=SET_GROUP_MOUSE,
                              reactor=lambda e: ( setattr(self, "stopMessage", e.IsChecked()), e.Skip() ) )

@@ -220,10 +220,13 @@ class _objlocScriptMethods (ScriptableObject):
         if not self.midi:
             # If MIDI wasn't active in the first place, do nothing.
             return
-        posTones.setGenerator("MIDI")
-        posTones.player.set_instrument(self.instrument)
         try:
-            x, y = self._getObjectPos(caret=self.caret)
-            playCoordinates(x, y, self.duration)
+            posTones.setGenerator("MIDI")
+            posTones.player.set_instrument(self.instrument)
+            try:
+                x, y = self._getObjectPos(caret=self.caret)
+                playCoordinates(x, y, self.duration)
+            except:
+                pass
         except:
             pass

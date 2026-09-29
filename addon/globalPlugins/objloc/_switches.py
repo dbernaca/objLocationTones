@@ -7,7 +7,9 @@
 
 from .constants import *
 from .          import dependencies as deps
-from .utils     import getForegroundObject, getNavigatorObject, getFocusObject, getObjectPosCenter, getObjectPosLeft, getObjectPosRight
+from .utils     import (getForegroundObject, getNavigatorObject, getFocusObject,
+                        getObjectPosCenter, getObjectPosLeft, getObjectPosRight,
+                        ensureMouseTracking, restoreMouseTracking)
 from .posTones  import play
 from .          import posTones
 from .UIStrings import DLG_WARN_EXPERIMENTAL, DLG_WARN
@@ -65,6 +67,7 @@ class _objlocSwitchMethods:
 
     def ActivateMouseMonitor (self):
         if self.event_mouseMove!=self._on_mouseMove:
+            ensureMouseTracking()
             self.event_mouseMove = self._on_mouseMove
             self.timer.Start(200)
 
@@ -77,6 +80,7 @@ class _objlocSwitchMethods:
         self.startMousePos = (-1, -1)
         self.lastMousePos  = (-1, -1)
         self.lastTime      = 0.0
+        restoreMouseTracking()
 
     def Toggle (self, e=None):
         """

@@ -9,54 +9,128 @@ from gui.guiHelper import associateElements
 import wx
 
 class Flag (object):
-    __slots__ = ("value", "_value")
+    __slots__ = ("value", "_value", "memory", "locked")
     def __init__ (self, value):
-        assert (value==None or isinstance(value, (bool, int, float)) or (callable(value) and not isclass(value)))
+        assert (value==None or isinstance(value, (bool, int, float)))
         self._value = value
 
+    def lock (self, value=None):
+        v = self.value
+        if self.locked:
+            return v
+        if value is not None:
+            self.value = v = bool(value)
+        self.memory = v
+        self.locked = True
+        return v
+
+    def unlock (self, remember=True):
+        v = self.value
+        if not self.locked:
+            return v
+        if remember:
+            self.value = v = self.memory
+        self.locked = False
+        return v
+
     def toggle (self):
-        if self.is_dynamic():
-            self.value = self.value!=bool(self._value(self))
+        if self.locked:
+            self.memory = not self.memory
             return
-        self.value = not self.value
+        self.value = self.memory = not self.value
 
     def set (self):
-        self.value = True
+        if self.locked:
+            self.memory = True
+            return
+        self.value = self.memory = True
 
     def clear (self):
-        self.value = False
+        if self.locked:
+            self.memory = False
+            return
+        self.value = self.memory = False
 
     def reset (self):
-        if callable(self._value):
-            try:
-                del self.value
-            except:
-                pass
-            return
-        self.value = bool(self._value)
-
-    def is_dynamic (self):
-        return callable(self._value)
+        v = bool(self._value)
+        if self.locked:
+            self.memory = v
+            return v
+        self.value = self.memory = v
+        return v
 
     def __getattr__ (self, a):
-        v = self._value
-        if callable(v):
-            return bool(v(self))
-        self.value = v = bool(v)
-        return v
+        if a=="value" or a=="memory":
+            v = bool(self._value)
+            self.value = self.memory = v
+            return v
+        if a=="locked":
+            self.locked = False
+            return False
+        raise AttributeError(a)
 
     def __bool__ (self):
         return self.value
     __nonzero__ = __bool__
 
     def __eq__ (self, other):
-        return self.value==bool(other)
-
-    def __lt__ (self, other):
-        return self.value<bool(other)
+        if isinstance(other, (bool, int, float, Flag)):
+            return self.value==bool(other)
+        return False
 
     def __repr__ (self):
         return repr(self.value)
+
+class CallableFlag (Flag):
+    __slots__ = ()
+    def __init__ (self, value):
+        assert (callable(value) and not isclass(value))
+        self._value = value
+
+    def __getattr__ (self, a):
+        if a=="value" or a=="memory":
+            return bool(self._value(self))
+        if a=="locked":
+            self.locked = False
+            return False
+        raise AttributeError(a)
+
+    def lock (self, value=None):
+        v = self.value
+        if self.locked:
+            return v
+        if value is None:
+            v = bool(value)
+        self.value = self.memory = v
+        self.locked = True
+        return v
+
+    def unlock (self, remember=True):
+        v = self.value
+        if not self.locked:
+            return v
+        try:
+            del self.value
+        except AttributeError:
+            pass
+        self.locked = False
+        if not remember:
+            self.memory = v
+        return self.value
+
+    def reset (self):
+        if self.locked:
+            self.memory = bool(self._value(self))
+            return self.value
+        try:
+            del self.value
+        except AttributeError:
+            pass
+        try:
+            del self.memory
+        except AttributeError:
+            pass
+        return self.value
 
 class IdGenerator (object):
     __slots__ = ("ids",)
@@ -128,7 +202,7 @@ class Attribute (object):
         object.__setattr__(self, "save", Flag(args.get("save", True)))
         object.__setattr__(self, "show", Flag(args.get("show", True)))
         if "enabled" in self.args and callable(self.args["enabled"]):
-            self.args["enabled"] = Flag(self.args["enabled"])
+            self.args["enabled"] = CallableFlag(self.args["enabled"])
 
     @staticmethod
     def from_instance (instance, attr):
@@ -200,12 +274,12 @@ class Attribute (object):
             object.__setattr__(self, a, Flag(v))
         elif a=="enable":
             if callable(v):
-                v = Flag(v)
+                v = CallableFlag(v)
             if v:
                 self.enable_gui_ctrl()
             else:
                 self.disable_gui_ctrl()
-            if isinstance(v, Flag):
+            if isinstance(v, CallableFlag):
                 self.args["enabled"] = v
         else:
             raise AttributeError("The Attribute() object only allows certain attributes to be set")

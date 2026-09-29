@@ -47,6 +47,12 @@ class Point (object):
             return l
         raise AttributeError(f"object 'Point' has no attribute '{a}'")
 
+    def __getitem__ (self, i):
+        return (self.x, self.y)[i]
+
+    def __eq__ (self, other):
+        return self.x==other.x and self.y==other.y
+
     def __repr__ (self):
         return f"{self.__class__.__name__}({self.x}, {self.y})"
 
@@ -73,20 +79,20 @@ class BBox (object):
         # Left top corner
         self.X1 = x1 = loc[0]
         self.Y1 = y1 = loc[1]
-        self.TL = (x1, y1)
+        self.TL = TL = (x1, y1)
         # Right top corner
-        self.X2 = x2 = loc[0]+loc[2]
+        self.X2 = x2 = x1+loc[2]
         self.Y2 = y2 = y1 # loc[1]
-        self.TR = (x2, y2)
+        self.TR = TR = (x2, y2)
         # Right bottom corner
         self.X3 = x3 = x2 # loc[0]+loc[2]
-        self.Y3 = y3 = loc[1]+loc[3]
-        self.BR = (x3, y3)
+        self.Y3 = y3 = y1+loc[3]
+        self.BR = BR = (x3, y3)
         # Left Bottom corner
         self.X4 = x4 = x1 # loc[0]
         self.Y4 = y4 = y3 # loc[1]+loc[3]
-        self.BL = (x4, y4)
-        self.corners = ((x1, y1), (x2, y2), (x3, y3), (x4, y4))
+        self.BL = BL = (x4, y4)
+        self.corners = (TL, TR, BR, BL)
 
     def __contains__ (self, point: tuple):
         """

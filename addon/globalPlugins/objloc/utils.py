@@ -4,6 +4,11 @@ from textInfos              import POSITION_CARET, POSITION_FIRST, UNIT_CHARACTE
 from speech                 import getObjectSpeech
 from controlTypes           import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_RICHEDIT, ROLE_PASSWORDEDIT, ROLE_DOCUMENT, ROLE_TABLE, ROLE_TABLECELL, ROLE_TABLEROW, ROLE_TABLECOLUMN, STATE_MULTILINE, OutputReason
 from treeInterceptorHandler import DocumentTreeInterceptor
+from globalCommands         import GlobalCommands, commands
+from functools import update_wrapper, WRAPPER_ASSIGNMENTS
+from gui.settingsDialogs import MouseSettingsPanel, NVDASettingsDialog
+from .settings.objects import Flag
+import config
 
 class LocationError (LookupError):
     """
@@ -193,3 +198,74 @@ def willEnterText (gesture, obj=None):
         return False
     name = gesture.mainKeyName
     return len(name)==1 or name=="space" or name=="tab" or name=="delete" or name=="backspace" or name=="plus"
+
+class MouseTracking:
+    class MouseSettings (MouseSettingsPanel):
+        mouseTrackingEnabled = Flag(config.conf["mouse"]["enableMouseTracking"])
+        lock   = mouseTrackingEnabled.lock
+        unlock = mouseTrackingEnabled.unlock
+        def makeSettings(self, settingsSizer):
+            MouseSettingsPanel.makeSettings(self, settingsSizer)
+            self.mouseTrackingCheckBox.SetValue(self.mouseTrackingEnabled.memory)
+
+        def onSave (self):
+            MouseSettingsPanel.onSave(self)
+            # It is OK if config reflects False for a moment, it will not have concrete impact on the add-on's working
+            config.conf["mouse"]["enableMouseTracking"] = self.mouseTrackingEnabled.value
+
+        @classmethod
+        def set (cls):
+            cls.lock(True)
+            cls.mouseTrackingEnabled.set() if config.conf["mouse"]["enableMouseTracking"] else cls.mouseTrackingEnabled.clear()
+            config.conf["mouse"]["enableMouseTracking"] = True
+
+        @classmethod
+        def clear (cls):
+            config.conf["mouse"]["enableMouseTracking"] = cls.unlock()
+
+    def __init__ (self, replacement=(lambda instance, gesture: None)):
+        self._oldToggleMouseTrackingScript   = scr = commands.script_toggleMouseTracking
+        self._oldToggleMouseTrackingGestures = self.getGestures(scr)
+        self.replacement = replacement
+        self._mouseTrackingEnsured         = False
+        self._assignments = WRAPPER_ASSIGNMENTS+("gestures", "category")
+        self._updater = update_wrapper
+
+    def inject (self):
+        mouse = NVDASettingsDialog.categoryClasses.index(MouseSettingsPanel)
+        NVDASettingsDialog.categoryClasses[mouse] = self.MouseSettings
+
+    def retract (self):
+        mouse = NVDASettingsDialog.categoryClasses.index(self.MouseSettings)
+        NVDASettingsDialog.categoryClasses[mouse] = MouseSettingsPanel
+
+    def getGestures (self, script):
+        gmitems = commands._gestureMap.items()
+        scrName = script.__qualname__
+        return [k for k, v in gmitems if v.__qualname__==scrName]
+
+    def ensure (self):
+        if self._mouseTrackingEnsured:
+            return
+        self._oldToggleMouseTrackingScript = scr = commands.script_toggleMouseTracking
+        self._oldToggleMouseTrackingGestures = gestures = self.getGestures(scr)
+        GlobalCommands.script_toggleMouseTracking = self._updater(self.replacement,
+                             scr, self._assignments)
+        for gesture in gestures:
+            commands.bindGesture(gesture, "toggleMouseTracking")
+        self.MouseSettings.set()
+        self._mouseTrackingEnsured = True
+
+    def restore (self):
+        if not self._mouseTrackingEnsured:
+            return
+        GlobalCommands.script_toggleMouseTracking = scr = self._oldToggleMouseTrackingScript
+        for gesture in self._oldToggleMouseTrackingGestures:
+            commands.bindGesture(gesture, "toggleMouseTracking")
+        self.MouseSettings.clear()
+        self._mouseTrackingEnsured = False
+
+MouseTracking = MouseTracking()
+MouseTracking.inject()
+ensureMouseTracking  = MouseTracking.ensure
+restoreMouseTracking = MouseTracking.restore

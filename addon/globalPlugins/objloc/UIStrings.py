@@ -6,6 +6,8 @@
 # Groups of UI strings are separated by the add-on version, so if a new string
 # appears in a new version that needs translating, you will see it at once.
 # All new strings will be added at the end of this module
+# Translation related comments are written in *.pot/*.po style with "." at their beginning
+# and will be used in automated *.pot/*.po files generation with the nvaddon tool.
 
 import addonHandler
 
@@ -283,3 +285,9 @@ SET_MOUSE_MONITOR_STOP_MESSAGE = _("Announce natural end of mouse monitoring")
 
 #. Description for MIDI reset option in input gesture dialog
 IG_MIDI_RESET = _("Resets MIDI output")
+
+#. Title of a dialog
+DLG_INFO = _("Information")
+
+#. Message of a dialog
+DLG_INFO_MOUSE = _("This feature relies on NVDA's mouse tracking and cannot work properly if the mouse tracking option is turned off.\nPlease go to NVDA mouse settings, or use mouse tracking toggling gesture to enable it first.")

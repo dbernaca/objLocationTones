@@ -9,20 +9,20 @@ import globalPluginHandler
 import inputCore
 import gui
 import wx
-
 from logHandler      import log
-from .utils          import *
-from .UIStrings      import *
-from .settings       import *
-from .constants      import *
 from ._events        import *
 from ._scripts       import *
 from ._switches      import *
+from .UIStrings      import *
 from .               import posTones
 from .               import dependencies as deps
 
 class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, _objlocSwitchMethods, globalPluginHandler.GlobalPlugin):
     def __init__ (self):
+        from .utils     import getFocusObject, getNavigatorObject, getObjectPosCenter, getObjectPosLeft, getObjectPosRight, MouseTracking
+        from .constants import IS_LOCATION_MODE_CENTROID, IS_LOCATION_MODE_LEFT, IS_LOCATION_MODE_NAVIGATOR, MOUSE_REF_NAVIGATOR
+        from .settings  import Settings, Settable, SettingsError
+        from time       import monotonic
         globalPluginHandler.GlobalPlugin.__init__(self)
 
         # Configurable attributes
@@ -124,7 +124,7 @@ class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, _objlocSwitchMeth
         posTones.play.rVolume    = self.rVolume
         posTones.play.stereoSwap = self.stereoSwap
         # Setup a settings panel
-        SetPanel(S, self)
+        S.set_panel(self)
 
         # Flow control flags
         self.focusing     = True  # A flag to prevent double tones on focus of text area children
@@ -158,6 +158,7 @@ class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, _objlocSwitchMeth
             self._getRefObject = getNavigatorObject
         else:
             self._getRefObject = getFocusObject
+        self._time = monotonic
 
         # Mouse monitoring position playing timer
         self.timer = wx.Timer(gui.mainFrame)
@@ -186,6 +187,7 @@ class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, _objlocSwitchMeth
             except:
                 posTones.setGenerator("NVDA")
                 self.midi = False
+        MouseTracking.injectSettingsPanel()
 
     def terminate (self):
         """
@@ -200,11 +202,15 @@ class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, _objlocSwitchMeth
             posTones.setGenerator("NVDA")
         except:
             pass
+        from .settings import SettingsError
         try:
             self.settings.save(self)
         except SettingsError as e:
             log.warning(str(e))
         if self.easyTableNav:
             deps.disableAddonSupport("easyTableNavigator")
+        from .utils import MouseTracking
+        MouseTracking.retractSettingsPanel()
+        self.settings.remove_panel()
         del self.settings
-        RemovePanel()
+

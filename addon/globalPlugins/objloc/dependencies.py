@@ -9,12 +9,16 @@ from NVDAState import _TrackNVDAInitialization
 from logHandler import log
 from threading import Event
 from collections import deque
-
+from .meta import AutoAll
 import addonHandler
+
+__all__ = AutoAll(globals())
 
 states = {}
 
 isNVDAInitialized = _TrackNVDAInitialization.isInitializationComplete
+
+__all__.begin()
 
 def findAddon (addonId):
     try:
@@ -62,6 +66,8 @@ def checkAddonUsability (addonId, logging=True, running=False, filter=(lambda ad
     if logging:
         log.warning("Version mismatch: Current version of %s does not offer complete external API, please update it." % addonId)
     return False
+
+__all__.end()
 
 class AddonPublicInterface:
     def __init__ (self, id, *args, **kwargs):
@@ -167,7 +173,9 @@ class ETN (AddonPublicInterface):
         if event=="Terminated":
             self.terminate()
 
+__all__.begin()
 easyTableNavigator = ETN()
+__all__.end()
 
 _enabq = deque()
 def _postStartupEnabler ():
@@ -187,6 +195,8 @@ def _postStartupEnabler ():
     wx.CallAfter(postNvdaStartup.unregister, _postStartupEnabler)
 
 postNvdaStartup.register(_postStartupEnabler)
+
+__all__.begin()
 
 def enableAddonSupport (addonId, *args, **kwargs):
     e = states.setdefault(addonId, Event())
@@ -229,3 +239,5 @@ def isAddonSupportEnabled (addonId):
         log.warning("NVDA not initialized yet. "+addonId+" is still pending support enabling")
         return False
     return addon.isSet()
+
+__all__.end().finalize()

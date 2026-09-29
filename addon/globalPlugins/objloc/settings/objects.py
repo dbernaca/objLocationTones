@@ -35,9 +35,10 @@ class Flag (object):
 
     def toggle (self):
         if self.locked:
-            self.memory = not self.memory
-            return
-        self.value = self.memory = not self.value
+            self.memory = v = not self.memory
+            return v
+        self.value = self.memory = v = not self.value
+        return v
 
     def set (self):
         if self.locked:

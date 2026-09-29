@@ -11,7 +11,6 @@ from .UIStrings      import MSG_LOCATION_REACHED, MSG_LOCATION_UNAVAILABLE, MSG_
 from .geometry       import BBox
 from .posTones       import playCoordinates, playPoints
 from .constants      import *
-from time            import monotonic as time
 import wx
 import ui
 import speech
@@ -78,6 +77,12 @@ class _objlocEventMethods:
         Event handler that plays a positional tone upon navigation.
         """
         self.focusing = True # Prevent tone in the caret event right after text area gains focus
+        # Refresh the time so if mouse is monitored and reference point is
+        # navigator or focus the monitoring doesn't time out if mouse is stationary, but we are navigating.
+        # The desired outcome might be that a person positions the mouse
+        # then navigates using keyboard to see where are objects in relation to its pointer.
+        # We do not check for reference point type to preserve speed
+        self.lastTime = self._time()
         if self.processing:
             nextHandler()
             return
@@ -97,6 +102,11 @@ class _objlocEventMethods:
             self.focusing = False
             nextHandler()
             return
+        # Refresh the time so if mouse is monitored and reference point is
+        # being caret, because we are within a text editable, the monitoring doesn't time out if mouse is stationary, but we are navigating through text or typing.
+        # The desired outcome might be that a person positions the mouse
+        # then moves the caret using keyboard to see where are objects in relation to mouse's pointer.
+        self.lastTime = self._time()
         if self.typing:
             # Caret moved because user is typing or editing the text:
             if not self.caretTyping:
@@ -145,7 +155,7 @@ class _objlocEventMethods:
             ui.message(MSG_LOCATION_UNAVAILABLE)
             return
         # If mouse is stationary for too long, automatically stop monitoring:
-        t   = time()
+        t   = self._time()
         lmp = self.lastMousePos
         if lmp==mp and t-self.lastTime>=self.timeout:
             self.DeactivateMouseMonitor()

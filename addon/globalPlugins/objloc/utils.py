@@ -1,14 +1,24 @@
-from api                    import getDesktopObject, getNavigatorObject, getFocusObject, getForegroundObject
-from winUser                import getCursorPos
+from .meta import AutoAll
+
+__all__ = AutoAll(globals())
+
 from textInfos              import POSITION_CARET, POSITION_FIRST, UNIT_CHARACTER, UNIT_LINE
-from speech                 import getObjectSpeech
-from controlTypes           import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_RICHEDIT, ROLE_PASSWORDEDIT, ROLE_DOCUMENT, ROLE_TABLE, ROLE_TABLECELL, ROLE_TABLEROW, ROLE_TABLECOLUMN, STATE_MULTILINE, OutputReason
+
+__all__.begin()
+from api          import getDesktopObject, getNavigatorObject, getFocusObject, getForegroundObject
+from winUser      import getCursorPos
+from speech       import getObjectSpeech
+from controlTypes import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_RICHEDIT, ROLE_PASSWORDEDIT, ROLE_DOCUMENT, ROLE_TABLE, ROLE_TABLECELL, ROLE_TABLEROW, ROLE_TABLECOLUMN, STATE_MULTILINE, OutputReason
+__all__.end()
+
 from treeInterceptorHandler import DocumentTreeInterceptor
 from globalCommands         import GlobalCommands, commands
 from functools import update_wrapper, WRAPPER_ASSIGNMENTS
 from gui.settingsDialogs import MouseSettingsPanel, NVDASettingsDialog
 from .settings.objects import Flag
-import config
+import config, ui
+
+__all__.begin()
 
 class LocationError (LookupError):
     """
@@ -199,24 +209,49 @@ def willEnterText (gesture, obj=None):
     name = gesture.mainKeyName
     return len(name)==1 or name=="space" or name=="tab" or name=="delete" or name=="backspace" or name=="plus"
 
+__all__.end()
+
 class MouseTracking:
+    """
+    This class is in charge of protecting NVDA's mouse tracking feature during the mouse monitoring.
+    While Object Location Tones is performing the mouse monitoring, it needs mouse tracking.
+    So this class will automatically, and temporarily, enable it if it is disabled and monitoring is requested.
+    And will prevent user from disabling it while mouse monitoring is in progress.
+    This involves disabling the script activated via gesture and adjusting the MouseSettingsPanel() to respect
+    Object Location Tones' needs.
+    """
     class MouseSettings (MouseSettingsPanel):
+        """
+        This class replaces the original MouseSettingsPanel() with a version that enables user to change the mouse tracking option,
+        but if the mouse monitoring is in progress it will not interfere with its working by disabling the tracking immediately after user presses OK or Apply.
+        Instead, the config will revert to user's chosen option after monitoring ends.
+        """
+        # This flag can be locked so that it shows always the same value (last one set)
+        # while, at the same time, it enables behind the scene setting and clearing, and after unlocking it
+        # the value from memory becomes the main value.
+        # Thus we can lock the config to True, while allowing users to change the value, which will be applied when we do not need the monitoring any longer
         mouseTrackingEnabled = Flag(config.conf["mouse"]["enableMouseTracking"])
-        lock   = mouseTrackingEnabled.lock
-        unlock = mouseTrackingEnabled.unlock
+        # Bind to class namespace for faster and neater access
+        lock    = mouseTrackingEnabled.lock
+        unlock  = mouseTrackingEnabled.unlock
+        flagSet = mouseTrackingEnabled.set
+        flagClr = mouseTrackingEnabled.clear
+        flagTog = mouseTrackingEnabled.toggle
         def makeSettings(self, settingsSizer):
             MouseSettingsPanel.makeSettings(self, settingsSizer)
             self.mouseTrackingCheckBox.SetValue(self.mouseTrackingEnabled.memory)
 
         def onSave (self):
             MouseSettingsPanel.onSave(self)
-            # It is OK if config reflects False for a moment, it will not have concrete impact on the add-on's working
-            config.conf["mouse"]["enableMouseTracking"] = self.mouseTrackingEnabled.value
+            # It is OK if config reflects False for a moment while monitoring, it will not have concrete impact on the add-on's working
+            mte = self.mouseTrackingEnabled
+            mte.set() if self.mouseTrackingCheckBox.IsChecked() else mte.clear()
+            config.conf["mouse"]["enableMouseTracking"] = mte.value
 
         @classmethod
         def set (cls):
             cls.lock(True)
-            cls.mouseTrackingEnabled.set() if config.conf["mouse"]["enableMouseTracking"] else cls.mouseTrackingEnabled.clear()
+            cls.flagSet() if config.conf["mouse"]["enableMouseTracking"] else cls.flagClr()
             config.conf["mouse"]["enableMouseTracking"] = True
 
         @classmethod
@@ -228,14 +263,14 @@ class MouseTracking:
         self._oldToggleMouseTrackingGestures = self.getGestures(scr)
         self.replacement = replacement
         self._mouseTrackingEnsured         = False
-        self._assignments = WRAPPER_ASSIGNMENTS+("gestures", "category")
+        self._assignments = WRAPPER_ASSIGNMENTS+('gestures', 'category', 'allowInSleepMode', 'bypassInputHelp', 'canPropagate', 'speakOnDemand')
         self._updater = update_wrapper
 
-    def inject (self):
+    def injectSettingsPanel (self):
         mouse = NVDASettingsDialog.categoryClasses.index(MouseSettingsPanel)
         NVDASettingsDialog.categoryClasses[mouse] = self.MouseSettings
 
-    def retract (self):
+    def retractSettingsPanel (self):
         mouse = NVDASettingsDialog.categoryClasses.index(self.MouseSettings)
         NVDASettingsDialog.categoryClasses[mouse] = MouseSettingsPanel
 
@@ -265,7 +300,19 @@ class MouseTracking:
         self.MouseSettings.clear()
         self._mouseTrackingEnsured = False
 
+__all__.begin()
+
 MouseTracking = MouseTracking()
-MouseTracking.inject()
+__all__.end()
+def toggleMouseTracking (instance, gesture):
+    switch = MouseTracking.MouseSettings.flagTog()
+    msg = "Mouse tracking on" if switch else "Mouse tracking off"
+    ui.message(msg)
+MouseTracking.replacement = toggleMouseTracking
+
+__all__.begin()
 ensureMouseTracking  = MouseTracking.ensure
 restoreMouseTracking = MouseTracking.restore
+
+__all__.end().finalize()
+

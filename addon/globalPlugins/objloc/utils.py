@@ -2,6 +2,7 @@ from .meta import AutoAll
 
 __all__ = AutoAll(globals())
 
+from languageHandler import installedTranslation
 from textInfos              import POSITION_CARET, POSITION_FIRST, UNIT_CHARACTER, UNIT_LINE
 
 __all__.begin()
@@ -17,6 +18,8 @@ from functools import update_wrapper, WRAPPER_ASSIGNMENTS
 from gui.settingsDialogs import MouseSettingsPanel, NVDASettingsDialog
 from .settings.objects import Flag
 import config, ui
+
+gettext = installedTranslation().gettext
 
 __all__.begin()
 
@@ -306,7 +309,7 @@ MouseTracking = MouseTracking()
 __all__.end()
 def toggleMouseTracking (instance, gesture):
     switch = MouseTracking.MouseSettings.flagTog()
-    msg = "Mouse tracking on" if switch else "Mouse tracking off"
+    msg = gettext("Mouse tracking on") if switch else gettext("Mouse tracking off")
     ui.message(msg)
 MouseTracking.replacement = toggleMouseTracking
 

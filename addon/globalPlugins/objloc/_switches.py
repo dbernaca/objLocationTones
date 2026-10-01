@@ -69,6 +69,7 @@ class _objlocSwitchMethods:
         if self.event_mouseMove!=self._on_mouseMove:
             ensureMouseTracking()
             self.event_mouseMove = self._on_mouseMove
+            self.mousing = self.refPoint==MOUSE_REF_FOCUS or self.refPoint==MOUSE_REF_NAVIGATOR
             self.timer.Start(200)
 
     def DeactivateMouseMonitor (self):
@@ -80,6 +81,7 @@ class _objlocSwitchMethods:
         self.startMousePos = (-1, -1)
         self.lastMousePos  = (-1, -1)
         self.lastTime      = 0.0
+        self.mousing = False
         restoreMouseTracking()
 
     def Toggle (self, e=None):
@@ -304,3 +306,4 @@ class _objlocSwitchMethods:
             self._getRefObject = getNavigatorObject
         else:
             self._getRefObject = getFocusObject
+        self.mousing = self.timer.IsRunning() and (self.refPoint==MOUSE_REF_FOCUS or self.refPoint==MOUSE_REF_NAVIGATOR)

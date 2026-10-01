@@ -130,6 +130,7 @@ class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, _objlocSwitchMeth
         self.focusing     = True  # A flag to prevent double tones on focus of text area children
                                   # right after a parent window is brought to top
                                   # might not be needed in the future
+        self.mousing      = False # A flag that tells that mouse monitor is on and using dynamic, keyboard affected reference points
         self.typing       = False # A flag to prevent tones during typing
         self.entered      = False # A flag for reporting entering and exiting of the focused object area
         self.processing   = False # A flag to avoid collisions of positional audio upon fast subsequent keypresses

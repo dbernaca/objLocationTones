@@ -77,12 +77,16 @@ class _objlocEventMethods:
         Event handler that plays a positional tone upon navigation.
         """
         self.focusing = True # Prevent tone in the caret event right after text area gains focus
-        # Refresh the time so if mouse is monitored and reference point is
-        # navigator or focus the monitoring doesn't time out if mouse is stationary, but we are navigating.
-        # The desired outcome might be that a person positions the mouse
-        # then navigates using keyboard to see where are objects in relation to its pointer.
-        # We do not check for reference point type to preserve speed
-        self.lastTime = self._time()
+        if self.mousing:
+            # Refresh the time so if mouse is monitored and reference point is
+            # navigator or focus the monitoring doesn't time out if mouse is stationary, but we are navigating.
+            # The desired outcome might be that a person positions the mouse
+            # then navigates using keyboard to see where are objects in relation to its pointer.
+            # We do not check for reference point type to preserve speed
+            self.lastTime = self._time()
+            # If mouse is moving, do not play navigational output with reference point being navigable
+            nextHandler()
+            return
         if self.processing:
             nextHandler()
             return
@@ -102,11 +106,15 @@ class _objlocEventMethods:
             self.focusing = False
             nextHandler()
             return
-        # Refresh the time so if mouse is monitored and reference point is
-        # being caret, because we are within a text editable, the monitoring doesn't time out if mouse is stationary, but we are navigating through text or typing.
-        # The desired outcome might be that a person positions the mouse
-        # then moves the caret using keyboard to see where are objects in relation to mouse's pointer.
-        self.lastTime = self._time()
+        if self.mousing:
+            # Refresh the time so if mouse is monitored and reference point is
+            # being caret, because we are within a text editable, the monitoring doesn't time out if mouse is stationary, but we are navigating through text or typing.
+            # The desired outcome might be that a person positions the mouse
+            # then moves the caret using keyboard to see where are objects in relation to mouse's pointer.
+            self.lastTime = self._time()
+            # Rely on mouse monitor to report the position, because reference point is the caret
+            nextHandler()
+            return
         if self.typing:
             # Caret moved because user is typing or editing the text:
             if not self.caretTyping:
@@ -147,9 +155,7 @@ class _objlocEventMethods:
         Helps to monitor their relation, i.e. difference of their distance on the screen.
         """
         try:
-            mp     = getCursorPos()
-            obj = self._getRefObject()
-            oX, oY = getObjectPos(obj, caret=self.caret)
+            mp = getCursorPos()
         except:
             self.DeactivateMouseMonitor()
             ui.message(MSG_LOCATION_UNAVAILABLE)
@@ -168,6 +174,10 @@ class _objlocEventMethods:
         wx.CallAfter(playCoordinates, mp[0], mp[1], self.duration+40)
         if self.refPoint==MOUSE_REF_FOCUS or self.refPoint==MOUSE_REF_NAVIGATOR:
             # Play focused or navigator objects pos as a ref point
+            try:
+                oX, oY = getObjectPos(self._getRefObject(), caret=self.caret)
+            except:
+                return
             wx.CallLater(self.duration+100, playCoordinates, oX, oY, self.duration+70)
         elif self.refPoint==MOUSE_REF_TLW:
             # Top left of the foreground window

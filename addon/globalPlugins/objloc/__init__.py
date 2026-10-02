@@ -19,7 +19,7 @@ from .               import dependencies as deps
 
 class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, _objlocSwitchMethods, globalPluginHandler.GlobalPlugin):
     def __init__ (self):
-        from .utils     import getFocusObject, getNavigatorObject, getObjectPosCenter, getObjectPosLeft, getObjectPosRight, MouseTracking
+        from .utils     import getFocusObject, getNavigatorObject, getObjectPosCenter, getObjectPosLeft, getObjectPosRight, MouseTracking, DisplayLayout
         from .constants import IS_LOCATION_MODE_CENTROID, IS_LOCATION_MODE_LEFT, IS_LOCATION_MODE_NAVIGATOR, MOUSE_REF_NAVIGATOR
         from .settings  import Settings, Settable, SettingsError
         from time       import monotonic
@@ -189,6 +189,7 @@ class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, _objlocSwitchMeth
                 posTones.setGenerator("NVDA")
                 self.midi = False
         MouseTracking.injectSettingsPanel()
+        DisplayLayout.enableAutoRefresh()
 
     def terminate (self):
         """
@@ -210,8 +211,8 @@ class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, _objlocSwitchMeth
             log.warning(str(e))
         if self.easyTableNav:
             deps.disableAddonSupport("easyTableNavigator")
-        from .utils import MouseTracking
+        from .utils import MouseTracking, DisplayLayout
         MouseTracking.retractSettingsPanel()
         self.settings.remove_panel()
         del self.settings
-
+        DisplayLayout.disableAutoRefresh()

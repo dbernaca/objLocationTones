@@ -3,7 +3,7 @@
 
 from time   import monotonic as time
 from tones  import beep
-from .utils import getDesktopObject
+from .utils import getPrimaryDisplaySize
 from .      import midi
 from .midi  import general_midi_instruments
 
@@ -42,7 +42,7 @@ class _play:
         lx, ly, ld = self.lastCoords
         if x==lx and ly==ly and t-self.lastPlayed<=ld:
             return
-        screenWidth, screenHeight = getDesktopObject().location[2:]
+        screenWidth, screenHeight = getPrimaryDisplaySize()
         if 0 <= x <= screenWidth and 0 <= y <= screenHeight:
             curPitch = minPitch + ((maxPitch - minPitch) * ((screenHeight - y) / float(screenHeight)))
             if self.stereoSwap:

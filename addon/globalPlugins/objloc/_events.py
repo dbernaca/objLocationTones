@@ -199,10 +199,10 @@ class _objlocEventMethods:
         elif self.refPoint==MOUSE_REF_CS:
             # Center of the virtual screen as given by the desktop object
             try:
-                dcpx, dcpy = getDesktopObject().location.center
+                dcpx, dcpy = getPrimaryDisplaySize()
             except:
                 return
-            wx.CallLater(self.duration+100, playCoordinates, dcpx, dcpy, self.duration+70)
+            wx.CallLater(self.duration+100, playCoordinates, dcpx//2, dcpy//2, self.duration+70)
         elif self.refPoint==MOUSE_REF_START:
             pspx, pspy = self.startMousePos
             wx.CallLater(self.duration+100, playCoordinates, pspx, pspy, self.duration+70)

@@ -11,7 +11,7 @@ from winUser      import getCursorPos
 from speech       import getObjectSpeech
 from controlTypes import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_RICHEDIT, ROLE_PASSWORDEDIT, ROLE_DOCUMENT, ROLE_TABLE, ROLE_TABLECELL, ROLE_TABLEROW, ROLE_TABLECOLUMN, STATE_MULTILINE, OutputReason
 __all__.end()
-
+from winAPI._displayTracking import displayChanged
 from treeInterceptorHandler import DocumentTreeInterceptor
 from globalCommands         import GlobalCommands, commands
 from functools import update_wrapper, WRAPPER_ASSIGNMENTS
@@ -214,6 +214,42 @@ def willEnterText (gesture, obj=None):
 
 __all__.end()
 
+class Display:
+    """
+    Represents one display connected to your machine.
+    """
+    __slots__ = ("top", "left", "width", "height", "size", "primary")
+    def __init__ (self, top, left, width, height):
+        self.top     = top
+        self.left    = left
+        self.width   = width
+        self.height  = height
+        self.primary = False
+        self.size    = (width, height)
+
+    def getSize (self):
+        return self.size
+
+class DisplayLayout:
+    __slots__ = ("primary", "getPrimaryDisplaySize", "__weakref__")
+    def __init__ (self):
+        self.primary = pd = Display(*getDesktopObject().location)
+        pd.primary = True
+        self.getPrimaryDisplaySize = pd.getSize
+
+    def refresh (self, orientationState=None):
+        pd = self.primary
+        pd.__init__(*getDesktopObject().location)
+        pd.primary = True
+
+    def enableAutoRefresh (self):
+        displayChanged.register(self.refresh)
+
+    def disableAutoRefresh (self):
+        displayChanged.unregister(self.refresh)
+
+DisplayLayout = DisplayLayout()
+
 class MouseTracking:
     """
     This class is in charge of protecting NVDA's mouse tracking feature during the mouse monitoring.
@@ -314,8 +350,9 @@ def toggleMouseTracking (instance, gesture):
 MouseTracking.replacement = toggleMouseTracking
 
 __all__.begin()
-ensureMouseTracking  = MouseTracking.ensure
-restoreMouseTracking = MouseTracking.restore
+ensureMouseTracking   = MouseTracking.ensure
+restoreMouseTracking  = MouseTracking.restore
+getPrimaryDisplaySize = DisplayLayout.getPrimaryDisplaySize
 
 __all__.end().finalize()
 

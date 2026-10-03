@@ -11,12 +11,13 @@ from winUser      import getCursorPos
 from speech       import getObjectSpeech
 from controlTypes import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_RICHEDIT, ROLE_PASSWORDEDIT, ROLE_DOCUMENT, ROLE_TABLE, ROLE_TABLECELL, ROLE_TABLEROW, ROLE_TABLECOLUMN, STATE_MULTILINE, OutputReason
 __all__.end()
+from api                     import isTypingProtected, getCaretPosition as getCaretTextInfo
 from winAPI._displayTracking import displayChanged
-from treeInterceptorHandler import DocumentTreeInterceptor
-from globalCommands         import GlobalCommands, commands
-from functools import update_wrapper, WRAPPER_ASSIGNMENTS
-from gui.settingsDialogs import MouseSettingsPanel, NVDASettingsDialog
-from .settings.objects import Flag
+from treeInterceptorHandler  import DocumentTreeInterceptor
+from globalCommands          import GlobalCommands, commands
+from functools               import update_wrapper, WRAPPER_ASSIGNMENTS
+from gui.settingsDialogs     import MouseSettingsPanel, NVDASettingsDialog
+from .settings.objects       import Flag
 import config, ui
 
 gettext = installedTranslation().gettext
@@ -81,6 +82,28 @@ def getCaretPos (obj=None):
         raise
     except:
         raise LocationError("Location unavailable")
+
+def getCharacterAtCaret ():
+    if isTypingProtected():
+        return ""
+    try:
+        info = getCaretTextInfo().copy()
+        info.expand(UNIT_CHARACTER)
+        return info.text
+    except (RuntimeError, NotImplementedError):
+        return ""
+
+def getCharacterBeforeCaret ():
+    try:
+        info = getCaretTextInfo().copy()
+        info.collapse()
+        if info.move(UNIT_CHARACTER, -1) == 0:
+            return ""
+        info.expand(UNIT_CHARACTER)
+        ch = info.text
+        return "*" if isTypingProtected() and ch else ch
+    except (RuntimeError, NotImplementedError, LookupError):
+        return ""
 
 def getObjectPos (obj=None, location=True, caret=False):
     """

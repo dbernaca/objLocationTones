@@ -56,6 +56,9 @@ class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, _objlocSwitchMeth
                              choices=tuple(SET_CARET_CHOICES), # tuple() means wx.Choice(), instead of wx.ListBox() in settings panel
                              label=SET_CARET_REPORT, group=SET_GROUP_CARET,
                              reactor=lambda e: ( setattr(self, "caretMode", e.GetSelection()), e.Skip() ) )
+        self.caretSpaces   = Settable(False,  # Whether to report only when caret is on tab or space
+                             label=SET_CARET_SPACES, group=SET_GROUP_CARET,
+                             reactor=lambda e: (setattr(self, "caretSpaces", e.IsChecked()), e.Skip()) )
         self.caretTyping   = Settable(False, # Whether to report caret location while typing or not
                              label=SET_CARET_TYPING, group=SET_GROUP_CARET,
                              reactor=lambda e: (setattr(self, "caretTyping", e.IsChecked()), e.Skip()) )

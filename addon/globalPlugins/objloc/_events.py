@@ -120,6 +120,9 @@ class _objlocEventMethods:
             if not self.caretTyping:
                 nextHandler()
                 return
+            if self.caretSpaces and getCharacterBeforeCaret() not in (" ", "\t"):
+                nextHandler()
+                return
             try:
                 x, y = getCaretPos(obj)
                 playCoordinates(x, y, self.durationCaret)
@@ -140,6 +143,9 @@ class _objlocEventMethods:
             # Horizontal navigation
             pass
         else:
+            if self.caretSpaces and getCharacterAtCaret() not in (" ", "\t"):
+                nextHandler()
+                return
             try:
                 x, y = getCaretPos(obj)
                 playCoordinates(x, y, self.durationCaret)

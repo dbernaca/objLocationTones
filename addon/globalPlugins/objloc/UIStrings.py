@@ -286,8 +286,5 @@ SET_MOUSE_MONITOR_STOP_MESSAGE = _("Announce natural end of mouse monitoring")
 #. Description for MIDI reset option in input gesture dialog
 IG_MIDI_RESET = _("Resets MIDI output")
 
-#. Title of a dialog
-DLG_INFO = _("Information")
-
-#. Message of a dialog
-DLG_INFO_MOUSE = _("This feature relies on NVDA's mouse tracking and cannot work properly if the mouse tracking option is turned off.\nPlease go to NVDA mouse settings, or use mouse tracking toggling gesture to enable it first.")
+#. Checkbox label in caret group of settings panel
+SET_CARET_SPACES = _("Report caret location only at tabs and spaces")

@@ -98,6 +98,10 @@ def onInstall ():
             inst.durationCaret = inst.duration.value if hasattr(inst, "duration") else 40
         if not hasattr(inst, "refPoint"):
             inst.refPoint = 0
+        else:
+            # New option has been injected in 26.2.0 at the index 1
+            # Make sure this is version aware in release of add-on following this one or it will cause serious bugs
+            inst.refPoint.value += inst.refPoint.value>0
         if not hasattr(inst, "midi"):
             inst.midi = False
             inst.instrument = 115
@@ -105,6 +109,12 @@ def onInstall ():
             inst.easyTableNav = True
         if not hasattr(inst, "reportOutline"):
             inst.reportOutline = False
+        if not hasattr(inst, "locationMode"):
+            inst.locationMode = 0
+        if not hasattr(inst, "caretSpaces"):
+            inst.caretSpaces = False
+        if not hasattr(inst, "stopMessage"):
+            inst.stopMessage = True
         # Save it into pending install version, so that it gets activated after old add-on removal and renaming of new one:
         setpath = os.path.join(addon.pendingInstallPath, "globalPlugins", "objloc", "settings", "settings.json")
         # Switch settings path to a new file:

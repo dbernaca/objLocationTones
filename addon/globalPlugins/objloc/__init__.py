@@ -110,7 +110,7 @@ class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, _objlocSwitchMeth
         # Make particular dependency related options not show in settings dialog if that add-on is not available
         ETN.show = deps.checkAddonUsability("easyTableNavigator",
                    logging=False,
-                   filter=(lambda addon: addon.version>="2.8"))
+                   filter=(lambda addon: addon.version>="2.8.0"))
         # Load the configurables from settings if possible
         self.settings = S = Settings()
         try:
@@ -130,13 +130,12 @@ class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, _objlocSwitchMeth
         S.set_panel(self)
 
         # Flow control flags
-        self.focusing     = True  # A flag to prevent double tones on focus of text area children
-                                  # right after a parent window is brought to top
-                                  # might not be needed in the future
-        self.mousing      = False # A flag that tells that mouse monitor is on and using dynamic, keyboard affected reference points
-        self.typing       = False # A flag to prevent tones during typing
-        self.entered      = False # A flag for reporting entering and exiting of the focused object area
-        self.processing   = False # A flag to avoid collisions of positional audio upon fast subsequent keypresses
+        self.focusing   = True  # A flag to prevent double tones on focus of text area children
+                                # right after a parent window is brought to top
+        self.mousing    = False # A flag that tells that mouse monitor is on and using dynamic, keyboard affected reference points
+        self.typing     = False # A flag to prevent tones during typing
+        self.entered    = False # A flag for reporting entering and exiting of the focused object area
+        self.processing = False # A flag to avoid collisions of positional audio upon fast subsequent keypresses
 
         # Temporary variables for action checks
         self.startMousePos  = (-1, -1) # Used to mark a point from which mouse started

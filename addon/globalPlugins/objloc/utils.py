@@ -362,10 +362,8 @@ class MouseTracking:
         self.MouseSettings.clear()
         self._mouseTrackingEnsured = False
 
-__all__.begin()
-
 MouseTracking = MouseTracking()
-__all__.end()
+
 def toggleMouseTracking (instance, gesture):
     switch = MouseTracking.MouseSettings.flagTog()
     msg = gettext("Mouse tracking on") if switch else gettext("Mouse tracking off")
@@ -373,6 +371,7 @@ def toggleMouseTracking (instance, gesture):
 MouseTracking.replacement = toggleMouseTracking
 
 __all__.begin()
+
 ensureMouseTracking   = MouseTracking.ensure
 restoreMouseTracking  = MouseTracking.restore
 getPrimaryDisplaySize = DisplayLayout.getPrimaryDisplaySize

@@ -127,7 +127,7 @@ class GlobalPlugin (_objlocEventMethods, _objlocScriptMethods, _objlocSwitchMeth
         posTones.play.rVolume    = self.rVolume
         posTones.play.stereoSwap = self.stereoSwap
         # Setup a settings panel
-        S.set_panel(self)
+        S.set_panel(self, title=SET_CATEGORY, placeAbove="AdvancedPanel")
 
         # Flow control flags
         self.focusing   = True  # A flag to prevent double tones on focus of text area children

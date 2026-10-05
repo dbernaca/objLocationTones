@@ -274,8 +274,8 @@ class Settings:
             except Exception as e:
                 raise SettingsError("Unable to set the attribute '%s' to value %s because of %s" % (attr.name, repr(value), str(e)))
 
-    def set_panel (self, instance):
-        SetPanel(self, instance)
+    def set_panel (self, instance, title=None, placeAbove=None):
+        SetPanel(self, instance, title, placeAbove)
 
     def remove_panel (self):
         RemovePanel()

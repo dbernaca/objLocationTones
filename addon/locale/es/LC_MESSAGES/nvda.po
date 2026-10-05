@@ -1,4 +1,4 @@
-# Croatian translations for objLocTones.
+# Spanish translations for objLocTones.
 # Copyright (C) 2026 by Dalen Bernaca
 # This file is distributed under GPL v2.
 # Translation has been facilitated using Perplexity
@@ -7,12 +7,11 @@ msgstr ""
 "Project-Id-Version: objLocTones 26.2.0\n"
 "Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
 "POT-Creation-Date: 2026-10-05 08:12+0200\n"
-"PO-Revision-Date: 2026-09-24 00:00+0200\n"
+"PO-Revision-Date: 2026-10-05 03:18+0200\n"
 "Last-Translator: Dalen\n"
-"Language: hr\n"
-"Language-Team: hr <LL@li.org>\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
-"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Language: es\n"
+"Language-Team: Spanish\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -31,9 +30,9 @@ msgid ""
 "Announce location of objects via tones.\n"
 "This add-on brings positional audio capabilities to NVDA screen reader."
 msgstr ""
-"Najavljuje položaj objekata pozicijskim tonovima.\n"
-"Ovaj dodatak čitaču zaslona NVDA dodaje mogućnost uporabe tehnologije "
-"pozicijskog zvuka."
+"Indica la ubicación de los objetos con tonos.\n"
+"Este complemento añade funciones de audio posicional al lector de "
+"pantalla NVDA."
 
 #. Translators: What's new in this version of the add-on, shown in the add-on
 #. store.
@@ -58,43 +57,46 @@ msgid ""
 "* Some bug fixes that didn't affect the previous versions of the add-on, "
 "but would have in future versions"
 msgstr ""
-"* Kompatibilnost s NVDA 2026.2\n"
-"* Nova značajka: odabir načina predstavljanja položaja (omogućuje odabir "
-"detekcije objekta tijekom navigacije i položaja unutar objekta koji se "
-"najavljuje tonom)\n"
-"* Nova značajka: referentna točka praćenja miša koja koristi navigatorski"
-" objekt\n"
-"* Nova značajka: uključivanje/isključivanje poruke o zaustavljanju "
-"nadzora miša\n"
-"* Nova značajka: uključivanje/isključivanje izvještavanja lokacije "
-"kursora samo za tabulatore i razmake\n"
-"* Nova značajka: resetiranje MIDI izlaza pomoću geste\n"
-"* Dodani prijevodi za hrvatski, talijanski i španjolski\n"
+"* Compatibilidad con NVDA 2026.2\n"
+"* Nueva función: selección del modo de presentación de la posición "
+"(permite elegir el objeto que se detecta durante la navegación y el punto"
+" dentro de él que se indica con un tono)\n"
+"* Nueva función: punto de referencia para la monitorización del ratón "
+"basado en el navegador de objetos\n"
+"* Nueva función: posibilidad de activar o desactivar el mensaje que "
+"anuncia la finalización automática de la monitorización del ratón\n"
+"* Nueva función: posibilidad de indicar la posición del cursor del "
+"sistema solo en tabulaciones y espacios\n"
+"* Nueva función: gesto para restablecer la salida MIDI\n"
+"* Se añadieron traducciones al croata, italiano y español\n"
 "---\n"
-"Više o svakoj novoj značajci pročitajte u datoteci readme kako biste "
-"bolje razumjeli način njihovog djelovanja.\n"
+"Para comprender mejor su funcionamiento, consulta la descripción de cada "
+"nueva función en el archivo README.\n"
 "---\n"
-"* Dodatne mikrooptimizacije učinkovitosti\n"
-"* Ispravci nekih pogrešaka koje nisu utjecale na prethodne verzije "
-"dodatka, ali bi utjecale na buduće verzije"
+"* Más microoptimizaciones de rendimiento\n"
+"* Corrección de algunos errores que no afectaban a las versiones "
+"anteriores del complemento, pero que habrían causado problemas en "
+"versiones futuras"
 
 #. Input gestures dialog category label for objLocTones.
 #. A category name in the NVDA settings dialog
 #: addon/globalPlugins/objloc/UIStrings.py:24
 #: addon/globalPlugins/objloc/UIStrings.py:104
 msgid "Positional tones"
-msgstr "Pozicijski tonovi"
+msgstr "Tonos posicionales"
 
 #. Focused object outline report gesture description in the input gesture
 #. dialog
 #: addon/globalPlugins/objloc/UIStrings.py:27
 msgid "Reports outline of a current object via positional tones"
-msgstr "Izvještava o obrisu trenutačnog objekta pozicijskim tonovima"
+msgstr "Reproduce con tonos posicionales el contorno del objeto actual"
 
 #. Parent object outline report gesture description in the input gesture dialog
 #: addon/globalPlugins/objloc/UIStrings.py:30
 msgid "Reports outline of a parent of the current object via positional tones"
-msgstr "Izvještava o obrisu roditelja trenutnog objekta pozicijskim tonovima"
+msgstr ""
+"Reproduce con tonos posicionales el contorno del objeto padre del objeto "
+"actual"
 
 #. The toggle mouse location monitoring gesture description in the input
 #. gesture dialog
@@ -103,19 +105,19 @@ msgid ""
 "Toggles a mouse cursor position in relation to reference point location "
 "reporting via positional tones"
 msgstr ""
-"Pokreće ili zaustavlja izvještavanje pozicijskim tonovima o položaju "
-"pokazivača miša u odnosu na referentnu točku"
+"Activa o desactiva la monitorización con tonos posicionales de la "
+"posición del puntero del ratón respecto a un punto de referencia"
 
 #. Input dialog gesture description for on request of mouse cursor location
 #: addon/globalPlugins/objloc/UIStrings.py:36
 msgid "Plays a positional tone for a mouse cursor"
-msgstr "Reproducira pozicijski ton za položaj pokazivača miša"
+msgstr "Reproduce un tono que indica la posición del puntero del ratón"
 
 #. The gesture description for on request object location in the input gesture
 #. dialog
 #: addon/globalPlugins/objloc/UIStrings.py:39
 msgid "Plays a positional tone for a current object"
-msgstr "Reproducira pozicijski ton za aktualni objekt"
+msgstr "Reproduce un tono que indica la posición del objeto actual"
 
 #. The Object Location Tones toggle gesture description in the input gesture
 #. dialog
@@ -124,28 +126,28 @@ msgid ""
 "Toggles automatic auditory description of object locations via positional"
 " tones"
 msgstr ""
-"Uključuje ili isključuje automatski zvučni opis položaja objekata "
-"pozicijskim tonovima"
+"Activa o desactiva la indicación sonora automática de la posición de los "
+"objetos con tonos posicionales"
 
 #. The Object Location Tones toggle of caret reporting gesture description in
 #. the input gesture dialog
 #: addon/globalPlugins/objloc/UIStrings.py:45
 msgid "Toggles caret location reporting via positional tones"
 msgstr ""
-"Uključuje ili isključuje izvještavanje o položaju kursora pozicijskim "
-"tonovima"
+"Activa o desactiva la indicación de la posición del cursor del sistema "
+"con tonos posicionales"
 
 #. Description for cycling through caret reporting modes in the input gesture
 #. dialog
 #: addon/globalPlugins/objloc/UIStrings.py:48
 msgid "Cycles through caret reporting modes"
-msgstr "Mijenja načine izvještavanja o položaju kursora"
+msgstr "Cambia al siguiente modo de indicación del cursor del sistema"
 
 #. ui.message() when fetching parent object for positional audio and there is
 #. no parent to fetch
 #: addon/globalPlugins/objloc/UIStrings.py:51
 msgid "Parent object not available"
-msgstr "Nadređeni objekt nije dostupan"
+msgstr "Objeto padre no disponible"
 
 #. ui.message() in reporting parent outline script
 #. The message is dynamic and thus only partially translatable
@@ -160,257 +162,257 @@ msgstr "Nadređeni objekt nije dostupan"
 #. now
 #: addon/globalPlugins/objloc/UIStrings.py:62
 msgid "ancestor"
-msgstr "predak"
+msgstr "ancestro"
 
 #. ui.message() in all cases when the location of an object, for any reason,
 #. cannot be detected
 #: addon/globalPlugins/objloc/UIStrings.py:65
 msgid "Location unavailable"
-msgstr "Položaj nije dostupan"
+msgstr "Posición no disponible"
 
 #. ui.message() in mouse monitoring, when triggered, and the mouse cursor
 #. is already at the position of the focused object
 #: addon/globalPlugins/objloc/UIStrings.py:69
 msgid "Mouse already there"
-msgstr "Pokazivač je već na odredištu"
+msgstr "El puntero ya está en el destino"
 
 #. ui.message() when user cancels the mouse monitoring by triggering the script
 #. via gesture
 #: addon/globalPlugins/objloc/UIStrings.py:72
 msgid "Mouse location monitoring cancelled"
-msgstr "Nadzor položaja pokazivača otkazan"
+msgstr "Monitorización del ratón cancelada"
 
 #. ui.message() when the mouse monitoring stops automatically after the mouse
 #. is stationary for too long
 #: addon/globalPlugins/objloc/UIStrings.py:75
 msgid "Mouse location monitoring stopped"
-msgstr "Nadzor položaja pokazivača zaustavljen"
+msgstr "Monitorización del ratón finalizada"
 
 #. ui.message() during the mouse monitoring when the mouse enters the focused
 #. object area
 #. The object's description will be added at the end of the string
 #: addon/globalPlugins/objloc/UIStrings.py:79
 msgid "Entering"
-msgstr "Ulazak u"
+msgstr "Entrando en"
 
 #. ui.message() during the mouse monitoring when the mouse exits the focused
 #. object area
 #. The object's description will be added at the end of the string
 #: addon/globalPlugins/objloc/UIStrings.py:83
 msgid "Leaving"
-msgstr "Izlazak iz"
+msgstr "Saliendo de"
 
 #. ui.message() when during the mouse monitoring the mouse cursor is brought to
 #. the denoted location of the focused object
 #: addon/globalPlugins/objloc/UIStrings.py:86
 msgid "Location reached"
-msgstr "Položaj dosegnut"
+msgstr "Posición alcanzada"
 
 #. ui.message() when positional tones are switched on via gesture
 #: addon/globalPlugins/objloc/UIStrings.py:89
 msgid "Positional tones on"
-msgstr "Pozicijski tonovi uključeni"
+msgstr "Tonos posicionales activados"
 
 #. ui.message() when positional tones are switched off via gesture
 #: addon/globalPlugins/objloc/UIStrings.py:92
 msgid "Positional tones off"
-msgstr "Pozicijski tonovi isključeni"
+msgstr "Tonos posicionales desactivados"
 
 #. ui.message() when positional tones for a caret are switched on via gesture
 #: addon/globalPlugins/objloc/UIStrings.py:95
 msgid "Caret location reporting on"
-msgstr "Izvještavanje o položaju kursora uključeno"
+msgstr "Indicación de la posición del cursor del sistema activada"
 
 #. ui.message() when positional tones for a caret are switched off via gesture
 #: addon/globalPlugins/objloc/UIStrings.py:98
 msgid "Caret location reporting off"
-msgstr "Izvještavanje o položaju kursora isključeno"
+msgstr "Indicación de la posición del cursor del sistema desactivada"
 
 #. Checkbox in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:107
 msgid "Play positional tones during object navigation"
-msgstr "Reproduciraj pozicijske tonove za objekte tijekom navigacije"
+msgstr "Reproducir tonos posicionales durante la navegación de objetos"
 
 #. Integer input via text editable in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:110
 msgid "Positional tone duration (msec):"
-msgstr "Trajanje pozicijskog tona (ms):"
+msgstr "Duración del tono posicional (ms):"
 
 #. Integer input via text editable in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:113
 msgid "Mouse point matching tolerance (px):"
-msgstr "Prag tolerancije za usporedbu blizine pokazivača miša (px):"
+msgstr "Tolerancia de proximidad del puntero a la posición de destino (px):"
 
 #. Floating point input via text editable in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:116
 msgid "Turn off mouse monitoring automatically after (sec):"
-msgstr "Automatski isključi nadzor pokazivača miša nakon (s):"
+msgstr "Tiempo de espera por inactividad del puntero (s):"
 
 #. Checkbox in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:119
 msgid "Start mouse location monitoring automatically"
-msgstr "Automatsko pokretanje nadzora položaja pokazivača miša"
+msgstr "Activar automáticamente la monitorización de la posición del ratón"
 
 #. Slider in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:122
 msgid "Left speaker volume:"
-msgstr "Glasnoća lijevog zvučnika:"
+msgstr "Volumen del altavoz izquierdo:"
 
 #. Slider in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:125
 msgid "Right speaker volume:"
-msgstr "Glasnoća desnog zvučnika:"
+msgstr "Volumen del altavoz derecho:"
 
 #. Checkbox in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:128
 msgid "Swap stereo channels"
-msgstr "Zamijeni stereo kanale"
+msgstr "Intercambiar los canales estéreo"
 
 #. Checkbox in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:134
 msgid "Play positional tones for caret location"
-msgstr "Reproduciraj pozicijske tonove za položaj kursora"
+msgstr "Reproducir tonos posicionales para la posición del cursor del sistema"
 
 #. Integer input via text editable in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:137
 msgid "Tone duration for caret location reporting (msec):"
-msgstr "Trajanje tona za izvještavanje o položaju kursora (ms):"
+msgstr "Duración del tono para la posición del cursor del sistema (ms):"
 
 #. Checkbox in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:140
 msgid "Report caret location while typing"
-msgstr "Izvještavaj o položaju kursora tijekom tipkanja"
+msgstr "Indicar la posición del cursor del sistema mientras se escribe"
 
 #. Label for the caret reporting mode in settings panel and in a ui.message()
 #. when using script to cycle through caret reporting modes
 #. Label for wx.Choice() element when in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:144
 msgid "Caret reporting mode:"
-msgstr "Način izvještavanja o položaju kursora:"
+msgstr "Modo de indicación del cursor del sistema:"
 
 #. Choice item in settings panel and part of ui.message() when using script to
 #. cycle through caret reporting modes
 #: addon/globalPlugins/objloc/UIStrings.py:147
 msgid "Lines"
-msgstr "Redci"
+msgstr "Líneas"
 
 #. Choice item in settings panel and part of ui.message() when using script to
 #. cycle through caret reporting modes
 #: addon/globalPlugins/objloc/UIStrings.py:150
 msgid "Columns"
-msgstr "Stupci"
+msgstr "Columnas"
 
 #. Choice item in settings panel and part of ui.message() when using script to
 #. cycle through caret reporting modes
 #: addon/globalPlugins/objloc/UIStrings.py:153
 msgid "Lines And Columns"
-msgstr "Redci i stupci"
+msgstr "Líneas y columnas"
 
 #. Choice item in settings panel and part of ui.message() when using script to
 #. cycle through caret reporting modes
 #: addon/globalPlugins/objloc/UIStrings.py:156
 msgid "None"
-msgstr "Nijedno"
+msgstr "Ninguno"
 
 #. Label in settings panel for the mouse monitoring second tone
 #. Label for wx.Choice() element in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:165
 msgid "Mouse monitoring reference point:"
-msgstr "Referentna točka za nadzor pokazivača miša:"
+msgstr "Punto de referencia para la monitorización del ratón:"
 
 #. Mouse reference point will be the focused object (default behaviour)
 #. A choice item in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:169
 msgid "Focused object's location"
-msgstr "Položaj objekta u fokusu"
+msgstr "Posición del objeto con el foco"
 
 #. Mouse reference point will be the navigator object's location (new in
 #. 2026.2)
 #. A choice item in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:173
 msgid "Navigator object's location"
-msgstr "Položaj navigatorskog objekta"
+msgstr "Posición del navegador de objetos"
 
 #. Mouse reference point: Top Left of the Window
 #. A choice item in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:177
 msgid "Top left corner of the application's root window"
-msgstr "Gornji lijevi kut glavnog prozora aplikacije"
+msgstr "Esquina superior izquierda de la ventana en primer plano"
 
 #. Mouse reference point: Centre of the window
 #. A choice item in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:181
 msgid "Centre of the application's root window"
-msgstr "Središte glavnog prozora aplikacije"
+msgstr "Centro de la ventana en primer plano"
 
 #. Mouse reference point: Top left of the screen
 #. A choice item in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:185
 msgid "Top left corner of the screen"
-msgstr "Gornji lijevi kut zaslona"
+msgstr "Esquina superior izquierda de la pantalla"
 
 #. Mouse reference point: Centre of the screen
 #. A choice item in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:189
 msgid "Centre of the screen"
-msgstr "Središte zaslona"
+msgstr "Centro de la pantalla"
 
 #. Mouse reference point: none will be used
 #. A choice item in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:193
 msgid "No reference point"
-msgstr "Bez referentne točke"
+msgstr "Sin punto de referencia"
 
 #. Mouse reference point: mouse start position will be used
 #. A choice item in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:197
 msgid "Pointer's position at start of navigation"
-msgstr "Položaj pokazivača na početku navigacije"
+msgstr "Posición del puntero al iniciar la monitorización"
 
 #. Label of a group of settings over a box sizer in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:207
 msgid "Navigation"
-msgstr "Navigacija"
+msgstr "Navegación"
 
 #. Label of a group of settings over a box sizer in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:210
 msgid "Caret"
-msgstr "Kursor"
+msgstr "Cursor"
 
 #. Label of a group of settings over a box sizer in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:213
 msgid "Mouse"
-msgstr "Miš"
+msgstr "Ratón"
 
 #. Label of a group of settings over a box sizer in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:216
 msgid "Tones"
-msgstr "Tonovi"
+msgstr "Tonos"
 
 #. Label of a group of settings over a box sizer in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:219
 msgid "Audio"
-msgstr "Zvuk"
+msgstr "Audio"
 
 #. Label of a button in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:222
 msgid "Restore defaults..."
-msgstr "Vrati zadane postavke..."
+msgstr "Restaurar valores predeterminados..."
 
 #. Checkbox in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:227
 msgid "Use Musical Instrument Digital Interface (MIDI) for tone generation"
-msgstr "Koristi Musical Instrument Digital Interface (MIDI) za generiranje tonova"
+msgstr "Usar Musical Instrument Digital Interface MIDI para generar los tonos"
 
 #. Label of a wx.Choice() element in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:230
 msgid "MIDI instrument:"
-msgstr "MIDI instrument:"
+msgstr "Instrumento MIDI:"
 
 #. Title of a dialog
 #: addon/globalPlugins/objloc/UIStrings.py:233
 msgid "Warning..."
-msgstr "Upozorenje..."
+msgstr "Advertencia..."
 
 #. Dialog message
 #: addon/globalPlugins/objloc/UIStrings.py:236
@@ -421,10 +423,10 @@ msgid ""
 "\n"
 "Do you want to activate it now?"
 msgstr ""
-"Ova je mogućnost još u eksperimentalnoj fazi.\n"
-"Prije njezina uključivanja proučite dokumentaciju dodatka.\n"
+"Esta opción todavía está en fase experimental.\n"
+"Antes de activarla, consulta la documentación del complemento.\n"
 "\n"
-"Želite li je sada uključiti?"
+"¿Quieres activarla ahora?"
 
 #. Checkbox in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:241
@@ -432,67 +434,67 @@ msgid ""
 "Play positional tones for cell locations when Easy Table Navigator layer "
 "is on"
 msgstr ""
-"Reproduciraj pozicijske tonove za položaje ćelija kada je Easy Table "
-"Navigator uključen"
+"Reproducir tonos posicionales para indicar la posición de las celdas "
+"cuando Easy Table Navigator esté activo"
 
 #. Label of wx.Choice() element in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:246
 msgid "MIDI synthesizer:"
-msgstr "MIDI synthesizer:"
+msgstr "Sintetizador MIDI:"
 
 #. Checkbox in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:249
 msgid "Play an outline of each window when it is brought to foreground"
-msgstr "Reproduciraj obris svakog prozora kada se pojavi u prvom planu"
+msgstr "Reproducir el contorno de cada ventana cuando pase a primer plano"
 
 #. Label for presentation mode choice
 #. Label of wx.Choice() element in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:256
 msgid "Location presentation mode:"
-msgstr "Način predstavljanja položaja:"
+msgstr "Modo de presentación de la posición:"
 
 #. A choice item in settings panel (default behaviour)
 #: addon/globalPlugins/objloc/UIStrings.py:261
 msgid "Centroid of a navigator object"
-msgstr "Središte navigatorskog objekta"
+msgstr "Centro del navegador de objetos"
 
 #. A choice item in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:264
 msgid "Left border of a navigator object"
-msgstr "Lijevi rub navigatorskog objekta"
+msgstr "Borde izquierdo del navegador de objetos"
 
 #. A choice item in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:267
 msgid "Right border of a navigator object"
-msgstr "Desni rub navigatorskog objekta"
+msgstr "Borde derecho del navegador de objetos"
 
 #. A choice item in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:270
 msgid "Centroid of a focused object"
-msgstr "Središte objekta u fokusu"
+msgstr "Centro del objeto con el foco"
 
 #. A choice item in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:273
 msgid "Left border of a focused object"
-msgstr "Lijevi rub objekta u fokusu"
+msgstr "Borde izquierdo del objeto con el foco"
 
 #. A choice item in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:276
 msgid "Right border of a focused object"
-msgstr "Desni rub objekta u fokusu"
+msgstr "Borde derecho del objeto con el foco"
 
 #. Checkbox in settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:284
 msgid "Announce natural end of mouse monitoring"
-msgstr "Najavi automatski kraj nadzora položaja pokazivača miša"
+msgstr "Anunciar la finalización automática de la monitorización del ratón"
 
 #. Description for MIDI reset option in input gesture dialog
 #: addon/globalPlugins/objloc/UIStrings.py:287
 msgid "Resets MIDI output"
-msgstr "Resetira MIDI izlaz"
+msgstr "Restablece la salida MIDI"
 
 #. Checkbox label in caret group of settings panel
 #: addon/globalPlugins/objloc/UIStrings.py:290
 msgid "Report caret location only at tabs and spaces"
-msgstr "Izvještavaj o položaju kursora samo za tabulatore i razmake"
+msgstr "Indicar la posición del cursor del sistema solo en tabulaciones y espacios"
 

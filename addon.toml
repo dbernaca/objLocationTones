@@ -32,6 +32,7 @@ changelog = """* NVDA 2026.2 compatibility
 * New feature: Enable/disable the mouse monitoring stop message
 * New feature: Enable/disable reporting caret location only at tabs and spaces
 * New feature: Use a gesture to reset MIDI output
+* Added translations for Croatian, Italian and Spanish
 ---
 Please read more about each of the new features in readme to understand better how they work.
 ---

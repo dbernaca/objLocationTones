@@ -2,15 +2,9 @@ from .meta import AutoAll
 
 __all__ = AutoAll(globals())
 
+import config, ui
 from languageHandler import installedTranslation
 from textInfos              import POSITION_CARET, POSITION_FIRST, UNIT_CHARACTER, UNIT_LINE
-
-__all__.begin()
-from api          import getDesktopObject, getNavigatorObject, getFocusObject, getForegroundObject
-from winUser      import getCursorPos
-from speech       import getObjectSpeech
-from controlTypes import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_RICHEDIT, ROLE_PASSWORDEDIT, ROLE_DOCUMENT, ROLE_TABLE, ROLE_TABLECELL, ROLE_TABLEROW, ROLE_TABLECOLUMN, STATE_MULTILINE, OutputReason
-__all__.end()
 from api                     import isTypingProtected, getCaretPosition as getCaretTextInfo
 from winAPI._displayTracking import displayChanged
 from treeInterceptorHandler  import DocumentTreeInterceptor
@@ -18,11 +12,12 @@ from globalCommands          import GlobalCommands, commands
 from functools               import update_wrapper, WRAPPER_ASSIGNMENTS
 from gui.settingsDialogs     import MouseSettingsPanel, NVDASettingsDialog
 from .settings.objects       import Flag
-import config, ui
-
-gettext = installedTranslation().gettext
 
 __all__.begin()
+from api          import getDesktopObject, getNavigatorObject, getFocusObject, getForegroundObject
+from winUser      import getCursorPos
+from speech       import getObjectSpeech
+from controlTypes import ROLE_TERMINAL, ROLE_EDITABLETEXT, ROLE_RICHEDIT, ROLE_PASSWORDEDIT, ROLE_DOCUMENT, ROLE_TABLE, ROLE_TABLECELL, ROLE_TABLEROW, ROLE_TABLECOLUMN, STATE_MULTILINE, OutputReason
 
 class LocationError (LookupError):
     """
@@ -369,6 +364,9 @@ def toggleMouseTracking (instance, gesture):
     msg = gettext("Mouse tracking on") if switch else gettext("Mouse tracking off")
     ui.message(msg)
 MouseTracking.replacement = toggleMouseTracking
+
+# Reference to original gettext of NVDA translations. I wanted it explicit to be used when swapping existing messages from NVDA. Call to it is however recognized when building POT even from here.
+gettext = installedTranslation().gettext
 
 __all__.begin()
 

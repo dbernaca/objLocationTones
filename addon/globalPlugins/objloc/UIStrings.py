@@ -21,7 +21,7 @@ except addonHandler.AddonError:
 # =========================================
 
 #. Input gestures dialog category label for objLocTones.
-IG_CATEGORY = _("Object Location Tones") 
+IG_CATEGORY = _("Positional tones") 
 
 #. Focused object outline report gesture description in the input gesture dialog
 IG_OUTLINE = _("Reports outline of a current object via positional tones")
@@ -101,7 +101,7 @@ MSG_CARET_TONES_OFF = _("Caret location reporting off")
 # =========================================
 
 #. A category name in the NVDA settings dialog
-SET_CATEGORY = _("Object Location Tones")
+SET_CATEGORY = _("Positional tones")
 
 #. Checkbox in settings panel
 SET_POSITIONAL_AUDIO = _("Play positional tones during object navigation")

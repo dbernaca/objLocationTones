@@ -4,8 +4,8 @@ try:
     from gui.settingsDialogs import SettingsPanel
 except:
     from gui import SettingsPanel
+from addonHandler import getCodeAddon
 
-from globalPlugins.objloc.UIStrings import SET_CATEGORY
 from .objects import Flag, Attribute
 
 import weakref
@@ -77,7 +77,7 @@ def setValue (attr, obj, value=Ellipsis):
     obj.SetValue(value)
 
 class Panel (SettingsPanel):
-    title       = SET_CATEGORY
+    title       = getCodeAddon().manifest["summary"]
     currentset  = lambda: None # Current settings instance to use stored as a weakref
     currentinst = lambda: None # Target instance on which the settings will be applied
     opened = Flag(False) # Are there any instances of the Panel()
@@ -86,6 +86,10 @@ class Panel (SettingsPanel):
     def setActiveSettings (cls, settings_obj, target_instance):
         cls.currentset  = weakref.ref(settings_obj)
         cls.currentinst = weakref.ref(target_instance)
+
+    @classmethod
+    def setTitle (cls, title):
+        cls.title = title
 
     def makeSettings (self, settingsSizer):
         self.opened.set()
@@ -160,16 +164,23 @@ class Panel (SettingsPanel):
         del self.controls
         self.opened.clear()
 
-def SetPanel (settings_obj, target_instance):
+def SetPanel (settings_obj, target_instance, title=None, placeAbove=None):
     """
     Links a settings panel with settings object and the instance where attributes should go,
     and adds it to NVDA Settings.
     The function can be called more than once in a row.
     If arguments are the same, there will be no ill effects.
     """
+    if isinstance(title, str):
+        Panel.setTitle(title)
     Panel.setActiveSettings(settings_obj, target_instance)
     categoryClasses = gui.settingsDialogs.NVDASettingsDialog.categoryClasses
-    if Panel not in categoryClasses:
+    if Panel in categoryClasses:
+        return
+    if placeAbove:
+        i = list(x.__name__ for x in categoryClasses).index(placeAbove)
+        categoryClasses.insert(i, Panel)
+    else:
         categoryClasses.append(Panel)
 
 def RemovePanel ():

@@ -340,6 +340,13 @@ class MouseTracking:
         if self._mouseTrackingEnsured:
             return
         self._oldToggleMouseTrackingScript = scr = commands.script_toggleMouseTracking
+        # This works on all levels because the GlobalCommand.script_toggleMouseTracking()
+        # has assigned gesture. That is why rebinding is needed.
+        # For other maps that are inputCore.GlobalGestureMap() objects, the
+        # method swapping will do the trick and rebinding is not needed.
+        # Also, when users remove the gesture it is just blocked in inputCore.manager.userGestureMap,
+        # by setting None for its script, so nothing will be called.
+        # Therefore this should be enough.
         self._oldToggleMouseTrackingGestures = gestures = self.getGestures(scr)
         GlobalCommands.script_toggleMouseTracking = self._updater(self.replacement,
                              scr, self._assignments)

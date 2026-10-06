@@ -1,3 +1,123 @@
+### Changelog for Version 26.2.0 in relation to 26.1.0
+
+#### **Major Updates**
+- **Location Presentation Modes**:
+  - Added a configurable location presentation mode that determines both which object represents the current navigation position and which point within that object is presented by the positional tone.
+  - Navigation can now follow either the navigator object or the focused object.
+  - Each object can be represented by its centroid, the middle of its left border, or the middle of its right border.
+  - The selected mode is applied immediately when changed in the settings panel and restored correctly if the settings dialog is cancelled.
+  - Automatic navigation reporting and on-demand object location and outline commands now follow the selected object type.
+
+- **Enhanced Mouse Monitoring and Keyboard Interaction**:
+  - Added the navigator object's location as a selectable mouse monitoring reference point.
+  - Keyboard navigation and caret movement can now be used while the pointer remains stationary to compare navigated objects or the caret with the pointer's position.
+  - Navigation and caret events refresh the inactivity timeout while a dynamic focused-object or navigator-object reference point is being used.
+  - Separate navigation tones are suppressed during this interaction so that mouse monitoring remains the single source of positional output.
+  - NVDA mouse tracking is now enabled automatically when required by mouse monitoring and protected from being disabled while monitoring is active.
+  - If the user changes NVDA's mouse-tracking setting during monitoring, the choice is remembered and applied after monitoring ends.
+
+- **Build System Migration**:
+  - Migrated the project from the legacy NVDA add-on template and SCons-based build system to `nvda-addon-kit`.
+  - Replaced `buildVars.py`, manifest templates, `sconstruct`, and bundled SCons support files with the declarative `addon.toml` configuration.
+  - Added build configuration for add-on metadata, compatibility information, translation sources, excluded files, and documentation rendering.
+  - Configured builds to exclude the runtime `settings.json` file from generated `.nvda-addon` packages.
+  - Added documentation describing how to build, install, migrate, and translate the add-on with `nvda-addon-kit`.
+  - Added the required `pymdown-extensions` configuration for fenced and inline code in generated documentation.
+
+- **Internal Architecture Refactoring**:
+  - Split event handlers, input scripts, and feature-switching methods out of `GlobalPlugin` into `_events.py`, `_scripts.py`, and `_switches.py`.
+  - Added `constants.py` for caret, mouse-reference, and location-presentation mode constants and their mode-detection helpers.
+  - Added `meta.AutoAll()` to generate controlled module export lists and reduce imported namespaces.
+  - Deferred several imports until `GlobalPlugin` initialization to reduce the add-on's module-level namespace and unnecessary startup work.
+  - Reworked positional tone playback around a persistent `play` instance that stores duplicate-detection state, channel volumes, stereo direction, and the active tone generator.
+  - Preserved `playCoordinates()` and `playPoints()` as aliases for backward-compatible internal use.
+  - Added support for selecting a specific MIDI output device in the internal tone-generator interface as groundwork for future MIDI options.
+
+#### **New Features**
+- **Navigator Object Mouse Reference Point**:
+  - Added the navigator object's location to the list of continuous mouse monitoring reference points.
+
+- **Configurable Location Representation**:
+  - Added six presentation choices combining navigator or focused objects with centroid, left-border, or right-border coordinates.
+  - Left and right border positions use the vertical midpoint of the corresponding object edge.
+  - Switching modes dynamically changes the NVDA event used for automatic location reporting. It is either event_becomeNavigator or event_gainFocus respectively.
+
+- **Tabs and Spaces Caret Reporting**:
+  - Added an option to report caret location only when tabs or spaces are encountered.
+  - During keyboard navigation, the character at the caret is inspected before a positional tone is played.
+  - During typing, the character immediately before the caret is inspected so inserted tabs and spaces can be reported. The new position of the caret is reported, not the position of inserted space or tab character.
+  - The option works together with the existing caret reporting mode and the option to report caret movement while typing.
+
+- **Optional Mouse Monitoring Stop Message**:
+  - Added a setting that controls whether the natural end of mouse monitoring is announced after the configured inactivity timeout.
+  - Explicit cancellation and other mouse monitoring messages remain unaffected.
+
+- **MIDI Output Reset Command**:
+  - Added an unassigned command to NVDA's Input Gestures dialog for resetting MIDI output.
+  - The command reinitializes the MIDI generator, restores the selected instrument, and plays the current location when possible.
+  - It provides a faster way to recover from an unresponsive software or hardware synthesizer without disabling and re-enabling MIDI in the settings panel.
+
+- **New Interface Translations**:
+  - Added Croatian, Italian, and Spanish translations.
+  - Added more detailed extraction comments for translators and configured `nvda-addon-kit` to obtain Python interface strings from `UIStrings.py` only.
+  - Changed the NVDA Settings and Input Gestures category name to **Positional tones**, while retaining **Object Location Tones** as the add-on title only.
+  - Positioned the Positional tones settings category immediately above NVDA's Advanced category.
+
+#### **Settings Framework Improvements**
+- **Dynamic Attribute Flags**:
+  - Added `CallableFlag` support for settings attributes whose `.show`, `.save`, `.skip`, or `.enable` state depends on a callable. (WIP)
+  - Added locking and remembered-state capabilities to flags so a value can be enforced temporarily while preserving changes made during the lock.
+  - These capabilities are used to protect NVDA mouse tracking during continuous mouse monitoring.
+
+- **Settings Refresh Fixes**:
+  - Fixed `refresh_panel()` and `refresh_instance()` processing only the first matching attribute when multiple specific attributes were supplied.
+  - Added common attribute-selection helpers to support lookup by name, nickname, control identifier, or attribute object.
+  - Improved restoration of default and original values.
+  - Added convenient methods for attaching and removing settings panel directly through a `Settings()` instance.
+  - Added support for assigning a custom settings-panel title and inserting the panel at a specific position in NVDA's category list.
+
+#### **Fixes and Optimizations**
+- **Mouse Monitoring Reliability**:
+  - Fixed conflicts between continuous mouse monitoring and NVDA mouse tracking being disabled through either the Mouse settings panel or an input gesture.
+  - Fixed duplicate or overlapping tones when keyboard navigation changes a focused-object, navigator-object, or caret reference point during mouse monitoring.
+  - Monitoring no longer ends from pointer inactivity while the user is actively moving through objects or text with the keyboard.
+
+- **Display Size Caching**:
+  - Replaced repeated desktop-object location lookups with a cached primary-display layout.
+  - The cached display dimensions are refreshed through NVDA's display-change extension point.
+  - Positional tone coordinate calculations and screen-centre reference calculations now use the cached dimensions.
+  - This reduces repeated API calls and provides a foundation for improved multi-display support in the future.
+
+- **Easy Table Navigator Compatibility**:
+  - Fixed the Easy Table Navigator option appearing for versions that do not provide the required external API.
+  - Added version filtering to optional add-on dependency detection.
+  - Corrected the dependency interface's version-check callback signature.
+  - The integration setting is now shown only when a usable Easy Table Navigator installation is available.
+
+- **Geometry Utilities**:
+  - Fixed bounding-box calculations and reduced repeated location indexing and temporary tuple construction.
+  - Simplified point containment checks and separated rectangle-overlap detection into an explicit `overlaps()` method.
+  - Added lightweight `Point` and `StampedPoint` classes with rectangular and elliptical proximity metrics as groundwork for future pointer-location features.
+  - Added cached location data and clearer representations to `BBox`.
+
+- **Positional Tone Playback**:
+  - Centralized playback state and audio settings in the `play` instance.
+  - Reduced repeated argument passing for channel volumes and stereo orientation.
+  - Added additional microoptimizations to frequently used geometry and namespace operations.
+
+- **Configuration Migration**:
+  - Updated `installTasks.py` to add defaults for location presentation mode, tabs-and-spaces caret reporting, and the mouse monitoring stop message when upgrading.
+  - Added migration of saved mouse reference point indices to account for insertion of the navigator-object option.
+
+- **Documentation and Translation Infrastructure**:
+  - Added completed build and translation instructions to the README.
+  - Corrected fenced-code rendering in generated HTML documentation.
+  - Added support for preserving ordinary line breaks through the `nl2br` Markdown extension.
+  - Updated the README stable-release link for version 26.2.0.
+  - Improved translation comments so generated POT and PO files contain clearer interface context.
+
+This changelog was generated using Perplexity AI.
+
 ### Changelog for Version 26.1.0 in relation to 25.1.0
 
 #### **Major Updates**

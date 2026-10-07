@@ -1,0 +1,182 @@
+# Object Location Tones
+
+* **Author**: Joseph Lee
+* **Maintainer**: Dalen
+* **Download**: [Stable Version][1]
+* **NVDA Compatibility**: 2023.1 and later
+
+After installing this add-on and restarting NVDA, you will hear tones to indicate the location of different objects on the screen as you navigate. Vertical position is represented by pitch: objects near the top of the screen produce higher tones, while objects near the bottom produce lower tones. Horizontal position is represented through stereo balance: objects toward the left sound louder in the left channel, while objects toward the right sound louder in the right channel.
+To turn off object location reporting, press `Ctrl+NumpadDelete`. To enable it again, use the same gesture. Object Location Tones will remember your preference, and when NVDA starts, it will retain the last state. All settings will persist, even after disabling and re-enabling the add-on.
+
+***
+
+**Contents**
+
+- [Features](#features)
+- [MIDI-based tone generation](#midi-based-tone-generation)
+- [Gestures](#gestures)
+- [Important notes](#important-notes)
+- [Translations](#translations)
+- [For developers and translators](#for-developers-and-translators)
+  - [Building the add-on](#building-the-add-on)
+  - [Translating the add-on](#translating-the-add-on)
+
+## Features
+
+* **Report Current Object's Location**: During navigation, a positional tone will indicate the current object's location. This feature helps you understand an application's or website's layout, scroll through long menus or file lists faster, and gain a better sense of how your OS behaves visually. Whether NVDA's navigator object or an object with the system focus is considered the current object you decide using location presentation mode option in settings. The navigator is the default.
+* **Report Caret Location in Text Fields**: When navigating within editable input fields, positional tones will indicate the caret's location. This helps you perceive how the document is scrolled both horizontally and vertically, how long your lines are and when and where they are wrapped, better manage indentations, and more. You can limit caret location reporting to positions containing tabs or spaces. This applies both while navigating through existing text and during typing when caret reporting while typing is enabled. This can help you monitor indentation and spacing without hearing a tone for every caret movement. When you are typing and caret reporting while typing is on, the caret's location will be reported to you after you enter a tab or space, not the location of the entered character itself.
+* **Location Presentation Mode**: In the settings panel, you can choose whether positional tones follow the navigator object or the focused object. You can also choose whether the current object is represented by its centroid, the middle of its left border, or the middle of its right border. For most objects there is no audible difference, but with long objects this may be noticeable and possibly useful. This essentially means that you can choose which point inside an object will represent its overall location and be turned into a positional tone. This can help to recognize vertical alignment among objects or better perceive horizontal spacings.
+* **Toggle Positional Tones**: You can toggle the automatic positional tones on or off using `Ctrl+NumpadDelete` gesture. This feature lets you activate positional tones during navigation only when you need it.
+* **Toggle Caret Reporting**: Use `Ctrl+Windows+NumpadDelete` gesture to turn caret location reporting on or off. This allows you to keep positional tones active during navigation while disabling them for text fields (or vice versa).
+* **Explicitly Report Object Location**: Press `NumpadDelete` to explicitly report the current object's location. In editable input fields, it will report the caret's position if caret reporting is turned on. This is useful when tones during navigation are off, or when you want to hear the location of the current object again without having to navigate away from it first. Whether NVDA's navigator object or an object with the system focus is considered the current object you decide using location presentation mode option in settings. The navigator is the default.
+* **Explicitly Report Mouse Cursor Location**: Use `Windows+NumpadDelete` gesture to report the mouse pointer's location via a positional tone.
+* **Report Object's Outline**: Use `Ctrl+Shift+NumpadDelete` gesture to hear positional tones indicating the outline of the current object. This gives you a sense of the size and location of UI controls or other elements, which can be helpful in understanding how visual elements are arranged on the screen. This feature is very useful in GUI development. An outline is represented using corners of the current object. The corners are played clockwise, beginning at the top-left corner. If caret reporting feature is on and the object is a text editable, the fifth positional tone, for the caret location, will be added at the end. Whether NVDA's navigator object or an object with the system focus is considered the current object you decide using location presentation mode option in settings. The navigator is the default.
+* **Automatic Foreground Window Outline Reporting**: You can configure Object Location Tones to automatically play the outline of each newly activated foreground window. This gives instant spatial feedback when switching between windows or dialogs, without requiring a manual gesture each time.
+* **Report Parent's Outline**: Use `Ctrl+Alt+Shift+NumpadDelete` gesture to hear the outline of the current object's parent. Pressing it multiple times moves further up the ancestry chain. This feature helps you understand the relationships between the current object and its ancestors, which is particularly useful for GUI development.
+* **Continuous Mouse Location Reporting**: Use `Shift+NumpadDelete` gesture to turn on continuous reporting of the mouse cursor's location in relation to a reference point. This feature plays one tone for the mouse pointer and another for the reference point. The reference point is by default set to be a location of currently focused object or system caret if caret reporting is enabled, but it can be changed in the settings panel. Other options are the location of NVDA's navigator object, the location of the center of the screen, the center of the foreground window or a top left corner of either mentioned, No reference point, which excludes the reference point from the output, or the position where mouse monitoring started. Monitoring ends when you press the gesture again, when the pointer remains stationary for the configured timeout, or when the pointer reaches the target within the configured tolerance. The pointer tone is played first, followed by the selected reference-point tone. This feature is helpful in applications or websites where interaction is only possible with the mouse, and it can also assist with text editing and selection. This feature can be automatically activated upon mouse movement if thus selected in the add-on's settings panel. You can also choose there whether Object Location Tones announces when mouse monitoring ends naturally after the configured period of pointer inactivity. While continuous mouse monitoring uses the focused object, navigator object, or caret as its reference point, you can leave the mouse stationary and navigate with the keyboard to hear the changing reference position in relation to the pointer. Keyboard navigation also keeps monitoring active and avoids producing an additional, overlapping navigation tone. Caret will be used as the reference point if caret reporting is on and current reference point is a navigator or a focused object which happens to be a text editable input field.
+* **Cycle Through Caret Reporting Modes**: Use the `Ctrl+Alt+Windows+NumpadDelete` gesture to cycle through different caret reporting modes. Available modes include:
+    **Lines**: Reports caret movements only when moving up or down lines;
+    **Columns**: Reports caret movements only when moving left or right across text;
+    **Lines & Columns**: Reports caret movements in both vertical and horizontal directions;
+    **None**: Disables ordinary navigation-triggered caret tones.
+    This feature allows for precise customization of how you receive feedback while editing text, adapting to various workflows and preferences. You can also choose your caret reporting mode in the settings panel.
+* **Use Musical Instrument Digital Interface (MIDI) for tone generation**: This feature allows you to use software or hardware musical synthesizers that support MIDI to produce tones instead of the classic NVDA beeps. You can opt for tones produced by any instrument defined by General MIDI Level 1 standard. Microsoft Windows has a built-in MIDI synthesizer so you can use the feature right away. The feature can be activated in Object Location Tones settings panel. Although stable, this feature is still in its experimental stage, because it relies on resources outside of NVDA's control. Please read the section below on using MIDI and how to correctly set it up so that you get positional tones that correctly reflect the on-screen locations.
+* **Reset MIDI Output**: A command for resetting MIDI output is available in NVDA's Input Gestures dialog without a default gesture assigned. You can assign a gesture and use it to reinitialize MIDI tone generation if a software or hardware synthesizer stops responding, without having to disable and re-enable MIDI in the settings panel each time it happens.
+* **Settings Panel**: The settings panel allows for further customization of positional tone reporting. You can adjust the tone duration for navigation and caret reporting individually, choose how caret movements are reported (lines, columns, both, or none), and decide whether caret movements during typing are reported or not. You can also limit caret location reporting only when caret encounters tabs or spaces. Mouse-related settings include automatic start of real-time monitoring when the mouse moves and adjusting the timeout duration for mouse monitoring, choosing a reference point for the mouse monitoring and setting the distance to targeted location sensibility. There are options controlling the volume level of positional tones and their stereo direction as well. You may also choose to use MIDI for tones instead of classic NVDA beeps and choose the MIDI instrument to use. The settings panel also includes an option to automatically play the outline of each newly activated foreground window or dialog, and supports more dynamic behavior where some controls may appear or become unavailable depending on current configuration. More options will be added in future releases. The settings panel can be found under **Positional tones** category in NVDA's settings, and is usually placed above the **Advanced** category.
+
+## MIDI-based tone generation
+
+MIDI (Musical Instrument Digital Interface) is not audio, it is a protocol used to tell a MIDI compatible synthesizer which note to play, which instrument to use, how loud, and for how long. Using MIDI for location tones gives you a more musical way to hear position on the screen. You can choose different instruments, get more distinctive pitch steps using all 128 MIDI notes, and generally create a more pleasant listening experience that gives potentially more expressive and intelligible sound cues.
+When you enable the **Use Musical Instrument Digital Interface (MIDI) for tone generation** option in settings, Object Location Tones will start sending MIDI note events instead of using NVDA's built-in tones.beep() function. These events go directly to the default MIDI output device set in your Windows system. Most of the time, this will be the **Microsoft GS Wavetable Synth**, a built-in software synthesizer that has been included since **Windows 98**.
+Right after you activate the checkbox, you will be warned that the option is experimental and asked for confirmation. This is because tone production using MIDI instructions depends on software and hardware elements outside of NVDA's control and there can be so many different setups. For example, if something is wrong with your software synthesizer, a synthesizer volume is down or your hardware synthesizer is turned off or configured incorrectly you will simply not hear positional tones while Object Location Tones add-on will not be aware that anything is wrong. Usual occurrence with third party synthesizers will be that they will stop working after computer wakes up from sleep or hibernation or when virtual machine resumes execution. In these cases, going to settings, disabling and re-enabling MIDI will solve the problem. If this occurs often, you can add a gesture to the reset MIDI output option in input gestures dialog and use it to awake your MIDI output. The experimental warning will be changed or removed after collected feedback from users helps mitigate mentioned problems.
+When MIDI output is turned off, the MIDI instrument selection control in the settings panel is disabled automatically. This helps indicate that the selected instrument only applies while MIDI tone generation is active
+
+### Limitations of Microsoft's built-in synth
+
+While it works out of the box, which is excellent because it allows Object Location Tones to work with MIDI with no additional requirements, the Microsoft GS Wavetable Synth has some serious limitations:
+
+* It is old and inefficient and has not been updated in decades.
+* It has **noticeable latency**, often between **30 ms and over 1 second**, depending on your machine and audio drivers. This lag is especially bad for mouse monitoring or fast navigation , where you need instant feedback.
+* It cannot load or change SoundFonts. You are limited to the General MIDI instruments it ships with.
+* It does not support audio effects like reverb, chorus, or filter envelopes. Because of this, instruments often sound dry, flat, and lacking in spatial depth.
+* Some instruments don’t play the full range of MIDI notes (0–127), which means parts of the screen may give incorrect tones for vertical navigation.
+
+That said, one good thing about GS Wavetable Synth is that instruments **are mono**, which helps with accurate horizontal spatial mapping.
+
+### You can get better results with third-party software synthesizers
+
+If you want more responsive and flexible sound, you can install a better software synthesizer. Two popular ones that are free:
+
+* [**CoolSoft VirtualMIDISynth**](https://coolsoft.altervista.org/en/virtualmidisynth)  
+  Easy to use, comes with a nice interface, and can set itself as the system's default MIDI device. Lets you load your own SoundFonts and configure everything from a control panel.
+
+* [**FluidSynth**](https://www.fluidsynth.org/)  
+  Designed for real-time audio with very low latency. It is powerful and fast, but has no built-in GUI. It is more suitable if you are comfortable with command-line tools or external front-ends like Qsynth.
+
+To use either of these with Object Location Tones, you will need to make sure they’re set as your default MIDI output. CoolSoft can handle this automatically. Otherwise, you will need to adjust the system MIDI Mapper or use a routing tool. You will also need to download and set a SoundFont to use with any of the two synthesizers.
+You can find a good selection of free SoundFonts listed on the official website of the [**CoolSoft VirtualMIDISynth**](https://coolsoft.altervista.org/en/virtualmidisynth) 
+
+### SoundFonts: what to look for
+
+SoundFonts are files (*.sf2) that contain sampled instruments. Your synthesizer will use these to actually play the MIDI notes. For this add-on, you don’t need anything fancy, but you should keep a few things in mind:
+
+* The instrument used for positional tones must be **mono**. Stereo instruments (like many pianos) can distort the screen position to stereo space mapping and your horizontal plane location output will be wrong.
+* The instrument must not have a slow attack or fade-in at the start (common in string instruments), otherwise the note can be inaudible because of the tone duration settings and even if it can be heard, you will have a delayed positional feedback.
+* The instrument  should cover **all 128 MIDI notes (0 to 127)**. If it doesn’t, you’ll have incorrect tone pitch to vertical plane mapping
+* Try to pick a **compact SoundFont**, something around **32 MB** in size. This keeps memory usage low while still sounding good. Huge SoundFonts made for music production don’t add anything useful here and just waste RAM.
+
+You can choose which instrument the add-on uses from its settings. After selecting one, it’s a good idea to test how it behaves when used for positional feedback. To check this, navigate across fixed interface areas like the desktop, taskbar, Start menu, and system tray. If notes drop out or feel mismatched in height, especially toward top and bottom edges of the screen, or elements that are one below another such as menu items are reported to have drastically different horizontal position, especially between top and bottom edges of the screen, switch to another instrument.
+
+### For advanced users
+
+If you are a musician or have MIDI gear, you can also route the MIDI output to a **hardware synthesizer** or **MIDI sound module**. As long as the device shows up as a standard MIDI output and can be set as the default, it will work with this add-on. This setup gives you full control over sound and latency, though it takes a little bit more effort to configure.
+
+### Bundled MIDI components
+
+Object Location Tones includes bundled external binaries for its MIDI functionality. The MIDI package shipped with this add-on is a heavily modified standalone variant of `pygame.midi`, adapted for use inside the add-on rather than imported from a complete pygame installation. The package extends original pygame.midi functionalities further with addition of higher-level MIDI event managing API.
+
+The included MIDI support is based on:
+- [`pygame.midi`](https://www.pygame.org/docs/ref/midi.html), from the pygame project
+- [`PortMidi`](https://github.com/PortMidi/portmidi), the cross-platform MIDI I/O library used underneath
+- [`PyPortMidi` / `pm_python`](https://github.com/PortMidi/pm_python), Python bindings for PortMidi
+
+Accordingly, the add-on's midi package contains files such as `portmidi.dll` and compiled Python extension modules (*.pyd) from pm_python, needed for MIDI support.
+
+## Gestures
+
+| Gesture | Command |
+| --- | --- |
+| `NumpadDelete` | Reports the current object or caret location |
+| `Windows+NumpadDelete` | Reports the mouse-pointer location |
+| `Ctrl+NumpadDelete` | Toggles automatic positional tones |
+| `Ctrl+Windows+NumpadDelete` | Toggles caret location reporting |
+| `Ctrl+Alt+Windows+NumpadDelete` | Cycles through caret reporting modes |
+| `Ctrl+Shift+NumpadDelete` | Reports the current object's outline |
+| `Ctrl+Alt+Shift+NumpadDelete` | Reports a parent-object outline; repeat to move farther up the ancestry chain |
+| `Shift+NumpadDelete` | Toggles continuous mouse monitoring |
+| No default gesture | Resets MIDI output; assign a gesture in NVDA's Input Gestures dialog |
+
+All gestures can be changed in NVDA's Input Gestures dialog under **Positional tones**. Users without a numeric keypad can assign alternative gestures there.
+
+## Important Notes
+
+* The `Ctrl+NumpadDelete` gesture will disable both navigation and caret reporting if it is enabled. This is done for convenience and backward compatibility. Using the gesture again will enable the caret reporting as well, unless it has been explicitly turned off using its gesture or via settings panel before that. To enable caret reporting while navigation reporting is off either use the settings panel, or the `Ctrl+Windows+NumpadDelete` gesture after disabling positional tones for navigation.
+* If a control is somewhere off-screen, tones for its location will not be played.
+* Positional tones currently use the primary display as their coordinate space. Objects on secondary displays, particularly displays positioned to the left of or above the primary display, may not be reported.
+* Some caret location reports may be inaccurate in certain types of input fields, especially in applications with non-native GUI controls. Errors usually occur at the end of documents or when documents are empty.
+* If you choose to use MIDI for tone generation, make sure that the chosen instrument from the chosen sound font is mono and has no delay at note beginnings. Otherwise positional tones will not match positions on the screen or can be inaudible due to the positional tone duration, or both. Also, ensure that the instrument covers complete MIDI note range, from 0 through 127, in order to be sure that the positional tones are correct and/or audible.
+* If an application's progress bars begin reporting when the interface is brought to focus, and your progress bar reports are set to beeps, and you are not using MIDI for tone generation, there may be some confusion, as Object Location Tones will also produce beeps. Using MIDI or adjusting the positional tone duration in the settings panel may help differentiate between progress bar beeps and positional tones.
+* If another add-on uses emulated keypresses (especially with added beeps while you are not using MIDI), interference may occur until you identify how the tones from both add-ons interact. For example, Braille Extender may use emulated keypresses to improve routing experience.
+* If another add-on modifies certain parts of NVDA (especially if outdated or incompatible), some events might not be detected by Object Location Tones. For example, an old version of Braille Extender might prevent Object Location Tones from detecting typing, resulting in the location of the caret being reported while you type regardless of your settings, which may be annoying.
+
+## Translations
+
+Object Location Tones default language is English, but it includes translations to Croatian, Italian and Spanish. A supported language will automatically be used if it is set as NVDA's language in category General of NVDA settings. More translations are expected soon.
+
+## For developers and translators
+
+### Building the add-on
+
+Object Location Tones uses nvaddon tool from NVDAAddonKit by Beka Gozalishvili as its bundling system.
+To create *.nvda-addon file from source on your own following steps are recommended:
+
+* Install nvda-addon-kit from Python Package Index using pip:
+    ```bash
+    $ python -m pip install nvda-addon-kit
+    ```
+* Install Python markdown extra extensions needed to build the documentation
+    ```bash    
+    $ python -m pip install pymdown-extensions
+    ```
+* Acquire the Object Location Tones source from the repository and enter its root directory:
+    ```bash
+    $ git clone https://github.com/dbernaca/objLocationTones.git
+    $ cd objLocationTones
+    ```
+* Use the nvaddon tool on it to build or to build and install the add-on
+    `#!bash $ python -m nvaddon build`
+    or
+    `#!bash $ python -m nvaddon install`
+
+That is all.
+If you have Python's 'scripts' directory added to your PATH environment variable, you can call both pip and nvaddon tool directly from the shell.
+Note that master branch of the repo is being constantly used in development flow. So before you decide to build and use the add-on from source, it is recommended to check the git log first. If there are unresolved commits marked as work in progress (WIP) affecting the code present it is possible that you will end up with the add-on containing incomplete or buggy features. If you still want to build from the source, but want the stable version, use `git switch` command to roll back to the commit or tag you deem stable before building the add-on. Needless to say that that point has to be after the add-on switched from the add-on template to the NVDAAddonKit. If you choose one of points in history preceding the NVDAAddonKit anyway, you can still use nvaddon tool to build it, but you first have to use its migration process via the migrate command to transform the add-on's working tree to support the new system.
+
+### Translating the add-on
+
+Object Location Tones has all its translatable strings in one module - UIStrings.py.
+They are commented and sorted mostly as they appeared along with new features in new add-on versions.
+However, nvaddon tool supports creation of a pot file from an add-on and managing new translations.
+Using command:
+`#!bash $ python -m nvaddon locale-add <language_code>`
+while in the add-on's root directory, will create both *.pot template and *.po file for the specified language in its correct location.
+Using:
+`#!bash $ python -m nvaddon locale-compile`
+will compile all *.po into *.mo for usage by gettext in NVDA.
+When you use:
+`#!bash $ python -m nvaddon build`
+all your *.po files will be compiled automatically and appropriate manifest messages will be deposited into translated manifest.ini(s) in locales folder before building.
+
+If you are interested in contributing to Object Location Tones by translating it, please use nvaddon tool to create a *.po file for the language you want to add, translate it using your favourite editor or method, and send the result to be included in next Object Location Tones version, either via e-mail or using a pull request.
+
+[1]: https://github.com/dbernaca/objLocationTones/releases/26.2.0

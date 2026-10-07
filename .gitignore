@@ -5,9 +5,12 @@
 *.mo
 addon/manifest.ini
 addon/locale/*/manifest.ini
-addon/doc/style.css
-addon/doc/en/
-addon/doc/*/*.html
+
+# Leave the built docs since we are changing to .github/README.md version for landing page
+# and want properly rendered HTML, that is Python markdown and mdownx to be available for pages
+#addon/doc/style.css
+#addon/doc/en/
+#addon/doc/*/*.html
 
 # Addon creates settings.json
 settings.json

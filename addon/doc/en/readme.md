@@ -18,8 +18,8 @@ To turn off object location reporting, press `Ctrl+NumpadDelete`. To enable it a
 - [Important notes](#important-notes)
 - [Translations](#translations)
 - [For developers and translators](#for-developers-and-translators)
-  - [Building the add-on](#building-the-add-on)
-  - [Translating the add-on](#translating-the-add-on)
+    - [Building the add-on](#building-the-add-on)
+    - [Translating the add-on](#translating-the-add-on)
 
 ## Features
 

@@ -6,7 +6,7 @@ import config, ui
 from languageHandler import installedTranslation
 from textInfos              import POSITION_CARET, POSITION_FIRST, UNIT_CHARACTER, UNIT_LINE
 from api                     import isTypingProtected, getCaretPosition as getCaretTextInfo
-from winAPI._displayTracking import displayChanged
+from winAPI.messageWindow    import pre_handleWindowMessage, WindowMessage
 from treeInterceptorHandler  import DocumentTreeInterceptor
 from globalCommands          import GlobalCommands, commands
 from functools               import update_wrapper, WRAPPER_ASSIGNMENTS
@@ -80,7 +80,7 @@ def getCaretPos (obj=None):
 
 def getCharacterAtCaret ():
     if isTypingProtected():
-        return ""
+        return "*"
     try:
         info = getCaretTextInfo().copy()
         info.expand(UNIT_CHARACTER)
@@ -250,21 +250,26 @@ class Display:
 
 class DisplayLayout:
     __slots__ = ("primary", "getPrimaryDisplaySize", "__weakref__")
+    DISPLAY_CHANGE = WindowMessage.DISPLAY_CHANGE
     def __init__ (self):
         self.primary = pd = Display(*getDesktopObject().location)
         pd.primary = True
         self.getPrimaryDisplaySize = pd.getSize
 
-    def refresh (self, orientationState=None):
+    def refresh (self):
         pd = self.primary
         pd.__init__(*getDesktopObject().location)
         pd.primary = True
 
+    def _handleWindowMessage (self, msg, wParam=None, lParam=None):
+        if msg==self.DISPLAY_CHANGE:
+            self.refresh()
+        
     def enableAutoRefresh (self):
-        displayChanged.register(self.refresh)
+        pre_handleWindowMessage.register(self._handleWindowMessage)
 
     def disableAutoRefresh (self):
-        displayChanged.unregister(self.refresh)
+        pre_handleWindowMessage.unregister(self._handleWindowMessage)
 
 DisplayLayout = DisplayLayout()
 
@@ -332,6 +337,10 @@ class MouseTracking:
         NVDASettingsDialog.categoryClasses[mouse] = MouseSettingsPanel
 
     def getGestures (self, script):
+        # Having script.gestures should be good enough, and for original GlobalCommands.script_toggleMouseTracking() would be.
+        # But since we assume the script may have been patched by another add-on as well, in the similar manner, we should not rely on it.
+        # The replacement might not have the attribute 'gestures' at all.
+        # So, find gestures actively bound to current globalCommands.commands.script_toggleMouseTracking attribute (passed via script arg) instead
         gmitems = commands._gestureMap.items()
         scrName = script.__qualname__
         return [k for k, v in gmitems if v.__qualname__==scrName]
@@ -341,7 +350,7 @@ class MouseTracking:
             return
         self._oldToggleMouseTrackingScript = scr = commands.script_toggleMouseTracking
         # This works on all levels because the GlobalCommand.script_toggleMouseTracking()
-        # has assigned gesture. That is why rebinding is needed.
+        # has assigned gesture by default. That is why rebinding is needed.
         # For other maps that are inputCore.GlobalGestureMap() objects, the
         # method swapping will do the trick and rebinding is not needed.
         # Also, when users remove the gesture it is just blocked in inputCore.manager.userGestureMap,
@@ -354,6 +363,9 @@ class MouseTracking:
             commands.bindGesture(gesture, "toggleMouseTracking")
         self.MouseSettings.set()
         self._mouseTrackingEnsured = True
+        # Only way the protection stops working is that someone in another global plugin intercepts the gesture and they do not call commands.script_toggleMouseTracking() within the interceptor.
+        # But in these cases, we will just assume they didn't mean to work with mouse tracking at all.
+        # Hopefully, they wouldn't be changing config.conf["mouse"]["enableMouseTracking"] within their script and all will be fine.
 
     def restore (self):
         if not self._mouseTrackingEnsured:

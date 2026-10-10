@@ -100,8 +100,8 @@ def onInstall ():
             inst.refPoint = 0
         else:
             # New option has been injected in 26.2.0 at the index 1
-            # Make sure this is version aware in release of add-on following this one or it will cause serious bugs
-            inst.refPoint.value += inst.refPoint.value>0
+            if addon.version<="26.1.0":
+                inst.refPoint.value += inst.refPoint.value>0
         if not hasattr(inst, "midi"):
             inst.midi = False
             inst.instrument = 115

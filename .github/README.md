@@ -2,7 +2,7 @@
 
 * **Author**: Joseph Lee
 * **Maintainer**: Dalen
-* **Current Version**: [26.1.0](https://github.com/dbernaca/objLocationTones/releases/26.1.0)
+* **Current Version**: [26.2.0](https://github.com/dbernaca/objLocationTones/releases/26.2.0)
 * **NVDA Compatibility**: 2023.1 and later
 
 Object Location Tones is an NVDA add-on that adds positional audio capability to the NVDA screen reader via positional tones.  

@@ -1,9 +1,6 @@
 from logHandler import log
 from gui.guiHelper import BoxSizerHelper
-try:
-    from gui.settingsDialogs import SettingsPanel
-except:
-    from gui import SettingsPanel
+from gui.settingsDialogs import SettingsPanel
 from addonHandler import getCodeAddon
 
 from .objects import Flag, Attribute
